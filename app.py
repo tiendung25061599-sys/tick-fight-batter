@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Stickman Battle Story & Online", layout="wide")
+st.set_page_config(page_title="Stickman Battle Online & Story", layout="wide")
 
 game_code = """
 <!DOCTYPE html>
@@ -27,7 +27,6 @@ game_code = """
     #gameCanvas { background: #050508; border: 2px solid #45a29e; border-radius: 12px; width: 96vw; height: 54vh; display: none; position: relative; z-index: 1; box-shadow: 0 0 20px rgba(69, 162, 158, 0.3); }
     #backBtn { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); padding: 6px 16px; background: #1f2833; border: 1px solid #66fcf1; color: #66fcf1; border-radius: 6px; z-index: 50; cursor: pointer; display: none; font-weight: bold; }
     
-    /* OVERLAY KẾT THÚC */
     #endGameOverlay {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
       background: rgba(0, 0, 0, 0.88); display: none; flex-direction: column;
@@ -36,7 +35,6 @@ game_code = """
     #winnerText { font-size: 34px; font-weight: bold; color: #f7b731; text-shadow: 0 0 15px #f7b731; }
     #voteStatusText { color: #66fcf1; font-size: 14px; font-weight: bold; min-height: 20px; }
 
-    /* CONTROLS */
     .controls { position: absolute; bottom: 10px; width: 100vw; display: none; justify-content: space-between; padding: 0 20px; z-index: 50; }
     .btn-group { display: flex; gap: 10px; }
     .btn-ctrl { 
@@ -61,7 +59,7 @@ game_code = """
     <div class="btn" style="border-color:#ff4757; color:#ff4757;" id="btnMulti">🌐 MULTIPLAYER (ONLINE)</div>
   </div>
 
-  <!-- LOBBY SELECTION MENU -->
+  <!-- LOBBY MENU -->
   <div id="lobbyMenu" class="screen" style="display:none;">
     <h1>CHẾ ĐỘ MULTIPLAYER</h1>
     <div class="btn" style="border-color:#2ed573; color:#2ed573;" id="btnCreateLobby">🎲 TẠO LOBBY MỚI</div>
@@ -201,7 +199,7 @@ game_code = """
 
     peer.on('open', (id) => {
       isHost = true;
-      document.getElementById("statusText").innerText = "Mã phòng: " + roomCode;
+      document.getElementById("statusText").innerText = "Mã phòng: " + roomCode + " (Chờ đối thủ...)";
       showScreen('customScreen');
     });
 
@@ -241,6 +239,8 @@ game_code = """
     conn.on('open', () => {
       document.getElementById("statusText").innerText = "Đã kết nối thành công!";
       showScreen('customScreen');
+      // Gửi ngay dữ liệu trang bị cho nhau
+      conn.send({ type: 'INIT_PLAYER', data: myData });
     });
     conn.on('data', (data) => handleNetworkData(data));
   }
@@ -280,7 +280,6 @@ game_code = """
 
     isBossStage = (gameMode === 'story' && currentStage % 10 === 0);
 
-    // BẬT CHỈ SỐ THEO MÀN / BOSS
     let enemyHp = 100;
     let enemyScale = 1.0;
     let enemyColor = "#ff4757";
@@ -305,7 +304,7 @@ game_code = """
     pEnemy = { 
       x: enemyX, y: canvas.height - 25, vy: 0, isGrounded: true, 
       hp: enemyHp, maxHp: enemyHp, atk: false, 
-      data: { color: enemyColor, weapon: enemyWeapon, hat: isBossStage ? "knight" : "none", cape: isBossStage ? "black" : "none" }, 
+      data: (gameMode === 'story') ? { color: enemyColor, weapon: enemyWeapon, hat: isBossStage ? "knight" : "none", cape: isBossStage ? "black" : "none" } : enemyData, 
       facing: -1, walkTimer: 0, scale: enemyScale 
     };
     
@@ -320,10 +319,17 @@ game_code = """
   }
 
   function handleNetworkData(data) {
+    if(!data) return;
     if(data.type === 'INIT_PLAYER') {
       pEnemy.data = data.data;
     } else if(data.type === 'SYNC_POS') {
-      pEnemy.x = data.x; pEnemy.y = data.y; pEnemy.hp = data.hp; pEnemy.atk = data.atk; pEnemy.facing = data.facing;
+      // Nhận vị trí thực tế của đối thủ và cập nhật lập tức
+      pEnemy.x = data.x; 
+      pEnemy.y = data.y; 
+      pEnemy.hp = data.hp; 
+      pEnemy.atk = data.atk; 
+      pEnemy.facing = data.facing;
+      pEnemy.walkTimer = data.walkTimer;
     } else if(data.type === 'SKILL') {
       createBullet(pEnemy, pSelf, data.weapon);
     } else if(data.type === 'VOTE_REMATCH') {
@@ -446,7 +452,6 @@ game_code = """
     animFrame++;
     let ground = canvas.height - 25;
 
-    // Trọng lực Self
     pSelf.y += pSelf.vy; pSelf.vy += 0.55;
     if (pSelf.y >= ground) { pSelf.y = ground; pSelf.vy = 0; pSelf.isGrounded = true; }
 
@@ -456,7 +461,7 @@ game_code = """
     
     pSelf.x = Math.max(20, Math.min(canvas.width - 20, pSelf.x));
 
-    // AI STORY MODE (TĂNG ĐỘ KHÓ THEO MÀN)
+    // STORY MODE AI
     if(gameMode === 'story') {
       pEnemy.y += pEnemy.vy; pEnemy.vy += 0.55;
       if (pEnemy.y >= ground) { pEnemy.y = ground; pEnemy.vy = 0; pEnemy.isGrounded = true; }
@@ -470,7 +475,6 @@ game_code = """
         pEnemy.walkTimer += 0.2;
       }
 
-      // Tăng tần suất tung chiêu theo màn
       let atkChance = 0.015 + (currentStage * 0.003);
       if (Math.random() < 0.008 && pEnemy.isGrounded) pEnemy.vy = -11;
       
@@ -486,8 +490,17 @@ game_code = """
       }
     }
 
+    // GỬI VỊ TRÍ LIÊN TỤC 2 CHIỀU (DÀNH CHO MULTIPLAYER)
     if(gameMode === 'online' && conn && conn.open) {
-      conn.send({ type: 'SYNC_POS', x: pSelf.x, y: pSelf.y, hp: pSelf.hp, atk: pSelf.atk, facing: pSelf.facing });
+      conn.send({ 
+        type: 'SYNC_POS', 
+        x: pSelf.x, 
+        y: pSelf.y, 
+        hp: pSelf.hp, 
+        atk: pSelf.atk, 
+        facing: pSelf.facing,
+        walkTimer: pSelf.walkTimer
+      });
     }
 
     // DRAW SCENE
@@ -503,9 +516,8 @@ game_code = """
     ctx.fillStyle = pSelf.data.color; ctx.fillRect(10, 10, w * (pSelf.hp / pSelf.maxHp), 14);
     ctx.strokeStyle = "#fff"; ctx.lineWidth = 1; ctx.strokeRect(10, 10, w, 14);
 
-    // MÁU ENEMY / BOSS
+    // MÁU ENEMY
     if(isBossStage) {
-      // Thanh Máu Boss Khổng Lồ Giữa Màn Hình
       let bossW = canvas.width * 0.6;
       let bossX = (canvas.width - bossW) / 2;
       ctx.fillStyle = "#1f2833"; ctx.fillRect(bossX, 32, bossW, 18);
@@ -518,14 +530,14 @@ game_code = """
       ctx.strokeStyle = "#fff"; ctx.lineWidth = 1; ctx.strokeRect(canvas.width - 10 - w, 10, w, 14);
     }
 
-    // Hiệu ứng Particle
+    // Particles
     particles.forEach((p, i) => {
       p.x += p.vx; p.y += p.vy; p.life--;
       ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, 3, 3);
       if(p.life <= 0) particles.splice(i, 1);
     });
 
-    // Đạn & Laser
+    // Bullets
     bullets.forEach((b, idx) => {
       b.x += b.vx;
       ctx.fillStyle = b.color;
@@ -547,7 +559,6 @@ game_code = """
       }
     });
 
-    // VẼ NHÂN VẬT ANIME SMOOTH
     drawPlayer(pSelf); drawPlayer(pEnemy);
 
     if (pSelf.hp <= 0 || pEnemy.hp <= 0) {
@@ -566,7 +577,6 @@ game_code = """
     ctx.shadowColor = p.data.color;
     ctx.shadowBlur = 8;
 
-    // Áo Choàng
     if(p.data.cape && p.data.cape !== 'none') {
       ctx.fillStyle = p.data.cape === 'red' ? '#ff3838' : '#2f3542';
       ctx.beginPath(); 
@@ -578,28 +588,22 @@ game_code = """
 
     ctx.strokeStyle = p.data.color; ctx.lineWidth = 3 * s;
     
-    // Đầu
     ctx.beginPath(); ctx.arc(x, y - 35 * s, 9 * s, 0, Math.PI * 2); ctx.stroke();
-    // Thân
     ctx.beginPath(); ctx.moveTo(x, y - 26 * s); ctx.lineTo(x, y - 8 * s); ctx.stroke();
     
-    // Chân Bước Đi
     ctx.beginPath(); ctx.moveTo(x, y - 8 * s); ctx.lineTo(x - (8 + legSwing) * s, y + 20 * s); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(x, y - 8 * s); ctx.lineTo(x + (8 + legSwing) * s, y + 20 * s); ctx.stroke();
 
-    // Tay & Vũ Khí
     let handX = x + (p.atk ? f * 22 * s : f * 8 * s);
     let handY = y - (p.atk ? 24 * s : 16 * s);
     ctx.beginPath(); ctx.moveTo(x, y - 22 * s); ctx.lineTo(handX, handY); ctx.stroke();
 
-    // Mũ / Nón
     if(p.data.hat === 'knight') {
       ctx.fillStyle = '#a4b0be'; ctx.fillRect(x - 10 * s, y - 48 * s, 20 * s, 8 * s);
     } else if(p.data.hat === 'wizard') {
       ctx.fillStyle = '#5f27cd'; ctx.beginPath(); ctx.moveTo(x - 12 * s, y - 42 * s); ctx.lineTo(x, y - 62 * s); ctx.lineTo(x + 12 * s, y - 42 * s); ctx.fill();
     }
 
-    // ANIMATION VŨ KHÍ TẬN CÙNG BEAUTIFUL
     ctx.save(); ctx.translate(handX, handY);
     if(p.data.weapon === 'sword') {
       ctx.strokeStyle = '#fff'; ctx.lineWidth = 3 * s; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 25 * s, -18 * s); ctx.stroke();
