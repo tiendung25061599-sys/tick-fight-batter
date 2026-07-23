@@ -12,8 +12,18 @@ game_code = """
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
-    body { width: 100vw; height: 100vh; background: #0b0c10; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
+    body { width: 100vw; height: 100vh; background: #0b0c10; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; position: relative; }
     
+    /* NÚT QUAY LẠI CỐ ĐỊNH Ở GÓC TRÊN BÊN PHẢI */
+    #topRightBackBtn { 
+      position: absolute; top: 15px; right: 20px; 
+      padding: 8px 18px; background: #1f2833; border: 2px solid #ff4757; 
+      color: #ff4757; border-radius: 8px; z-index: 999; cursor: pointer; 
+      font-weight: bold; font-size: 14px; box-shadow: 0 0 10px rgba(255, 71, 87, 0.3);
+      display: none; transition: all 0.2s;
+    }
+    #topRightBackBtn:active { background: #ff4757; color: #fff; transform: scale(0.95); }
+
     .screen { position: absolute; top:0; left:0; width: 100%; height: 100%; background: radial-gradient(circle, #1f2833 0%, #0b0c10 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; gap: 14px; }
     h1 { font-size: 28px; color: #66fcf1; text-align: center; text-shadow: 0 0 15px #66fcf1; letter-spacing: 2px; }
     
@@ -25,7 +35,6 @@ game_code = """
     #statusText { color: #f7b731; font-weight: bold; font-size: 14px; text-align: center; }
     
     #gameCanvas { background: #050508; border: 2px solid #45a29e; border-radius: 12px; width: 96vw; height: 54vh; display: none; position: relative; z-index: 1; box-shadow: 0 0 20px rgba(69, 162, 158, 0.3); }
-    #backBtn { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); padding: 6px 16px; background: #1f2833; border: 1px solid #66fcf1; color: #66fcf1; border-radius: 6px; z-index: 50; cursor: pointer; display: none; font-weight: bold; }
     
     #endGameOverlay {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -52,6 +61,9 @@ game_code = """
 </head>
 <body>
 
+  <!-- NÚT QUAY LẠI TOP-RIGHT -->
+  <button id="topRightBackBtn" onclick="quitGame()">🏠 MENU VỀ TRANG CHÍNH</button>
+
   <!-- MAIN MENU -->
   <div id="mainMenu" class="screen">
     <h1>STICKMAN BATTLE</h1>
@@ -64,7 +76,6 @@ game_code = """
     <h1>CHẾ ĐỘ MULTIPLAYER</h1>
     <div class="btn" style="border-color:#2ed573; color:#2ed573;" id="btnCreateLobby">🎲 TẠO LOBBY MỚI</div>
     <div class="btn" style="border-color:#ffa502; color:#ffa502;" id="btnJoinLobby">🔑 THAM GIA LOBBY</div>
-    <div class="btn" style="border-color:#ff4757; color:#ff4757;" onclick="showScreen('mainMenu')">⬅ TRỜ VỀ</div>
   </div>
 
   <!-- TẠO PHÒNG -->
@@ -73,7 +84,6 @@ game_code = """
     <input type="text" id="customRoomCode" placeholder="Nhập Mã Phòng (VD: ROOM123)">
     <div id="createStatusText" style="color:#f7b731; font-size:13px;"></div>
     <div class="btn" style="border-color:#2ed573; color:#2ed573;" id="btnInitHost">🚀 KHỞI TẠO LOBBY</div>
-    <div class="btn" style="border-color:#ff4757; color:#ff4757;" onclick="showScreen('lobbyMenu')">⬅ TRỜ VỀ</div>
   </div>
 
   <!-- THAM GIA PHÒNG -->
@@ -82,7 +92,6 @@ game_code = """
     <input type="text" id="joinRoomCodeInput" placeholder="Nhập Mã Phòng Người Khác...">
     <div id="joinStatusText" style="color:#f7b731; font-size:13px;"></div>
     <div class="btn" style="border-color:#2ed573; color:#2ed573;" id="btnJoinTarget">🔑 VÀO PHÒNG</div>
-    <div class="btn" style="border-color:#ff4757; color:#ff4757;" onclick="showScreen('lobbyMenu')">⬅ TRỜ VỀ</div>
   </div>
 
   <!-- CẤU HÌNH TRANG BỊ -->
@@ -124,7 +133,6 @@ game_code = """
   </div>
 
   <!-- GAME CANVAS -->
-  <button id="backBtn" onclick="quitGame()">≡ MENU</button>
   <canvas id="gameCanvas"></canvas>
 
   <!-- OVERLAY KẾT THÚC -->
@@ -165,6 +173,14 @@ game_code = """
   function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
     document.getElementById(id).style.display = 'flex';
+    
+    // Hiển thị nút Top Right Back Btn ở tất cả màn hình trừ Màn Hình Chính
+    const topBtn = document.getElementById('topRightBackBtn');
+    if (id === 'mainMenu') {
+      topBtn.style.display = 'none';
+    } else {
+      topBtn.style.display = 'block';
+    }
   }
 
   function addClickEvent(id, fn) {
@@ -194,7 +210,8 @@ game_code = """
     roomCode = codeInput;
     
     document.getElementById("createStatusText").innerText = "Đang khởi tạo...";
-    if(peer) peer.destroy();
+    if(peer) { try { peer.destroy(); } catch(e){} }
+    
     peer = new Peer(roomCode);
 
     peer.on('open', (id) => {
@@ -220,7 +237,8 @@ game_code = """
     roomCode = codeInput;
 
     document.getElementById("joinStatusText").innerText = "Đang kết nối...";
-    if(peer) peer.destroy();
+    if(peer) { try { peer.destroy(); } catch(e){} }
+    
     peer = new Peer();
 
     peer.on('open', () => {
@@ -239,10 +257,17 @@ game_code = """
     conn.on('open', () => {
       document.getElementById("statusText").innerText = "Đã kết nối thành công!";
       showScreen('customScreen');
-      // Gửi ngay dữ liệu trang bị cho nhau
       conn.send({ type: 'INIT_PLAYER', data: myData });
     });
+    
     conn.on('data', (data) => handleNetworkData(data));
+    
+    conn.on('close', () => {
+      if (isRunning) {
+        alert("Đối thủ đã thoát trận đấu!");
+        quitGame();
+      }
+    });
   }
 
   function confirmCustom() {
@@ -269,7 +294,7 @@ game_code = """
     document.getElementById("endGameOverlay").style.display = 'none';
     
     canvas.style.display = 'block';
-    document.getElementById("backBtn").style.display = 'block';
+    document.getElementById("topRightBackBtn").style.display = 'block';
     document.getElementById("gameControls").style.display = 'flex';
 
     canvas.width = window.innerWidth * 0.95;
@@ -320,13 +345,16 @@ game_code = """
 
   function handleNetworkData(data) {
     if(!data) return;
+    
     if(data.type === 'INIT_PLAYER') {
-      pEnemy.data = data.data;
+      if(data.data) pEnemy.data = data.data;
     } else if(data.type === 'SYNC_POS') {
-      // Nhận vị trí thực tế của đối thủ và cập nhật lập tức
+      // Bảo vệ lượng máu không bị đè số 0 bất ngờ do mất gói tin
+      if(typeof data.hp === 'number' && data.hp > 0) {
+        pEnemy.hp = data.hp;
+      }
       pEnemy.x = data.x; 
       pEnemy.y = data.y; 
-      pEnemy.hp = data.hp; 
       pEnemy.atk = data.atk; 
       pEnemy.facing = data.facing;
       pEnemy.walkTimer = data.walkTimer;
@@ -384,10 +412,10 @@ game_code = """
 
   function quitGame() {
     isRunning = false;
-    if(conn) { conn.close(); conn = null; }
-    if(peer) { peer.destroy(); peer = null; }
+    if(conn) { try{ conn.close(); } catch(e){} conn = null; }
+    if(peer) { try{ peer.destroy(); } catch(e){} peer = null; }
+    
     canvas.style.display = 'none';
-    document.getElementById("backBtn").style.display = 'none';
     document.getElementById("gameControls").style.display = 'none';
     document.getElementById("endGameOverlay").style.display = 'none';
     showScreen('mainMenu');
@@ -490,7 +518,7 @@ game_code = """
       }
     }
 
-    // GỬI VỊ TRÍ LIÊN TỤC 2 CHIỀU (DÀNH CHO MULTIPLAYER)
+    // GỬI VỊ TRÍ 2 CHIỀU AN TOÀN
     if(gameMode === 'online' && conn && conn.open) {
       conn.send({ 
         type: 'SYNC_POS', 
@@ -506,14 +534,14 @@ game_code = """
     // DRAW SCENE
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Mặt đất Neon
+    // Mặt đất
     ctx.fillStyle = "#1f2833"; ctx.fillRect(0, ground + 20, canvas.width, 10);
     ctx.fillStyle = "#66fcf1"; ctx.fillRect(0, ground + 18, canvas.width, 2);
 
     // MÁU PLAYER
     let w = canvas.width * 0.35;
     ctx.fillStyle = "#1f2833"; ctx.fillRect(10, 10, w, 14); 
-    ctx.fillStyle = pSelf.data.color; ctx.fillRect(10, 10, w * (pSelf.hp / pSelf.maxHp), 14);
+    ctx.fillStyle = pSelf.data.color; ctx.fillRect(10, 10, w * (Math.max(0, pSelf.hp) / pSelf.maxHp), 14);
     ctx.strokeStyle = "#fff"; ctx.lineWidth = 1; ctx.strokeRect(10, 10, w, 14);
 
     // MÁU ENEMY
@@ -521,12 +549,12 @@ game_code = """
       let bossW = canvas.width * 0.6;
       let bossX = (canvas.width - bossW) / 2;
       ctx.fillStyle = "#1f2833"; ctx.fillRect(bossX, 32, bossW, 18);
-      ctx.fillStyle = "#ff0055"; ctx.fillRect(bossX, 32, bossW * (pEnemy.hp / pEnemy.maxHp), 18);
+      ctx.fillStyle = "#ff0055"; ctx.fillRect(bossX, 32, bossW * (Math.max(0, pEnemy.hp) / pEnemy.maxHp), 18);
       ctx.strokeStyle = "#ff4757"; ctx.lineWidth = 2; ctx.strokeRect(bossX, 32, bossW, 18);
       ctx.fillStyle = "#fff"; ctx.font = "bold 12px sans-serif"; ctx.fillText("🔥 BOSS KHỔNG LỒ (MÀN " + currentStage + ") 🔥", canvas.width/2 - 80, 26);
     } else {
       ctx.fillStyle = "#1f2833"; ctx.fillRect(canvas.width - 10 - w, 10, w, 14);
-      ctx.fillStyle = pEnemy.data.color; ctx.fillRect(canvas.width - 10 - w, 10, w * (pEnemy.hp / pEnemy.maxHp), 14);
+      ctx.fillStyle = pEnemy.data.color; ctx.fillRect(canvas.width - 10 - w, 10, w * (Math.max(0, pEnemy.hp) / pEnemy.maxHp), 14);
       ctx.strokeStyle = "#fff"; ctx.lineWidth = 1; ctx.strokeRect(canvas.width - 10 - w, 10, w, 14);
     }
 
