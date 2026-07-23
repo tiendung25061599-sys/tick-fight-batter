@@ -467,9 +467,9 @@ game_code = """
   function attack() {
     if(!pSelf || !isRunning) return;
     
-    // TÍNH TOÁN COOLDOWN TẤN CÔNG (0.5s cho tất cả trừ dao găm)
+    // TÍNH TOÁN COOLDOWN TẤN CÔNG (0.2s cho tất cả trừ dao găm)
     let now = Date.now();
-    let cooldown = (pSelf.data.weapon === 'dagger') ? 150 : 500; // 0.5 giây = 500ms
+    let cooldown = (pSelf.data.weapon === 'dagger') ? 150 : 200; // 0.2 giây = 200ms
     if (now - (pSelf.lastAtkTime || 0) < cooldown) return;
     pSelf.lastAtkTime = now;
 
@@ -564,7 +564,7 @@ game_code = """
       }
 
       let now = Date.now();
-      let enemyCooldown = (pEnemy.data.weapon === 'dagger') ? 200 : 600;
+      let enemyCooldown = (pEnemy.data.weapon === 'dagger') ? 150 : 200;
       let canEnemyAtk = (now - (pEnemy.lastAtkTime || 0) > enemyCooldown);
 
       let atkChance = 0.02 + (currentStage * 0.003);
