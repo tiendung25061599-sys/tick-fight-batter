@@ -127,7 +127,7 @@ game_code = """
         <option value="sword">⚔️ Kiếm Thần (Cân Bằng)</option>
         <option value="axe">🪓 Rìu Chiến (Sát Thương Lớn)</option>
         <option value="dagger">🗡️ Dao Độc (Tốc Đánh Nhanh)</option>
-        <option value="spear">🔱 Giáo Dài (Skill Đâm Xa - CD 5s)</option>
+        <option value="spear">🔱 Giáo Dài (Skill Đâm Xa - CD 2s)</option>
         <option value="staff">🪄 Trượng Ma Thuật (Cầu Lửa)</option>
         <option value="bow">🏹 Cung Thần (Bắn Nhanh)</option>
         <option value="laser">⚡ Súng Laser (Tia Xuyên)</option>
@@ -523,9 +523,8 @@ game_code = """
     p.x = Math.max(20, Math.min(canvas.width - 20, p.x + thrustDist));
     
     let other = (p === pSelf) ? pEnemy : pSelf;
-    // Kiểm tra khoảng cách chuẩn xác giữa 2 nhân vật (phạm vi lướt đâm trúng rộng)
     if(Math.abs(p.x - other.x) < 85) {
-      other.hp = Math.max(0, other.hp - 45); // Gây 45 sát thương lớn
+      other.hp = Math.max(0, other.hp - 45); 
       addParticles(other.x, other.y - 20, '#f1c40f', 22);
     }
     setTimeout(() => p.isDashing = false, 250);
@@ -543,7 +542,7 @@ game_code = """
     if(!pSelf || !isRunning) return;
     
     let now = Date.now();
-    let skillCooldown = (pSelf.data.weapon === 'spear') ? 5000 : 0; // Hồi chiêu 5 giây riêng cho giáo
+    let skillCooldown = (pSelf.data.weapon === 'spear') ? 2000 : 0; // Đã giảm hồi chiêu skill giáo xuống 2 giây
     if (now - (pSelf.lastSkillTime || 0) < skillCooldown) return;
     pSelf.lastSkillTime = now;
 
@@ -610,7 +609,7 @@ game_code = """
       }
 
       if (pEnemy.data.weapon === 'spear') {
-        let enemySkillCooldown = 5000;
+        let enemySkillCooldown = 2000;
         if (now - (pEnemy.lastSkillTime || 0) > enemySkillCooldown && Math.abs(pSelf.x - pEnemy.x) < 140) {
           pEnemy.lastSkillTime = now;
           triggerSkill(pEnemy);
