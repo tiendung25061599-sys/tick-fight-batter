@@ -364,14 +364,13 @@ game_code = """
       }
     }
 
-    // TĂNG MÁU PLAYER LÊN 400 HP
-    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 400, maxHp: 400, atk: false, data: myData, facing: 1, walkTimer: 0, scale: 1.0, isDashing: false };
+    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 400, maxHp: 400, atk: false, data: myData, facing: 1, walkTimer: 0, scale: 1.0, isDashing: false, lastAtkTime: 0 };
     
     pEnemy = { 
       x: enemyX, y: canvas.height - 25, vy: 0, isGrounded: true, 
       hp: enemyHp, maxHp: enemyHp, atk: false, 
       data: (gameMode === 'story') ? { color: enemyColor, weapon: enemyWeapon, hat: isBossStage ? "knight" : "none", cape: isBossStage ? "black" : "none" } : enemyData, 
-      facing: -1, walkTimer: 0, scale: enemyScale, isDashing: false 
+      facing: -1, walkTimer: 0, scale: enemyScale, isDashing: false, lastAtkTime: 0 
     };
     
     bullets = []; particles = [];
@@ -467,6 +466,13 @@ game_code = """
 
   function attack() {
     if(!pSelf || !isRunning) return;
+    
+    // TÍNH TOÁN COOLDOWN TẤN CÔNG (0.5s cho tất cả trừ dao găm)
+    let now = Date.now();
+    let cooldown = (pSelf.data.weapon === 'dagger') ? 150 : 500; // 0.5 giây = 500ms
+    if (now - (pSelf.lastAtkTime || 0) < cooldown) return;
+    pSelf.lastAtkTime = now;
+
     pSelf.atk = true; 
     let reach = 40;
     let dmg = 12;
@@ -557,10 +563,15 @@ game_code = """
         pEnemy.walkTimer += 0.2;
       }
 
-      let atkChance = 0.015 + (currentStage * 0.003);
+      let now = Date.now();
+      let enemyCooldown = (pEnemy.data.weapon === 'dagger') ? 200 : 600;
+      let canEnemyAtk = (now - (pEnemy.lastAtkTime || 0) > enemyCooldown);
+
+      let atkChance = 0.02 + (currentStage * 0.003);
       if (Math.random() < 0.008 && pEnemy.isGrounded) pEnemy.vy = -11;
       
-      if (Math.random() < atkChance) { 
+      if (Math.random() < atkChance && canEnemyAtk) { 
+        pEnemy.lastAtkTime = now;
         pEnemy.atk = true; 
         setTimeout(() => pEnemy.atk = false, 120); 
         if(['staff', 'bow', 'laser'].includes(pEnemy.data.weapon)) {
@@ -688,16 +699,12 @@ game_code = """
     } else if(p.data.weapon === 'dagger') {
       ctx.strokeStyle = '#2ed573'; ctx.lineWidth = 2 * s; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 14 * s, -10 * s); ctx.stroke();
     } else if(p.data.weapon === 'spear') {
-      // MODEL GIÁO DÀI MỚI (CHI TIẾT & SẮC NÉT HƠN)
-      // Cán giáo
       ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 3.5 * s; 
       ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 48 * s, -38 * s); ctx.stroke();
       
-      // Vòng bảo vệ tay cầm (Tsuba/Guard)
       ctx.fillStyle = '#f1c40f'; 
       ctx.fillRect(f * 10 * s - 2 * s, -10 * s, 4 * s, 6 * s);
 
-      // Lưỡi giáo chính (Màu bạc sắc bén)
       ctx.fillStyle = '#ecf0f1'; 
       ctx.beginPath(); 
       ctx.moveTo(f * 42 * s, -32 * s); 
@@ -705,7 +712,6 @@ game_code = """
       ctx.lineTo(f * 48 * s, -34 * s); 
       ctx.fill();
 
-      // Viền phản quang lưỡi giáo
       ctx.fillStyle = '#3498db'; 
       ctx.beginPath(); 
       ctx.moveTo(f * 48 * s, -40 * s); 
