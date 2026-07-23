@@ -128,9 +128,9 @@ game_code = """
         <option value="axe">🪓 Rìu Chiến (Skill: Bay Nhảy Đập)</option>
         <option value="dagger">🗡️ Dao Độc (Skill: Mưa Dao Găm)</option>
         <option value="spear">🔱 Giáo Dài (Skill: Lướt Đâm Xuyên)</option>
-        <option value="staff">🪄 Trượng Ma Thuật (Skill: Quả Cầu Lửa)</option>
-        <option value="bow">🏹 Cung Thần (Skill: Bắn Mũi Tên Đôi)</option>
-        <option value="laser">⚡ Súng Laser (Skill: Tia Xuyên Phá)</option>
+        <option value="staff">🪄 Trượng Ma Thuật (Skill: Bắn Cầu Lửa 0.2s)</option>
+        <option value="bow">🏹 Cung Thần (Skill: Bắn Mũi Tên Đôi 0.2s)</option>
+        <option value="laser">⚡ Súng Laser (Skill: Tia Xuyên Phá 0.2s)</option>
       </select>
     </div>
     <div class="select-box">
@@ -517,14 +517,12 @@ game_code = """
     }
   }
 
-  // --- CÁC HÀM KỸ NĂNG RIÊNG CHO TỪNG VŨ KHÍ ---
   function executeWeaponSkill(p) {
     let other = (p === pSelf) ? pEnemy : pSelf;
     let wp = p.data.weapon;
     let isStoryEnemy = (p === pEnemy && gameMode === 'story');
 
     if (wp === 'sword') {
-      // Kiếm Thần: Chém Lốc Xoáy diện rộng
       p.isSpecialAction = true;
       addParticles(p.x, p.y - 20, '#66fcf1', 18);
       let dmg = isStoryEnemy ? (35 + currentStage * 4) : 25;
@@ -535,7 +533,6 @@ game_code = """
       setTimeout(() => p.isSpecialAction = false, 300);
 
     } else if (wp === 'axe') {
-      // Rìu Chiến: Bay lên đập đất cực mạnh
       p.isSpecialAction = true;
       p.vy = -14; p.isGrounded = false;
       addParticles(p.x, p.y - 20, '#ffa502', 22);
@@ -558,7 +555,6 @@ game_code = """
       }, 280);
 
     } else if (wp === 'dagger') {
-      // Dao Độc: Mưa dao găm phóng nhanh liên tục
       p.isSpecialAction = true;
       addParticles(p.x, p.y - 20, '#2ed573', 15);
       let daggerDmg = isStoryEnemy ? (12 + currentStage * 2) : 10;
@@ -570,7 +566,6 @@ game_code = """
       setTimeout(() => p.isSpecialAction = false, 250);
 
     } else if (wp === 'spear') {
-      // Giáo Dài: Lướt đâm xuyên qua đối thủ
       p.isSpecialAction = true;
       addParticles(p.x, p.y - 20, '#f1c40f', 20);
       let dashDist = p.facing * 150;
@@ -583,10 +578,9 @@ game_code = """
       setTimeout(() => p.isSpecialAction = false, 250);
 
     } else if (['staff', 'bow', 'laser'].includes(wp)) {
-      // Súng/Cung/Trượng: Bắn skill tầm xa đặc biệt
       createBullet(p, other, wp);
       if(wp === 'bow') {
-        setTimeout(() => createBullet(p, other, wp), 100); // Bắn 2 phát cho Cung
+        setTimeout(() => createBullet(p, other, wp), 80);
       }
     }
   }
@@ -598,6 +592,7 @@ game_code = """
     let skillCooldown = 2500;
     if (pSelf.data.weapon === 'axe') skillCooldown = 4500;
     else if (pSelf.data.weapon === 'spear') skillCooldown = 3000;
+    else if (['staff', 'bow', 'laser'].includes(pSelf.data.weapon)) skillCooldown = 200; // Hồi chiêu 0.2s cho Trượng, Cung, Laser
 
     if (now - (pSelf.lastSkillTime || 0) < skillCooldown) return;
     pSelf.lastSkillTime = now;
@@ -666,8 +661,8 @@ game_code = """
         }
       }
 
-      let enemySkillCooldown = 2800;
-      if (now - (pEnemy.lastSkillTime || 0) > enemySkillCooldown && Math.abs(pSelf.x - pEnemy.x) < 180) {
+      let enemySkillCooldown = ['staff', 'bow', 'laser'].includes(pEnemy.data.weapon) ? 200 : 2800;
+      if (now - (pEnemy.lastSkillTime || 0) > enemySkillCooldown) {
         pEnemy.lastSkillTime = now;
         executeWeaponSkill(pEnemy);
       }
