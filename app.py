@@ -345,26 +345,27 @@ game_code = """
 
     isBossStage = (gameMode === 'story' && currentStage % 10 === 0);
 
-    let enemyHp = 200;
+    let enemyHp = 300;
     let enemyScale = 1.0;
     let enemyColor = "#ff4757";
     let enemyWeapon = "staff";
 
     if(gameMode === 'story') {
       if(isBossStage) {
-        enemyHp = 450 + (currentStage * 20);
+        enemyHp = 900 + (currentStage * 40);
         enemyScale = 1.8;
         enemyColor = "#ff0055";
         enemyWeapon = "spear";
       } else {
-        enemyHp = 150 + (currentStage * 15);
+        enemyHp = 300 + (currentStage * 30);
         enemyScale = 1.0 + (currentStage * 0.02);
         let wpList = ["sword", "axe", "dagger", "spear", "staff", "bow", "laser"];
         enemyWeapon = wpList[currentStage % wpList.length];
       }
     }
 
-    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 200, maxHp: 200, atk: false, data: myData, facing: 1, walkTimer: 0, scale: 1.0, isDashing: false };
+    // TĂNG MÁU PLAYER LÊN 400 HP
+    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 400, maxHp: 400, atk: false, data: myData, facing: 1, walkTimer: 0, scale: 1.0, isDashing: false };
     
     pEnemy = { 
       x: enemyX, y: canvas.height - 25, vy: 0, isGrounded: true, 
@@ -473,7 +474,7 @@ game_code = """
     if(pSelf.data.weapon === 'sword') { reach = 55; dmg = 14; }
     else if(pSelf.data.weapon === 'axe') { reach = 65; dmg = 25; }
     else if(pSelf.data.weapon === 'dagger') { reach = 35; dmg = 9; }
-    else if(pSelf.data.weapon === 'spear') { reach = 75; dmg = 18; }
+    else if(pSelf.data.weapon === 'spear') { reach = 80; dmg = 20; }
 
     if(Math.abs(pSelf.x - pEnemy.x) < reach * pSelf.scale) {
       pEnemy.hp = Math.max(0, pEnemy.hp - dmg);
@@ -502,7 +503,6 @@ game_code = """
     let dashDist = p.facing * 75;
     p.x = Math.max(20, Math.min(canvas.width - 20, p.x + dashDist));
     
-    // Gây sát thương lướt qua nếu trúng đối thủ
     let other = (p === pSelf) ? pEnemy : pSelf;
     if(Math.abs(p.x - other.x) < 40) {
       other.hp = Math.max(0, other.hp - 15);
@@ -514,10 +514,8 @@ game_code = """
   function useSkill() {
     if(!pSelf || !isRunning) return;
     
-    // Skill mặc định cho mọi vũ khí: Lướt nhanh (Dash)
     triggerDash(pSelf);
 
-    // Nếu dùng vũ khí tầm xa thì bắn thêm đạn
     if(['staff', 'bow', 'laser'].includes(pSelf.data.weapon)) {
       createBullet(pSelf, pEnemy, pSelf.data.weapon);
       if(gameMode === 'online' && conn && conn.open) conn.send({ type: 'SHOOT', weapon: pSelf.data.weapon });
@@ -690,8 +688,30 @@ game_code = """
     } else if(p.data.weapon === 'dagger') {
       ctx.strokeStyle = '#2ed573'; ctx.lineWidth = 2 * s; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 14 * s, -10 * s); ctx.stroke();
     } else if(p.data.weapon === 'spear') {
-      ctx.strokeStyle = '#ffa502'; ctx.lineWidth = 3 * s; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 38 * s, -28 * s); ctx.stroke();
-      ctx.fillStyle = '#ff4757'; ctx.beginPath(); ctx.moveTo(f * 38 * s, -28 * s); ctx.lineTo(f * 32 * s, -22 * s); ctx.lineTo(f * 30 * s, -32 * s); ctx.fill();
+      // MODEL GIÁO DÀI MỚI (CHI TIẾT & SẮC NÉT HƠN)
+      // Cán giáo
+      ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 3.5 * s; 
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 48 * s, -38 * s); ctx.stroke();
+      
+      // Vòng bảo vệ tay cầm (Tsuba/Guard)
+      ctx.fillStyle = '#f1c40f'; 
+      ctx.fillRect(f * 10 * s - 2 * s, -10 * s, 4 * s, 6 * s);
+
+      // Lưỡi giáo chính (Màu bạc sắc bén)
+      ctx.fillStyle = '#ecf0f1'; 
+      ctx.beginPath(); 
+      ctx.moveTo(f * 42 * s, -32 * s); 
+      ctx.lineTo(f * 56 * s, -48 * s); 
+      ctx.lineTo(f * 48 * s, -34 * s); 
+      ctx.fill();
+
+      // Viền phản quang lưỡi giáo
+      ctx.fillStyle = '#3498db'; 
+      ctx.beginPath(); 
+      ctx.moveTo(f * 48 * s, -40 * s); 
+      ctx.lineTo(f * 56 * s, -48 * s); 
+      ctx.lineTo(f * 46 * s, -36 * s); 
+      ctx.fill();
     } else if(p.data.weapon === 'staff') {
       ctx.strokeStyle = '#78e08f'; ctx.lineWidth = 3 * s; ctx.beginPath(); ctx.moveTo(0, 5 * s); ctx.lineTo(f * 18 * s, -22 * s); ctx.stroke();
       ctx.fillStyle = '#fffa65'; ctx.beginPath(); ctx.arc(f * 18 * s, -22 * s, 6 * s, 0, Math.PI*2); ctx.fill();
