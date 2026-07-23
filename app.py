@@ -355,20 +355,20 @@ game_code = """
 
     isBossStage = (gameMode === 'story' && currentStage % 10 === 0);
 
-    let enemyHp = 350;
+    let enemyHp = 500;
     let enemyScale = 1.0;
     let enemyColor = "#ff4757";
     let enemyWeapon = "sword";
 
     if(gameMode === 'story') {
       if(isBossStage) {
-        enemyHp = 1000 + (currentStage * 50);
-        enemyScale = 1.9;
+        enemyHp = 1800 + (currentStage * 120);
+        enemyScale = 2.0;
         enemyColor = "#ff0055";
         enemyWeapon = "axe";
       } else {
-        enemyHp = 350 + (currentStage * 35);
-        enemyScale = 1.0 + (currentStage * 0.02);
+        enemyHp = 450 + (currentStage * 65);
+        enemyScale = 1.0 + (currentStage * 0.03);
         let wpList = ["sword", "axe", "dagger", "spear", "staff", "bow", "laser"];
         enemyWeapon = wpList[currentStage % wpList.length];
       }
@@ -505,24 +505,27 @@ game_code = """
     let startX = caster.x + dir * 20 * caster.scale;
     let startY = caster.y - 24 * caster.scale;
 
+    let dmgBonus = (caster === pEnemy && gameMode === 'story') ? (10 + currentStage * 2) : 0;
+
     if (weapon === 'staff') {
-      bullets.push({ x: startX, y: startY, vx: dir * 8.5, color: '#fffa65', radius: 9, dmg: 20, type: 'orb' });
+      bullets.push({ x: startX, y: startY, vx: dir * 9.5, color: '#fffa65', radius: 9, dmg: 22 + dmgBonus, type: 'orb', shooter: caster });
     } else if (weapon === 'bow') {
-      bullets.push({ x: startX, y: startY, vx: dir * 13, color: '#c7ecee', radius: 3.5, dmg: 14, type: 'arrow' });
+      bullets.push({ x: startX, y: startY, vx: dir * 14, color: '#c7ecee', radius: 3.5, dmg: 16 + dmgBonus, type: 'arrow', shooter: caster });
     } else if (weapon === 'laser') {
-      bullets.push({ x: startX, y: startY, vx: dir * 19, color: '#66fcf1', radius: 2.5, dmg: 18, type: 'laser' });
+      bullets.push({ x: startX, y: startY, vx: dir * 20, color: '#66fcf1', radius: 2.5, dmg: 20 + dmgBonus, type: 'laser', shooter: caster });
     }
   }
 
   function triggerDash(p) {
     p.isDashing = true;
     addParticles(p.x, p.y - 20, p.data.color, 14);
-    let dashDist = p.facing * 85;
+    let dashDist = p.facing * 95;
     p.x = Math.max(20, Math.min(canvas.width - 20, p.x + dashDist));
     
     let other = (p === pSelf) ? pEnemy : pSelf;
-    if(Math.abs(p.x - other.x) < 50) {
-      other.hp = Math.max(0, other.hp - 18);
+    let dashDmg = (p === pEnemy && gameMode === 'story') ? (25 + currentStage * 3) : 18;
+    if(Math.abs(p.x - other.x) < 55) {
+      other.hp = Math.max(0, other.hp - dashDmg);
       addParticles(other.x, other.y - 20, '#ff4757', 16);
     }
     setTimeout(() => p.isDashing = false, 200);
@@ -531,12 +534,13 @@ game_code = """
   function triggerSpearThrust(p) {
     p.isDashing = true;
     addParticles(p.x, p.y - 20, '#f1c40f', 20);
-    let thrustDist = p.facing * 140; 
+    let thrustDist = p.facing * 150; 
     p.x = Math.max(20, Math.min(canvas.width - 20, p.x + thrustDist));
     
     let other = (p === pSelf) ? pEnemy : pSelf;
-    if(Math.abs(p.x - other.x) < 90) {
-      other.hp = Math.max(0, other.hp - 50); 
+    let thrustDmg = (p === pEnemy && gameMode === 'story') ? (60 + currentStage * 6) : 50;
+    if(Math.abs(p.x - other.x) < 100) {
+      other.hp = Math.max(0, other.hp - thrustDmg); 
       addParticles(other.x, other.y - 20, '#f1c40f', 26);
     }
     setTimeout(() => p.isDashing = false, 250);
@@ -544,12 +548,12 @@ game_code = """
 
   function triggerAxeSpinSkill(p) {
     p.isAxeSpinning = true;
-    p.vy = -13; 
+    p.vy = -14; 
     p.isGrounded = false;
     addParticles(p.x, p.y - 20, '#ffa502', 22);
 
     setTimeout(() => {
-      p.vy = 17; 
+      p.vy = 18; 
       let checkSlam = setInterval(() => {
         let ground = canvas.height - 25;
         if(p.y >= ground) {
@@ -560,8 +564,9 @@ game_code = """
           
           addParticles(p.x, p.y, '#ff4757', 30);
           let other = (p === pSelf) ? pEnemy : pSelf;
-          if(Math.abs(p.x - other.x) < 100) {
-            other.hp = Math.max(0, other.hp - 60);
+          let slamDmg = (p === pEnemy && gameMode === 'story') ? (75 + currentStage * 8) : 60;
+          if(Math.abs(p.x - other.x) < 110) {
+            other.hp = Math.max(0, other.hp - slamDmg);
             addParticles(other.x, other.y - 20, '#ff4757', 24);
           }
         }
@@ -628,42 +633,49 @@ game_code = """
       if (pEnemy.y >= ground) { pEnemy.y = ground; pEnemy.vy = 0; pEnemy.isGrounded = true; }
       
       pEnemy.facing = pSelf.x < pEnemy.x ? -1 : 1;
-      let speed = 1.6 + (currentStage * 0.15);
-      if(isBossStage) speed = 2.4;
+      let speed = 2.3 + (currentStage * 0.18);
+      if(isBossStage) speed = 3.2;
 
       if (!pEnemy.isAxeSpinning && Math.abs(pSelf.x - pEnemy.x) > 40 * pEnemy.scale) {
         pEnemy.x += (pSelf.x < pEnemy.x) ? -speed : speed;
-        pEnemy.walkTimer += 0.25;
+        pEnemy.walkTimer += 0.3;
       }
 
       let now = Date.now();
-      let enemyCooldown = (pEnemy.data.weapon === 'dagger') ? 140 : 190;
+      let enemyCooldown = (pEnemy.data.weapon === 'dagger') ? 100 : 150;
       let canEnemyAtk = (now - (pEnemy.lastAtkTime || 0) > enemyCooldown);
 
-      let atkChance = 0.025 + (currentStage * 0.0035);
-      if (Math.random() < 0.009 && pEnemy.isGrounded) pEnemy.vy = -12;
+      let atkChance = 0.045 + (currentStage * 0.005);
+      if (Math.random() < 0.015 && pEnemy.isGrounded) pEnemy.vy = -13;
       
       if (Math.random() < atkChance && canEnemyAtk) { 
         pEnemy.lastAtkTime = now;
         pEnemy.atk = true; 
-        setTimeout(() => pEnemy.atk = false, 120); 
+        setTimeout(() => pEnemy.atk = false, 100); 
         if(['staff', 'bow', 'laser'].includes(pEnemy.data.weapon)) {
           createBullet(pEnemy, pSelf, pEnemy.data.weapon); 
-        } else if(Math.abs(pSelf.x - pEnemy.x) < 60 * pEnemy.scale) {
-          pSelf.hp = Math.max(0, pSelf.hp - (10 + currentStage * 1.5));
-          addParticles(pSelf.x, pSelf.y - 20, '#ff4757', 8);
+        } else if(Math.abs(pSelf.x - pEnemy.x) < 70 * pEnemy.scale) {
+          let meleeDmg = 16 + (currentStage * 2.5);
+          pSelf.hp = Math.max(0, pSelf.hp - meleeDmg);
+          addParticles(pSelf.x, pSelf.y - 20, '#ff4757', 10);
         }
       }
 
       if (pEnemy.data.weapon === 'spear') {
-        let enemySkillCooldown = 2000;
-        if (now - (pEnemy.lastSkillTime || 0) > enemySkillCooldown && Math.abs(pSelf.x - pEnemy.x) < 150) {
+        let enemySkillCooldown = 1500;
+        if (now - (pEnemy.lastSkillTime || 0) > enemySkillCooldown && Math.abs(pSelf.x - pEnemy.x) < 180) {
           pEnemy.lastSkillTime = now;
           triggerSkill(pEnemy);
         }
       } else if (pEnemy.data.weapon === 'axe') {
-        let enemySkillCooldown = 5000;
-        if (now - (pEnemy.lastSkillTime || 0) > enemySkillCooldown && Math.abs(pSelf.x - pEnemy.x) < 170) {
+        let enemySkillCooldown = 3500;
+        if (now - (pEnemy.lastSkillTime || 0) > enemySkillCooldown && Math.abs(pSelf.x - pEnemy.x) < 200) {
+          pEnemy.lastSkillTime = now;
+          triggerSkill(pEnemy);
+        }
+      } else {
+        let enemySkillCooldown = 2500;
+        if (now - (pEnemy.lastSkillTime || 0) > enemySkillCooldown && Math.abs(pSelf.x - pEnemy.x) < 140) {
           pEnemy.lastSkillTime = now;
           triggerSkill(pEnemy);
         }
@@ -743,7 +755,7 @@ game_code = """
       }
       ctx.shadowBlur = 0;
 
-      let target = (b.vx > 0 && (isHost || gameMode === 'story')) ? pEnemy : pSelf;
+      let target = (b.shooter === pEnemy) ? pSelf : pEnemy;
       if (Math.abs(b.x - target.x) < 24 * target.scale && Math.abs(b.y - (target.y - 20 * target.scale)) < 32 * target.scale) {
         target.hp = Math.max(0, target.hp - b.dmg);
         addParticles(b.x, b.y, b.color, 12);
@@ -804,30 +816,26 @@ game_code = """
       ctx.fillStyle = '#8854d0'; ctx.beginPath(); ctx.moveTo(x - 13 * s, y - 43 * s); ctx.lineTo(x, y - 65 * s); ctx.lineTo(x + 13 * s, y - 43 * s); ctx.fill();
     }
 
-    // NÂNG CẤP MÔ HÌNH VŨ KHÍ CHI TIẾT & SANG TRỌNG
     ctx.save(); ctx.translate(handX, handY);
     
     if(p.data.weapon === 'sword') {
-      // Kiếm Thần: Lưỡi sáng bóng năng lượng xanh cyan + chuôi vàng
       ctx.shadowColor = '#66fcf1'; ctx.shadowBlur = 12;
       ctx.strokeStyle = '#fff'; ctx.lineWidth = 3.5 * s; 
       ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 30 * s, -22 * s); ctx.stroke();
-      ctx.fillStyle = '#f1c40f'; ctx.fillRect(f * 2 * s, -3 * s, 6 * s, 3 * s); // Chuôi kiếm
-      ctx.fillStyle = '#66fcf1'; ctx.fillRect(f * 12 * s, -10 * s, 4 * s, 4 * s); // Hạt năng lượng
+      ctx.fillStyle = '#f1c40f'; ctx.fillRect(f * 2 * s, -3 * s, 6 * s, 3 * s);
+      ctx.fillStyle = '#66fcf1'; ctx.fillRect(f * 12 * s, -10 * s, 4 * s, 4 * s);
       ctx.shadowBlur = 0;
       
     } else if(p.data.weapon === 'axe') {
-      // Rìu Chiến: Cán gỗ chắc chắn kết hợp lưỡi rìu thép đỏ rực chiến tranh
       ctx.strokeStyle = '#576574'; ctx.lineWidth = 4.5 * s; 
-      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 24 * s, -26 * s); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 22 * s, -26 * s); ctx.stroke();
       ctx.fillStyle = '#ff4757'; ctx.shadowColor = '#ff4757'; ctx.shadowBlur = 12;
       ctx.beginPath(); 
-      ctx.moveTo(f * 18 * s, -32 * s); ctx.lineTo(f * 28 * s, -36 * s); 
-      ctx.lineTo(f * 26 * s, -20 * s); ctx.lineTo(f * 16 * s, -22 * s); ctx.fill();
+      ctx.moveTo(f * 14 * s, -34 * s); ctx.lineTo(f * 26 * s, -28 * s); 
+      ctx.lineTo(f * 22 * s, -18 * s); ctx.lineTo(f * 12 * s, -22 * s); ctx.fill();
       ctx.shadowBlur = 0;
       
     } else if(p.data.weapon === 'dagger') {
-      // Dao Độc: Kiểu dáng lưỡi liềm nhỏ sắc bén màu lục phát sáng độc dược
       ctx.shadowColor = '#2ed573'; ctx.shadowBlur = 10;
       ctx.strokeStyle = '#2ed573'; ctx.lineWidth = 3 * s; 
       ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 18 * s, -14 * s); ctx.stroke();
@@ -835,17 +843,15 @@ game_code = """
       ctx.shadowBlur = 0;
       
     } else if(p.data.weapon === 'spear') {
-      // Giáo Dài: Cán dài, thân bọc đai vàng và ngọn giáo 3 tầng kim loại rực rỡ
       ctx.strokeStyle = '#744210'; ctx.lineWidth = 4 * s; 
       ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 70 * s, 0); ctx.stroke();
-      ctx.fillStyle = '#f1c40f'; ctx.fillRect(f * 16 * s, -4 * s, 6 * s, 8 * s); // Đai vàng
+      ctx.fillStyle = '#f1c40f'; ctx.fillRect(f * 16 * s, -4 * s, 6 * s, 8 * s);
       ctx.fillStyle = '#ecf0f1'; ctx.shadowColor = '#3498db'; ctx.shadowBlur = 10;
       ctx.beginPath(); ctx.moveTo(f * 56 * s, -8 * s); ctx.lineTo(f * 80 * s, 0); ctx.lineTo(f * 56 * s, 8 * s); ctx.fill();
-      ctx.fillStyle = '#e74c3c'; ctx.fillRect(f * 62 * s, -2 * s, 6 * s, 4 * s); // Tâm ngọc đỏ
+      ctx.fillStyle = '#e74c3c'; ctx.fillRect(f * 62 * s, -2 * s, 6 * s, 4 * s);
       ctx.shadowBlur = 0;
       
     } else if(p.data.weapon === 'staff') {
-      // Trượng Ma Thuật: Gậy pháp sư uốn lượn kèm cầu năng lượng cầu vồng xoáy
       ctx.strokeStyle = '#10ac84'; ctx.lineWidth = 4 * s; 
       ctx.beginPath(); ctx.moveTo(0, 6 * s); ctx.lineTo(f * 22 * s, -26 * s); ctx.stroke();
       ctx.fillStyle = '#fffa65'; ctx.shadowColor = '#fffa65'; ctx.shadowBlur = 18;
@@ -854,7 +860,6 @@ game_code = """
       ctx.shadowBlur = 0;
       
     } else if(p.data.weapon === 'bow') {
-      // Cung Thần: Cung uốn cong mạ vàng đi kèm dây cung năng lượng căng tràn
       ctx.strokeStyle = '#f7b731'; ctx.lineWidth = 3 * s; 
       ctx.shadowColor = '#f7b731'; ctx.shadowBlur = 10;
       ctx.beginPath(); ctx.arc(f * 8 * s, -7 * s, 17 * s, -Math.PI/1.8, Math.PI/1.8); ctx.stroke();
@@ -863,7 +868,6 @@ game_code = """
       ctx.shadowBlur = 0;
       
     } else if(p.data.weapon === 'laser') {
-      // Súng Laser: Khung súng bọc thép công nghệ cao phát tia chớp xanh ngắt
       ctx.fillStyle = '#222f3e'; ctx.fillRect(0, -5 * s, f * 24 * s, 10 * s);
       ctx.fillStyle = '#66fcf1'; ctx.shadowColor = '#66fcf1'; ctx.shadowBlur = 15;
       ctx.fillRect(f * 6 * s, -2.5 * s, f * 18 * s, 5 * s);
