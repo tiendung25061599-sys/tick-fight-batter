@@ -3,6 +3,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Stick Man Batter Fight", layout="wide")
 
+# (The complete and properly closed HTML/JavaScript game code)
 game_code = """
 <!DOCTYPE html>
 <html>
@@ -116,14 +117,6 @@ game_code = """
     <div class="btn" style="border-color:#ff4757; color:#ff4757; margin-top: 15px;" id="btnBackFromLobby">⬅ QUAY LẠI</div>
   </div>
 
-  <!-- CHỌN CHẾ ĐỘ CHƠI (MODE SELECTOR CHO CẢ ONLINE & STORY) -->
-  <div id="modeSelectScreen" class="screen" style="display:none;">
-    <h1>CHỌN CHẾ ĐỘ TRẬN ĐẤU</h1>
-    <div class="btn" id="btnClassicMode" style="border-color:#66fcf1; color:#66fcf1;">⚔️ 1. CHẾ ĐỘ CỔ ĐIỂN (PVP / 1v1)</div>
-    <div class="btn" id="btnCampaignMode" style="border-color:#2ed573; color:#2ed573;">🧟 2. CHẾ ĐỘ CHIẾN DỊCH (ĐÁNH ZOMBIE)</div>
-    <div class="btn" style="border-color:#ff4757; color:#ff4757; margin-top: 15px;" id="btnBackFromMode">⬅ QUAY LẠI</div>
-  </div>
-
   <!-- TẠO PHÒNG -->
   <div id="createRoomScreen" class="screen" style="display:none;">
     <h1>TẠO PHÒNG MỚI</h1>
@@ -180,7 +173,7 @@ game_code = """
       </select>
     </div>
     <div class="btn" id="btnStartGame" style="background: linear-gradient(135deg, #2ed573 0%, #10ac84 100%); border-color:#fff; color:#fff; text-shadow: 0 0 10px rgba(0,0,0,0.5);">BẮT ĐẦU VÀO TRẬN ➔</div>
-    <div class="btn" style="border-color:#ff4757; color:#ff4757;" id="btnBackToPrev">⬅ QUAY LẠI</div>
+    <div class="btn" style="border-color:#ff4757; color:#ff4757;" onclick="showScreen('mainMenu')">⬅ QUAY LẠI</div>
   </div>
 
   <!-- GAME CANVAS -->
@@ -212,7 +205,7 @@ game_code = """
   const ctx = canvas.getContext("2d");
   
   let peer = null, conn = null;
-  let isHost = false, gameMode = 'story', subGameMode = 'classic'; // subGameMode: 'classic' hoặc 'campaign'
+  let isHost = false, gameMode = 'story';
   let roomCode = "";
   let currentStage = 1;
 
@@ -220,7 +213,6 @@ game_code = """
   let enemyData = { color: "#ff4757", weapon: "staff", hat: "wizard", cape: "black" };
 
   let myVoteRematch = false, enemyVoteRematch = false;
-  let enemies = []; // Danh sách zombie trong chế độ chiến dịch
 
   function updateSkillIcon() {
     let wp = document.getElementById("weaponSelect").value;
@@ -258,7 +250,7 @@ game_code = """
     document.getElementById(id).style.display = 'flex';
     
     const topBtn = document.getElementById('topRightBackBtn');
-    if (id === 'mainMenu' || id === 'settingsScreen' || id === 'lobbyMenu' || id === 'createRoomScreen' || id === 'joinRoomScreen' || id === 'customScreen' || id === 'modeSelectScreen') {
+    if (id === 'mainMenu' || id === 'settingsScreen' || id === 'lobbyMenu' || id === 'createRoomScreen' || id === 'joinRoomScreen' || id === 'customScreen') {
       topBtn.style.display = 'none';
     } else {
       topBtn.style.display = 'block';
@@ -272,46 +264,17 @@ game_code = """
     el.addEventListener('touchend', (e) => { e.preventDefault(); fn(); });
   }
 
-  // Story Mode trực tiếp mở menu chọn chế độ phụ
   addClickEvent('btnStory', () => { 
     gameMode = 'story'; 
-    showScreen('modeSelectScreen');
-  });
-  // Multiplayer chọn phòng xong hoặc chọn chế độ trước
-  addClickEvent('btnMulti', () => { 
-    gameMode = 'online'; 
-    showScreen('lobbyMenu'); 
-    updateSkillIcon(); 
-  });
-  
-  addClickEvent('btnClassicMode', () => {
-    subGameMode = 'classic';
     currentStage = 1;
-    document.getElementById('customTitle').innerText = (gameMode === 'story') ? "STORY - CỔ ĐIỂN" : "MULTIPLAYER - PVP";
-    showScreen('customScreen');
+    document.getElementById('customTitle').innerText = "STORY MODE - MÀN " + currentStage;
+    showScreen('customScreen'); 
     updateSkillIcon();
   });
-
-  addClickEvent('btnCampaignMode', () => {
-    subGameMode = 'campaign';
-    currentStage = 1;
-    document.getElementById('customTitle').innerText = (gameMode === 'story') ? "CHIẾN DỊCH ZOMBIE - MÀN 1" : "MULTIPLAYER CO-OP - CHIẾN DỊCH";
-    showScreen('customScreen');
-    updateSkillIcon();
-  });
-
+  addClickEvent('btnMulti', () => { gameMode = 'online'; showScreen('lobbyMenu'); updateSkillIcon(); });
   addClickEvent('btnSettings', () => showScreen('settingsScreen'));
   addClickEvent('btnBackToMenu', () => showScreen('mainMenu'));
   addClickEvent('btnBackFromLobby', () => showScreen('mainMenu'));
-  addClickEvent('btnBackFromMode', () => {
-    if(gameMode === 'story') showScreen('mainMenu');
-    else showScreen('lobbyMenu');
-  });
-  addClickEvent('btnBackToPrev', () => {
-    if(gameMode === 'story') showScreen('modeSelectScreen');
-    else showScreen('lobbyMenu');
-  });
-
   addClickEvent('btnCreateLobby', () => showScreen('createRoomScreen'));
   addClickEvent('btnJoinLobby', () => showScreen('joinRoomScreen'));
   addClickEvent('btnInitHost', initHostRoom);
@@ -332,7 +295,7 @@ game_code = """
     peer.on('open', (id) => {
       isHost = true;
       document.getElementById("statusText").innerText = "Mã phòng: " + roomCode + " (Chờ đối thủ...)";
-      showScreen('modeSelectScreen'); // Host chọn chế độ sau khi tạo phòng thành công
+      showScreen('customScreen');
     });
 
     peer.on('connection', (c) => {
@@ -371,7 +334,7 @@ game_code = """
   function setupConnection() {
     conn.on('open', () => {
       document.getElementById("statusText").innerText = "Đã kết nối thành công!";
-      showScreen('modeSelectScreen'); // Client vào phòng thành công cũng chọn chế độ (hoặc đồng bộ)
+      showScreen('customScreen');
       conn.send({ type: 'INIT_PLAYER', data: myData });
     });
     
@@ -392,7 +355,7 @@ game_code = """
     myData.cape = document.getElementById("capeSelect").value;
     
     if(gameMode === 'online' && conn && conn.open) {
-      conn.send({ type: 'INIT_PLAYER', data: myData, subGameMode: subGameMode, currentStage: currentStage });
+      conn.send({ type: 'INIT_PLAYER', data: myData });
     }
     startGame();
   }
@@ -417,61 +380,43 @@ game_code = """
     let startX = isHost || gameMode === 'story' ? 80 : canvas.width - 80;
     let enemyX = isHost || gameMode === 'story' ? canvas.width - 80 : 80;
 
-    isBossStage = (subGameMode === 'campaign' && currentStage % 10 === 0);
+    isBossStage = (gameMode === 'story' && currentStage % 10 === 0);
 
     let enemyHp = 500;
     let enemyScale = 1.0;
     let enemyColor = "#ff4757";
     let enemyWeapon = "sword";
 
-    enemies = [];
-
-    if(subGameMode === 'campaign') {
-      // Số lượng zombie: Màn 1 có 1 zombie, mỗi màn tăng thêm 1 (trừ màn boss chỉ có 1 boss cực mạnh)
-      let zombieCount = isBossStage ? 1 : currentStage;
-      
+    if(gameMode === 'story') {
       if(isBossStage) {
         enemyHp = 1800 + (currentStage * 120);
         enemyScale = 2.0;
         enemyColor = "#ff0055";
         enemyWeapon = "axe";
-        enemies.push({
-          x: canvas.width - 80, y: canvas.height - 25, vy: 0, isGrounded: true,
-          hp: enemyHp, maxHp: enemyHp, atk: false,
-          data: { color: enemyColor, weapon: enemyWeapon, hat: "knight", cape: "black" },
-          facing: -1, walkTimer: 0, scale: enemyScale, isSpecialAction: false, lastAtkTime: 0, lastSkillTime: 0, windEffectTimer: 0, isBoss: true
-        });
       } else {
-        for(let i = 0; i < zombieCount; i++) {
-          let zHp = 300 + (currentStage * 40);
-          let wpList = ["sword", "axe", "dagger", "spear", "staff", "bow", "laser", "muscle"];
-          let zWp = wpList[(currentStage + i) % wpList.length];
-          enemies.push({
-            x: canvas.width - 80 - (i * 40), y: canvas.height - 25, vy: 0, isGrounded: true,
-            hp: zHp, maxHp: zHp, atk: false,
-            data: { color: "#ff4757", weapon: zWp, hat: "none", cape: "none" },
-            facing: -1, walkTimer: 0, scale: 1.0, isSpecialAction: false, lastAtkTime: 0, lastSkillTime: 0, windEffectTimer: 0, isBoss: false
-          });
-        }
+        enemyHp = 450 + (currentStage * 65);
+        enemyScale = 1.0 + (currentStage * 0.03);
+        let wpList = ["sword", "axe", "dagger", "spear", "staff", "bow", "laser", "muscle"];
+        enemyWeapon = wpList[currentStage % wpList.length];
       }
-    } else {
-      // Chế độ cổ điển (PVP hoặc 1v1 online)
-      pEnemy = { 
-        x: enemyX, y: canvas.height - 25, vy: 0, isGrounded: true, 
-        hp: 450, maxHp: 450, atk: false, 
-        data: (gameMode === 'story') ? { color: "#ff4757", weapon: "staff", hat: "wizard", cape: "black" } : enemyData, 
-        facing: -1, walkTimer: 0, scale: 1.0, isSpecialAction: false, lastAtkTime: 0, lastSkillTime: 0, windEffectTimer: 0
-      };
     }
 
     pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 450, maxHp: 450, atk: false, data: myData, facing: 1, walkTimer: 0, scale: 1.0, isSpecialAction: false, lastAtkTime: 0, lastSkillTime: 0, windEffectTimer: 0 };
     
+    pEnemy = { 
+      x: enemyX, y: canvas.height - 25, vy: 0, isGrounded: true, 
+      hp: enemyHp, maxHp: enemyHp, atk: false, 
+      data: (gameMode === 'story') ? { color: enemyColor, weapon: enemyWeapon, hat: isBossStage ? "knight" : "none", cape: isBossStage ? "black" : "none" } : enemyData, 
+      facing: -1, walkTimer: 0, scale: enemyScale, isSpecialAction: false, lastAtkTime: 0, lastSkillTime: 0, windEffectTimer: 0
+    };
+    
     bullets = []; particles = [];
     myVoteRematch = false; enemyVoteRematch = false;
     document.getElementById("rematchBtn").style.opacity = "1";
-    document.getElementById("rematchBtn").innerText = (subGameMode === 'campaign') ? "⏭️ MÀN TIẾP THEO" : "🔄 CHƠI TIẾP";
+    document.getElementById("rematchBtn").innerText = gameMode === 'story' ? "⏭️ MÀN TIẾP THEO" : "🔄 CHƠI TIẾP";
     document.getElementById("voteStatusText").innerText = "";
 
+    вища = true;
     isRunning = true;
     requestAnimationFrame(loop);
   }
@@ -480,26 +425,20 @@ game_code = """
     if(!data) return;
     
     if(data.type === 'INIT_PLAYER') {
-      if(data.data) {
-        if(subGameMode === 'classic') pEnemy.data = data.data;
-      }
-      if(data.subGameMode) subGameMode = data.subGameMode;
-      if(data.currentStage) currentStage = data.currentStage;
+      if(data.data) pEnemy.data = data.data;
     } else if(data.type === 'SYNC_POS') {
-      if(subGameMode === 'classic') {
-        if(typeof data.hp === 'number' && data.hp > 0) {
-          pEnemy.hp = data.hp;
-        }
-        pEnemy.x = data.x; 
-        pEnemy.y = data.y; 
-        pEnemy.atk = data.atk; 
-        pEnemy.facing = data.facing;
-        pEnemy.walkTimer = data.walkTimer;
+      if(typeof data.hp === 'number' && data.hp > 0) {
+        pEnemy.hp = data.hp;
       }
+      pEnemy.x = data.x; 
+      pEnemy.y = data.y; 
+      pEnemy.atk = data.atk; 
+      pEnemy.facing = data.facing;
+      pEnemy.walkTimer = data.walkTimer;
     } else if(data.type === 'SKILL') {
-      if(subGameMode === 'classic' && pEnemy) executeWeaponSkill(pEnemy);
+      executeWeaponSkill(pEnemy);
     } else if(data.type === 'SHOOT') {
-      if(subGameMode === 'classic' && pEnemy) createBullet(pEnemy, pSelf, data.weapon);
+      createBullet(pEnemy, pSelf, data.weapon);
     } else if(data.type === 'VOTE_REMATCH') {
       enemyVoteRematch = true;
       checkBothVoted();
@@ -511,7 +450,7 @@ game_code = """
     let overlay = document.getElementById("endGameOverlay");
     let winTxt = document.getElementById("winnerText");
 
-    if(subGameMode === 'campaign') {
+    if(gameMode === 'story') {
       if(won) {
         winTxt.innerText = isBossStage ? "🏆 DIỆT BOSS HOÀN HẢO!" : "🎉 HOÀN THÀNH MÀN " + currentStage;
         winTxt.style.color = "#2ed573";
@@ -529,7 +468,8 @@ game_code = """
   }
 
   function requestRematch() {
-    if(subGameMode === 'campaign' || gameMode === 'story') {
+    if(gameMode === 'story') {
+      document.getElementById('customTitle').innerText = "STORY MODE - MÀN " + currentStage;
       startGame();
     } else {
       myVoteRematch = true;
@@ -541,7 +481,7 @@ game_code = """
   }
 
   function checkBothVoted() {
-    if(gameMode === 'online' && subGameMode === 'classic') {
+    if(gameMode === 'online') {
       if(myVoteRematch && enemyVoteRematch) {
         startGame();
       } else if(enemyVoteRematch && !myVoteRematch) {
@@ -581,19 +521,10 @@ game_code = """
     else if(pSelf.data.weapon === 'spear') { reach = 85; dmg = 22; }
     else if(pSelf.data.weapon === 'muscle') { reach = 85; dmg = 32; }
 
-    if(subGameMode === 'campaign') {
-      for(let z of enemies) {
-        if(z.hp > 0 && Math.abs(pSelf.x - z.x) < reach * pSelf.scale) {
-          z.hp = Math.max(0, z.hp - dmg);
-          addParticles(z.x, z.y - 20 * z.scale, pSelf.data.color, 12);
-        }
-      }
-    } else {
-      let other = pEnemy;
-      if(Math.abs(pSelf.x - other.x) < reach * pSelf.scale) {
-        other.hp = Math.max(0, other.hp - dmg);
-        addParticles(other.x, other.y - 20 * other.scale, pSelf.data.color, 12);
-      }
+    let other = pEnemy;
+    if(Math.abs(pSelf.x - other.x) < reach * pSelf.scale) {
+      other.hp = Math.max(0, other.hp - dmg);
+      addParticles(other.x, other.y - 20 * other.scale, pSelf.data.color, 12);
     }
     setTimeout(() => pSelf.atk = false, 120);
   }
@@ -602,12 +533,12 @@ game_code = """
     let dir = caster.facing;
     let startX = caster.x + dir * 20 * caster.scale;
     let startY = caster.y - 24 * caster.scale;
-    let dmgBonus = (subGameMode === 'campaign') ? (10 + currentStage * 2) : 0;
+    let dmgBonus = (caster === pEnemy && gameMode === 'story') ? (10 + currentStage * 2) : 0;
 
     if (weapon === 'staff') {
       bullets.push({ x: startX, y: startY, vx: dir * 9.5, color: '#fffa65', radius: 9, dmg: 22 + dmgBonus, type: 'orb', shooter: caster });
     } else if (weapon === 'bow') {
-      let bowDmg = (subGameMode === 'campaign') ? Math.max(2, 2 + Math.floor(currentStage / 2)) : 2;
+      let bowDmg = (caster === pEnemy && gameMode === 'story') ? Math.max(2, 2 + Math.floor(currentStage / 2)) : 2;
       bullets.push({ x: startX, y: startY, vx: dir * 14, color: '#c7ecee', radius: 3.5, dmg: bowDmg, type: 'arrow', shooter: caster });
     } else if (weapon === 'laser') {
       bullets.push({ x: startX, y: startY, vx: dir * 20, color: '#66fcf1', radius: 2.5, dmg: 20 + dmgBonus, type: 'laser', shooter: caster });
@@ -615,8 +546,9 @@ game_code = """
   }
 
   function executeWeaponSkill(p) {
+    let other = (p === pSelf) ? pEnemy : pSelf;
     let wp = p.data.weapon;
-    let isCampaignZombie = (subGameMode === 'campaign' && enemies.includes(p));
+    let isStoryEnemy = (p === pEnemy && gameMode === 'story');
 
     if (wp === 'sword') {
       p.isSpecialAction = true;
@@ -649,22 +581,10 @@ game_code = """
             p.y = ground; p.vy = 0; p.isSpecialAction = false;
             clearInterval(checkSlam);
             addParticles(p.x, p.y, '#ff4757', 30);
-            let slamDmg = isCampaignZombie ? (75 + currentStage * 8) : 60;
-            
-            if(subGameMode === 'campaign') {
-              let targets = (p === pSelf) ? enemies : [pSelf];
-              for(let t of targets) {
-                if(t && t.hp > 0 && Math.abs(p.x - t.x) < 110) {
-                  t.hp = Math.max(0, t.hp - slamDmg);
-                  addParticles(t.x, t.y - 20, '#ff4757', 24);
-                }
-              }
-            } else {
-              let other = (p === pSelf) ? pEnemy : pSelf;
-              if(Math.abs(p.x - other.x) < 110) {
-                other.hp = Math.max(0, other.hp - slamDmg);
-                addParticles(other.x, other.y - 20, '#ff4757', 24);
-              }
+            let slamDmg = isStoryEnemy ? (75 + currentStage * 8) : 60;
+            if(Math.abs(p.x - other.x) < 110) {
+              other.hp = Math.max(0, other.hp - slamDmg);
+              addParticles(other.x, other.y - 20, '#ff4757', 24);
             }
           }
         }, 20);
@@ -673,7 +593,7 @@ game_code = """
     } else if (wp === 'dagger') {
       p.isSpecialAction = true;
       addParticles(p.x, p.y - 20, '#2ed573', 15);
-      let daggerDmg = isCampaignZombie ? (12 + currentStage * 2) : 10;
+      let daggerDmg = isStoryEnemy ? (12 + currentStage * 2) : 10;
       for(let i=0; i<3; i++) {
         setTimeout(() => {
           bullets.push({ x: p.x + p.facing*20, y: p.y - 25, vx: p.facing * (16 + i*2), color: '#2ed573', radius: 4, dmg: daggerDmg, type: 'arrow', shooter: p });
@@ -686,22 +606,10 @@ game_code = """
       addParticles(p.x, p.y - 20, '#f1c40f', 20);
       let dashDist = p.facing * 150;
       p.x = Math.max(20, Math.min(canvas.width - 20, p.x + dashDist));
-      let thrustDmg = isCampaignZombie ? (60 + currentStage * 6) : 50;
-
-      if(subGameMode === 'campaign') {
-        let targets = (p === pSelf) ? enemies : [pSelf];
-        for(let t of targets) {
-          if(t && t.hp > 0 && Math.abs(p.x - t.x) < 100) {
-            t.hp = Math.max(0, t.hp - thrustDmg);
-            addParticles(t.x, t.y - 20, '#f1c40f', 26);
-          }
-        }
-      } else {
-        let other = (p === pSelf) ? pEnemy : pSelf;
-        if(Math.abs(p.x - other.x) < 100) {
-          other.hp = Math.max(0, other.hp - thrustDmg);
-          addParticles(other.x, other.y - 20, '#f1c40f', 26);
-        }
+      let thrustDmg = isStoryEnemy ? (60 + currentStage * 6) : 50;
+      if(Math.abs(p.x - other.x) < 100) {
+        other.hp = Math.max(0, other.hp - thrustDmg);
+        addParticles(other.x, other.y - 20, '#f1c40f', 26);
       }
       setTimeout(() => p.isSpecialAction = false, 250);
 
@@ -715,17 +623,9 @@ game_code = """
         flameSpinTimer++;
         addParticles(p.x + (Math.random()-0.5)*40, p.y - 30 + (Math.random()-0.5)*40, '#ff4757', 5);
         addParticles(p.x + (Math.random()-0.5)*40, p.y - 30 + (Math.random()-0.5)*40, '#ffa502', 5);
-        
-        if(subGameMode === 'campaign') {
-          let targets = (p === pSelf) ? enemies : [pSelf];
-          for(let t of targets) {
-            if(t && t.hp > 0 && Math.abs(p.x - t.x) < 70) t.hp = Math.max(0, t.hp - 4);
-          }
-        } else {
-          let other = (p === pSelf) ? pEnemy : pSelf;
-          if(Math.abs(p.x - other.x) < 70) other.hp = Math.max(0, other.hp - 4);
+        if(Math.abs(p.x - other.x) < 70) {
+          other.hp = Math.max(0, other.hp - 4);
         }
-
         if(flameSpinTimer >= 15) {
           clearInterval(spinInterval);
           p.vy = 22;
@@ -735,26 +635,12 @@ game_code = """
               p.y = ground; p.vy = 0; p.isSpecialAction = false;
               clearInterval(checkMuscleSlam);
               addParticles(p.x, p.y, '#ff4757', 45);
-              let muscleSlamDmg = isCampaignZombie ? (90 + currentStage * 10) : 75;
-
-              if(subGameMode === 'campaign') {
-                let targets = (p === pSelf) ? enemies : [pSelf];
-                for(let t of targets) {
-                  if(t && t.hp > 0 && Math.abs(p.x - t.x) < 140) {
-                    t.hp = Math.max(0, t.hp - muscleSlamDmg);
-                    t.x += (t.x > p.x) ? 90 : -90;
-                    t.x = Math.max(20, Math.min(canvas.width - 20, t.x));
-                    addParticles(t.x, t.y - 20, '#ff4757', 30);
-                  }
-                }
-              } else {
-                let other = (p === pSelf) ? pEnemy : pSelf;
-                if(Math.abs(p.x - other.x) < 140) {
-                  other.hp = Math.max(0, other.hp - muscleSlamDmg);
-                  other.x += (other.x > p.x) ? 90 : -90;
-                  other.x = Math.max(20, Math.min(canvas.width - 20, other.x));
-                  addParticles(other.x, other.y - 20, '#ff4757', 30);
-                }
+              let muscleSlamDmg = isStoryEnemy ? (90 + currentStage * 10) : 75;
+              if(Math.abs(p.x - other.x) < 140) {
+                other.hp = Math.max(0, other.hp - muscleSlamDmg);
+                other.x += (other.x > p.x) ? 90 : -90;
+                other.x = Math.max(20, Math.min(canvas.width - 20, other.x));
+                addParticles(other.x, other.y - 20, '#ff4757', 30);
               }
             }
           }, 20);
@@ -762,10 +648,9 @@ game_code = """
       }, 50);
 
     } else if (['staff', 'bow', 'laser'].includes(wp)) {
-      let otherTarget = (subGameMode === 'classic') ? ((p === pSelf) ? pEnemy : pSelf) : pSelf;
-      createBullet(p, otherTarget, wp);
+      createBullet(p, other, wp);
       if(wp === 'bow') {
-        setTimeout(() => createBullet(p, otherTarget, wp), 80);
+        setTimeout(() => createBullet(p, other, wp), 80);
       }
     }
   }
@@ -784,7 +669,7 @@ game_code = """
 
     executeWeaponSkill(pSelf);
 
-    if(gameMode === 'online' && conn && conn.open && subGameMode === 'classic') {
+    if(gameMode === 'online' && conn && conn.open) {
       if(['staff', 'bow', 'laser'].includes(pSelf.data.weapon)) {
         conn.send({ type: 'SHOOT', weapon: pSelf.data.weapon });
       } else {
@@ -844,6 +729,7 @@ game_code = """
     ctx.lineTo(0, -12);
     ctx.stroke();
 
+    // Walking animation for limbs
     let legOffset = Math.sin(p.walkTimer) * 10;
     
     // Legs
@@ -854,7 +740,7 @@ game_code = """
     ctx.lineTo(8 - legOffset, 0);
     ctx.stroke();
 
-    // Arms
+    // Arms & Weapon attack swing
     let armAngle = p.atk ? -Math.PI / 3 : Math.sin(p.walkTimer) * 0.5;
     ctx.beginPath();
     ctx.moveTo(0, -26);
@@ -869,7 +755,6 @@ game_code = """
     animFrame++;
     let ground = canvas.height - 25;
 
-    // Player self movement
     pSelf.y += pSelf.vy; pSelf.vy += 0.58;
     if (pSelf.y >= ground) { pSelf.y = ground; pSelf.vy = 0; pSelf.isGrounded = true; }
 
@@ -880,126 +765,71 @@ game_code = """
     pSelf.x = Math.max(20, Math.min(canvas.width - 20, pSelf.x));
     if (pSelf.windEffectTimer > 0) pSelf.windEffectTimer--;
 
-    // LOGIC CHO CHẾ ĐỘ CHIẾN DỊCH (CAMPAIGN / ZOMBIE)
-    if(subGameMode === 'campaign') {
-      let allZombiesDead = true;
+    if(gameMode === 'story') {
+      pEnemy.y += pEnemy.vy; pEnemy.vy += 0.58;
+      if (pEnemy.y >= ground) { pEnemy.y = ground; pEnemy.vy = 0; pEnemy.isGrounded = true; }
+      
+      pEnemy.facing = pSelf.x < pEnemy.x ? -1 : 1;
+      let speed = 2.3 + (currentStage * 0.18);
+      if(isBossStage) speed = 3.2;
 
-      for(let z of enemies) {
-        if(z.hp <= 0) continue;
-        allZombiesDead = false;
+      if (!pEnemy.isSpecialAction && Math.abs(pSelf.x - pEnemy.x) > 40 * pEnemy.scale) {
+        pEnemy.x += (pSelf.x < pEnemy.x) ? -speed : speed;
+        pEnemy.walkTimer += 0.3;
+      }
+      if (pEnemy.windEffectTimer > 0) pEnemy.windEffectTimer--;
 
-        z.y += z.vy; z.vy += 0.58;
-        if (z.y >= ground) { z.y = ground; z.vy = 0; z.isGrounded = true; }
-        
-        // Zombie ưu tiên đuổi người chơi gần nhất (hoặc pSelf nếu chơi đơn / host-client)
-        z.facing = pSelf.x < z.x ? -1 : 1;
-        let speed = 2.3 + (currentStage * 0.18);
-        if(z.isBoss) speed = 3.2;
+      let now = Date.now();
+      let enemyCooldown = (pEnemy.data.weapon === 'dagger') ? 100 : 150;
+      let canEnemyAtk = (now - (pEnemy.lastAtkTime || 0) > enemyCooldown);
 
-        if (!z.isSpecialAction && Math.abs(pSelf.x - z.x) > 40 * z.scale) {
-          z.x += (pSelf.x < z.x) ? -speed : speed;
-          z.walkTimer += 0.3;
-        }
-        if (z.windEffectTimer > 0) z.windEffectTimer--;
-
-        let now = Date.now();
-        let zombieCooldown = (z.data.weapon === 'dagger') ? 100 : 150;
-        let canZAtk = (now - (z.lastAtkTime || 0) > zombieCooldown);
-
-        if (Math.random() < 0.015 && z.isGrounded) z.vy = -13;
-        
-        if (Math.random() < (0.045 + currentStage * 0.005) && canZAtk) { 
-          z.lastAtkTime = now;
-          z.atk = true; 
-          setTimeout(() => z.atk = false, 100); 
-          if(['staff', 'bow', 'laser'].includes(z.data.weapon)) {
-            createBullet(z, pSelf, z.data.weapon); 
-          } else if(Math.abs(pSelf.x - z.x) < 70 * z.scale) {
-            let meleeDmg = 16 + (currentStage * 2.5);
-            pSelf.hp = Math.max(0, pSelf.hp - meleeDmg);
-            addParticles(pSelf.x, pSelf.y - 20, '#ff4757', 10);
-          }
-        }
-
-        let zSkillCooldown = (z.data.weapon === 'bow') ? 200 : 10000;
-        if (now - (z.lastSkillTime || 0) > zSkillCooldown) {
-          z.lastSkillTime = now;
-          executeWeaponSkill(z);
+      let atkChance = 0.045 + (currentStage * 0.005);
+      if (Math.random() < 0.015 && pEnemy.isGrounded) pEnemy.vy = -13;
+      
+      if (Math.random() < atkChance && canEnemyAtk) { 
+        pEnemy.lastAtkTime = now;
+        pEnemy.atk = true; 
+        setTimeout(() => pEnemy.atk = false, 100); 
+        if(['staff', 'bow', 'laser'].includes(pEnemy.data.weapon)) {
+          createBullet(pEnemy, pSelf, pEnemy.data.weapon); 
+        } else if(Math.abs(pSelf.x - pEnemy.x) < 70 * pEnemy.scale) {
+          let meleeDmg = 16 + (currentStage * 2.5);
+          pSelf.hp = Math.max(0, pSelf.hp - meleeDmg);
+          addParticles(pSelf.x, pSelf.y - 20, '#ff4757', 10);
         }
       }
 
-      if(allZombiesDead) {
-        triggerEndGame(true);
-        return;
+      let enemySkillCooldown = (pEnemy.data.weapon === 'bow') ? 200 : 10000;
+      if (now - (pEnemy.lastSkillTime || 0) > enemySkillCooldown) {
+        pEnemy.lastSkillTime = now;
+        executeWeaponSkill(pEnemy);
       }
+    }
 
-    } else {
-      // Logic Chế độ cổ điển (PVP / 1v1)
-      if(gameMode === 'story' || (gameMode === 'online' && isHost)) {
-        pEnemy.y += pEnemy.vy; pEnemy.vy += 0.58;
-        if (pEnemy.y >= ground) { pEnemy.y = ground; pEnemy.vy = 0; pEnemy.isGrounded = true; }
-        
-        if(gameMode === 'story') {
-          pEnemy.facing = pSelf.x < pEnemy.x ? -1 : 1;
-          if (Math.abs(pSelf.x - pEnemy.x) > 40) {
-            pEnemy.x += (pSelf.x < pEnemy.x) ? -2.5 : 2.5;
-            pEnemy.walkTimer += 0.3;
-          }
-          if(Math.abs(pSelf.x - pEnemy.x) < 60 && Math.random() < 0.05) {
-            pEnemy.atk = true;
-            pSelf.hp = Math.max(0, pSelf.hp - 12);
-            setTimeout(() => pEnemy.atk = false, 100);
-          }
-        }
-      }
-
-      if(gameMode === 'online' && conn && conn.open) {
-        conn.send({ 
-          type: 'SYNC_POS', 
-          x: pSelf.x, 
-          y: pSelf.y, 
-          hp: pSelf.hp, 
-          atk: pSelf.atk, 
-          facing: pSelf.facing,
-          walkTimer: pSelf.walkTimer
-        });
-      }
+    if(gameMode === 'online' && conn && conn.open) {
+      conn.send({ 
+        type: 'SYNC_POS', 
+        x: pSelf.x, 
+        y: pSelf.y, 
+        hp: pSelf.hp, 
+        atk: pSelf.atk, 
+        facing: pSelf.facing,
+        walkTimer: pSelf.walkTimer
+      });
     }
 
     // Bullets update
     for(let i = bullets.length - 1; i >= 0; i--) {
       let b = bullets[i];
       b.x += b.vx;
+      let target = (b.shooter === pSelf) ? pEnemy : pSelf;
 
-      if(subGameMode === 'campaign') {
-        let hitTarget = null;
-        if(b.shooter === pSelf) {
-          for(let z of enemies) {
-            if(z.hp > 0 && Math.abs(b.x - z.x) < 25 * z.scale && Math.abs(b.y - (z.y - 25)) < 30 * z.scale) {
-              hitTarget = z; break;
-            }
-          }
-        } else {
-          if(Math.abs(b.x - pSelf.x) < 25 && Math.abs(b.y - (pSelf.y - 25)) < 30) {
-            hitTarget = pSelf;
-          }
-        }
-        if(hitTarget) {
-          hitTarget.hp = Math.max(0, hitTarget.hp - b.dmg);
-          addParticles(b.x, b.y, b.color, 8);
-          bullets.splice(i, 1);
-          continue;
-        }
-      } else {
-        let target = (b.shooter === pSelf) ? pEnemy : pSelf;
-        if(Math.abs(b.x - target.x) < 25 * target.scale && Math.abs(b.y - (target.y - 25)) < 30 * target.scale) {
-          target.hp = Math.max(0, target.hp - b.dmg);
-          addParticles(b.x, b.y, b.color, 8);
-          bullets.splice(i, 1);
-          continue;
-        }
+      if(Math.abs(b.x - target.x) < 25 * target.scale && Math.abs(b.y - (target.y - 25)) < 30 * target.scale) {
+        target.hp = Math.max(0, target.hp - b.dmg);
+        addParticles(b.x, b.y, b.color, 8);
+        bullets.splice(i, 1);
+        continue;
       }
-
       if(b.x < 0 || b.x > canvas.width) {
         bullets.splice(i, 1);
       }
@@ -1009,11 +839,9 @@ game_code = """
     if(pSelf.hp <= 0) {
       triggerEndGame(false);
       return;
-    } else if(subGameMode === 'classic') {
-      if(pEnemy.hp <= 0) {
-        triggerEndGame(true);
-        return;
-      }
+    } else if(pEnemy.hp <= 0) {
+      triggerEndGame(true);
+      return;
     }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1041,31 +869,17 @@ game_code = """
     ctx.shadowBlur = 0;
     ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.strokeRect(12, 12, w, 16);
 
-    // Enemy / Boss Health Bar hoặc danh sách zombie
-    if(subGameMode === 'classic') {
-      ctx.fillStyle = "rgba(31, 40, 51, 0.8)"; ctx.fillRect(canvas.width - w - 12, 12, w, 16);
-      ctx.fillStyle = pEnemy.data.color;
-      ctx.shadowColor = pEnemy.data.color; ctx.shadowBlur = 8;
-      ctx.fillRect(canvas.width - w - 12, 12, w * (Math.max(0, pEnemy.hp) / pEnemy.maxHp), 16);
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.strokeRect(canvas.width - w - 12, 12, w, 16);
-    } else {
-      // Hiển thị thông tin màn chơi chiến dịch zombie
-      ctx.fillStyle = "#f7b731";
-      ctx.font = "bold 14px Segoe UI";
-      ctx.fillText("MÀN: " + currentStage + (isBossStage ? " (BOSS)" : ""), canvas.width - 150, 24);
-    }
+    // Enemy Health Bar
+    ctx.fillStyle = "rgba(31, 40, 51, 0.8)"; ctx.fillRect(canvas.width - w - 12, 12, w, 16);
+    ctx.fillStyle = pEnemy.data.color;
+    ctx.shadowColor = pEnemy.data.color; ctx.shadowBlur = 8;
+    ctx.fillRect(canvas.width - w - 12, 12, w * (Math.max(0, pEnemy.hp) / pEnemy.maxHp), 16);
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.strokeRect(canvas.width - w - 12, 12, w, 16);
 
     // Draw characters
     drawStickMan(ctx, pSelf);
-    
-    if(subGameMode === 'classic') {
-      drawStickMan(ctx, pEnemy);
-    } else {
-      for(let z of enemies) {
-        if(z.hp > 0) drawStickMan(ctx, z);
-      }
-    }
+    drawStickMan(ctx, pEnemy);
 
     // Draw Bullets
     for(let b of bullets) {
