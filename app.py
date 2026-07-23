@@ -127,7 +127,7 @@ game_code = """
         <option value="sword">⚔️ Kiếm Thần (Cân Bằng)</option>
         <option value="axe">🪓 Rìu Chiến (Sát Thương Lớn)</option>
         <option value="dagger">🗡️ Dao Độc (Tốc Đánh Nhanh)</option>
-        <option value="spear">🔱 Giáo Dài (Tầm Đánh Xa)</option>
+        <option value="spear">🔱 Giáo Dài (Skill Đâm Xa - CD 5s)</option>
         <option value="staff">🪄 Trượng Ma Thuật (Cầu Lửa)</option>
         <option value="bow">🏹 Cung Thần (Bắn Nhanh)</option>
         <option value="laser">⚡ Súng Laser (Tia Xuyên)</option>
@@ -173,7 +173,7 @@ game_code = """
     </div>
     <div class="btn-group">
       <div class="btn-ctrl" id="btnAtk">⚔️<span class="key-hint">M1</span></div>
-      <div class="btn-ctrl" style="border-color:#ff4757" id="btnSkill">💨<span class="key-hint">M2</span></div>
+      <div class="btn-ctrl" style="border-color:#ff4757" id="btnSkill">🔱<span class="key-hint">M2</span></div>
     </div>
   </div>
 
@@ -348,7 +348,7 @@ game_code = """
     let enemyHp = 300;
     let enemyScale = 1.0;
     let enemyColor = "#ff4757";
-    let enemyWeapon = "staff";
+    let enemyWeapon = "sword";
 
     if(gameMode === 'story') {
       if(isBossStage) {
@@ -479,7 +479,7 @@ game_code = """
     if(pSelf.data.weapon === 'sword') { reach = 55; dmg = 14; }
     else if(pSelf.data.weapon === 'axe') { reach = 65; dmg = 25; }
     else if(pSelf.data.weapon === 'dagger') { reach = 35; dmg = 9; }
-    else if(pSelf.data.weapon === 'spear') { reach = 80; dmg = 20; }
+    else if(pSelf.data.weapon === 'spear') { reach = 75; dmg = 18; }
 
     if(Math.abs(pSelf.x - pEnemy.x) < reach * pSelf.scale) {
       pEnemy.hp = Math.max(0, pEnemy.hp - dmg);
@@ -509,7 +509,7 @@ game_code = """
     p.x = Math.max(20, Math.min(canvas.width - 20, p.x + dashDist));
     
     let other = (p === pSelf) ? pEnemy : pSelf;
-    if(Math.abs(p.x - other.x) < 40) {
+    if(Math.abs(p.x - other.x) < 45) {
       other.hp = Math.max(0, other.hp - 15);
       addParticles(other.x, other.y - 20, '#ff4757', 12);
     }
@@ -518,15 +518,15 @@ game_code = """
 
   function triggerSpearThrust(p) {
     p.isDashing = true;
-    addParticles(p.x, p.y - 20, '#f1c40f', 14);
-    let thrustDist = p.facing * 120; // Lướt xa hơn một chút
+    addParticles(p.x, p.y - 20, '#f1c40f', 16);
+    let thrustDist = p.facing * 130; 
     p.x = Math.max(20, Math.min(canvas.width - 20, p.x + thrustDist));
     
     let other = (p === pSelf) ? pEnemy : pSelf;
-    // Tầm sát thương rộng hơn cho kỹ năng Giáo Dài
-    if(Math.abs(p.x - other.x) < 70 * p.scale) {
-      other.hp = Math.max(0, other.hp - 40); // Gây sát thương lớn (40 dmg)
-      addParticles(other.x, other.y - 20, '#f1c40f', 20);
+    // Kiểm tra khoảng cách chuẩn xác giữa 2 nhân vật (phạm vi lướt đâm trúng rộng)
+    if(Math.abs(p.x - other.x) < 85) {
+      other.hp = Math.max(0, other.hp - 45); // Gây 45 sát thương lớn
+      addParticles(other.x, other.y - 20, '#f1c40f', 22);
     }
     setTimeout(() => p.isDashing = false, 250);
   }
@@ -542,9 +542,8 @@ game_code = """
   function useSkill() {
     if(!pSelf || !isRunning) return;
     
-    // Kiểm tra hồi chiêu skill 5 giây riêng cho Giáo Dài, các vũ khí khác giữ nguyên
     let now = Date.now();
-    let skillCooldown = (pSelf.data.weapon === 'spear') ? 5000 : 0; // 5 giây = 5000ms
+    let skillCooldown = (pSelf.data.weapon === 'spear') ? 5000 : 0; // Hồi chiêu 5 giây riêng cho giáo
     if (now - (pSelf.lastSkillTime || 0) < skillCooldown) return;
     pSelf.lastSkillTime = now;
 
@@ -610,10 +609,9 @@ game_code = """
         }
       }
 
-      // Boss / AI dùng skill Giáo Dài với hồi chiêu 5 giây nếu cầm giáo
       if (pEnemy.data.weapon === 'spear') {
         let enemySkillCooldown = 5000;
-        if (now - (pEnemy.lastSkillTime || 0) > enemySkillCooldown && Math.abs(pSelf.x - pEnemy.x) < 130) {
+        if (now - (pEnemy.lastSkillTime || 0) > enemySkillCooldown && Math.abs(pSelf.x - pEnemy.x) < 140) {
           pEnemy.lastSkillTime = now;
           triggerSkill(pEnemy);
         }
@@ -737,23 +735,23 @@ game_code = """
       ctx.strokeStyle = '#2ed573'; ctx.lineWidth = 2 * s; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 14 * s, -10 * s); ctx.stroke();
     } else if(p.data.weapon === 'spear') {
       ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 3.5 * s; 
-      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 48 * s, -38 * s); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 52 * s, -42 * s); ctx.stroke();
       
       ctx.fillStyle = '#f1c40f'; 
       ctx.fillRect(f * 10 * s - 2 * s, -10 * s, 4 * s, 6 * s);
 
       ctx.fillStyle = '#ecf0f1'; 
       ctx.beginPath(); 
-      ctx.moveTo(f * 42 * s, -32 * s); 
-      ctx.lineTo(f * 56 * s, -48 * s); 
-      ctx.lineTo(f * 48 * s, -34 * s); 
+      ctx.moveTo(f * 45 * s, -35 * s); 
+      ctx.lineTo(f * 60 * s, -52 * s); 
+      ctx.lineTo(f * 52 * s, -38 * s); 
       ctx.fill();
 
       ctx.fillStyle = '#3498db'; 
       ctx.beginPath(); 
-      ctx.moveTo(f * 48 * s, -40 * s); 
-      ctx.lineTo(f * 56 * s, -48 * s); 
-      ctx.lineTo(f * 46 * s, -36 * s); 
+      ctx.moveTo(f * 52 * s, -44 * s); 
+      ctx.lineTo(f * 60 * s, -52 * s); 
+      ctx.lineTo(f * 50 * s, -40 * s); 
       ctx.fill();
     } else if(p.data.weapon === 'staff') {
       ctx.strokeStyle = '#78e08f'; ctx.lineWidth = 3 * s; ctx.beginPath(); ctx.moveTo(0, 5 * s); ctx.lineTo(f * 18 * s, -22 * s); ctx.stroke();
