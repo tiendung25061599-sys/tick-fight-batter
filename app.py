@@ -12,62 +12,63 @@ game_code = """
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
-    body { width: 100vw; height: 100vh; background: #0b0c10; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+    body { width: 100vw; height: 100vh; background: #050508; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; position: relative; }
     
-    /* NÚT QUAY LẠI CỐ ĐỊNH Ở GÓC TRÊN BÊN PHẢI (TRONG TRẬN) */
+    /* TOP BAR NÚT QUAY LẠI */
     .top-bar {
       position: absolute; top: 15px; right: 20px; 
       display: flex; gap: 10px; z-index: 999;
     }
-
     .top-btn { 
-      padding: 8px 16px; background: #1f2833; border: 2px solid #ff4757; 
-      color: #ff4757; border-radius: 8px; cursor: pointer; 
-      font-weight: bold; font-size: 13px; box-shadow: 0 0 10px rgba(255, 71, 87, 0.3);
+      padding: 8px 16px; background: rgba(31, 40, 51, 0.8); border: 2px solid #ff4757; 
+      color: #ff4757; border-radius: 10px; cursor: pointer; 
+      font-weight: bold; font-size: 13px; backdrop-filter: blur(5px);
+      box-shadow: 0 0 15px rgba(255, 71, 87, 0.4);
       transition: all 0.2s; outline: none; display: none;
     }
     .top-btn:active { background: #ff4757; color: #fff; transform: scale(0.95); }
 
-    .screen { position: absolute; top:0; left:0; width: 100%; height: 100%; background: radial-gradient(circle, #1f2833 0%, #0b0c10 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; gap: 14px; }
-    h1 { font-size: 28px; color: #66fcf1; text-align: center; text-shadow: 0 0 15px #66fcf1; letter-spacing: 2px; }
+    .screen { position: absolute; top:0; left:0; width: 100%; height: 100%; background: radial-gradient(circle at center, #1f2833 0%, #050508 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; gap: 16px; }
+    h1 { font-size: 32px; color: #66fcf1; text-align: center; text-shadow: 0 0 20px rgba(102, 252, 241, 0.6); letter-spacing: 3px; font-weight: 900; }
     
-    .btn { padding: 12px 28px; font-size: 16px; font-weight: bold; background: #1f2833; border: 2px solid #66fcf1; border-radius: 8px; color: #66fcf1; cursor: pointer; text-align: center; z-index: 110; min-width: 240px; box-shadow: 0 0 10px rgba(102, 252, 241, 0.2); transition: all 0.2s; }
-    .btn:active { background: #66fcf1; color: #000; transform: scale(0.95); }
+    .btn { padding: 14px 30px; font-size: 16px; font-weight: bold; background: rgba(31, 40, 51, 0.9); border: 2px solid #66fcf1; border-radius: 12px; color: #66fcf1; cursor: pointer; text-align: center; z-index: 110; min-width: 260px; box-shadow: 0 0 15px rgba(102, 252, 241, 0.25); backdrop-filter: blur(5px); transition: all 0.2s; }
+    .btn:active { background: #66fcf1; color: #000; transform: scale(0.95); box-shadow: 0 0 25px #66fcf1; }
     
-    input, select { padding: 10px 14px; font-size: 15px; border-radius: 8px; border: 1px solid #66fcf1; background: #0b0c10; color: white; text-align: center; width: 240px; outline: none; }
-    .select-box { display: flex; gap: 10px; align-items: center; background: #1f2833; padding: 8px 14px; border-radius: 8px; width: 85%; max-width: 360px; justify-content: space-between; border: 1px solid #45a29e; }
-    #statusText { color: #f7b731; font-weight: bold; font-size: 14px; text-align: center; }
+    input, select { padding: 12px 16px; font-size: 15px; border-radius: 10px; border: 2px solid #45a29e; background: rgba(11, 12, 16, 0.9); color: white; text-align: center; width: 260px; outline: none; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+    input:focus, select:focus { border-color: #66fcf1; box-shadow: 0 0 10px rgba(102, 252, 241, 0.3); }
     
-    #gameCanvas { background: #050508; border: 2px solid #45a29e; border-radius: 12px; width: 96vw; height: 54vh; display: none; position: relative; z-index: 1; box-shadow: 0 0 20px rgba(69, 162, 158, 0.3); }
+    .select-box { display: flex; gap: 12px; align-items: center; background: rgba(31, 40, 51, 0.7); padding: 10px 16px; border-radius: 12px; width: 85%; max-width: 380px; justify-content: space-between; border: 1px solid rgba(69, 162, 158, 0.5); backdrop-filter: blur(5px); }
+    #statusText { color: #f7b731; font-weight: bold; font-size: 15px; text-align: center; text-shadow: 0 0 10px rgba(247, 183, 49, 0.4); }
+    
+    #gameCanvas { background: radial-gradient(circle at center, #111318 0%, #030305 100%); border: 2px solid #45a29e; border-radius: 16px; width: 96vw; height: 54vh; display: none; position: relative; z-index: 1; box-shadow: 0 0 30px rgba(69, 162, 158, 0.4); }
     
     #endGameOverlay {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0, 0, 0, 0.88); display: none; flex-direction: column;
-      align-items: center; justify-content: center; z-index: 200; gap: 15px;
+      background: rgba(3, 3, 5, 0.9); backdrop-filter: blur(8px); display: none; flex-direction: column;
+      align-items: center; justify-content: center; z-index: 200; gap: 18px;
     }
-    #winnerText { font-size: 34px; font-weight: bold; color: #f7b731; text-shadow: 0 0 15px #f7b731; }
-    #voteStatusText { color: #66fcf1; font-size: 14px; font-weight: bold; min-height: 20px; }
+    #winnerText { font-size: 38px; font-weight: 900; color: #f7b731; text-shadow: 0 0 25px rgba(247, 183, 49, 0.8); letter-spacing: 2px; }
+    #voteStatusText { color: #66fcf1; font-size: 15px; font-weight: bold; min-height: 22px; text-shadow: 0 0 10px rgba(102, 252, 241, 0.4); }
 
-    .controls { position: absolute; bottom: 10px; width: 100vw; display: none; justify-content: space-between; padding: 0 20px; z-index: 50; }
-    .btn-group { display: flex; gap: 10px; }
+    .controls { position: absolute; bottom: 15px; width: 100vw; display: none; justify-content: space-between; padding: 0 25px; z-index: 50; }
+    .btn-group { display: flex; gap: 12px; }
     .btn-ctrl { 
-      position: relative; width: 62px; height: 62px; border-radius: 14px; 
+      position: relative; width: 68px; height: 68px; border-radius: 16px; 
       font-weight: bold; display: flex; align-items: center; justify-content: center; 
-      background: #1f2833; border: 2px solid #66fcf1; color: #fff; cursor: pointer; 
-      font-size: 22px; box-shadow: 0 0 10px rgba(102, 252, 241, 0.3);
+      background: rgba(31, 40, 51, 0.85); border: 2px solid #66fcf1; color: #fff; cursor: pointer; 
+      font-size: 24px; box-shadow: 0 0 15px rgba(102, 252, 241, 0.3); backdrop-filter: blur(5px);
     }
-    .btn-ctrl:active, .btn-ctrl.active { background: #66fcf1; color: #000; }
+    .btn-ctrl:active, .btn-ctrl.active { background: #66fcf1; color: #000; box-shadow: 0 0 25px #66fcf1; transform: scale(0.95); }
     .key-hint { 
-      position: absolute; top: 2px; right: 4px; font-size: 9px; color: #f7b731; 
-      font-weight: bold; background: rgba(0,0,0,0.6); padding: 1px 3px; border-radius: 3px; 
+      position: absolute; top: 3px; right: 5px; font-size: 10px; color: #f7b731; 
+      font-weight: bold; background: rgba(0,0,0,0.7); padding: 2px 4px; border-radius: 4px; 
     }
   </style>
 </head>
 <body>
 
-  <!-- NÚT QUAY LẠI KHI TRONG TRẬN -->
   <div class="top-bar">
-    <button class="top-btn" id="topRightBackBtn" onclick="quitGame()">🏠 MENU VỀ TRANG CHÍNH</button>
+    <button class="top-btn" id="topRightBackBtn" onclick="quitGame()">🏠 THOÁT TRẬN</button>
   </div>
 
   <!-- MAIN MENU -->
@@ -84,7 +85,7 @@ game_code = """
     <div class="select-box" style="justify-content: center;">
       <button class="btn" id="btnFullscreenToggle" onclick="toggleFullscreen()" style="min-width: 280px; border-color:#66fcf1; color:#66fcf1;">📺 BẬT FULLSCREEN</button>
     </div>
-    <div class="btn" style="border-color:#ff4757; color:#ff4757; margin-top: 20px;" id="btnBackToMenu">⬅ QUAY LẠI MENU</div>
+    <div class="btn" style="border-color:#ff4757; color:#ff4757; margin-top: 15px;" id="btnBackToMenu">⬅ QUAY LẠI MENU</div>
   </div>
 
   <!-- LOBBY MENU -->
@@ -137,19 +138,19 @@ game_code = """
       <span>Mũ / Nón:</span>
       <select id="hatSelect">
         <option value="none">Không Đội Mũ</option>
-        <option value="knight">🪖 Mũ Chiến Binh</option>
-        <option value="wizard">🧙 Mũ Phù Thủy</option>
+        <option value="knight">🪖 Mũ Chiến Binh Siêu Cấp</option>
+        <option value="wizard">🧙 Mũ Phù Thủy Ma Quái</option>
       </select>
     </div>
     <div class="select-box">
       <span>Áo Choàng:</span>
       <select id="capeSelect">
         <option value="none">Không Áo Choàng</option>
-        <option value="red">🔴 Áo Choàng Đỏ</option>
-        <option value="black">⚫ Áo Choàng Đen</option>
+        <option value="red">🔴 Áo Choàng Dạ Quang Đỏ</option>
+        <option value="black">⚫ Áo Choàng Đen Huyền Bí</option>
       </select>
     </div>
-    <div class="btn" id="btnStartGame" style="background:#2ed573; border-color:#fff; color:#000;">BẮT ĐẦU VÀO TRẬN ➔</div>
+    <div class="btn" id="btnStartGame" style="background: linear-gradient(135deg, #2ed573 0%, #10ac84 100%); border-color:#fff; color:#fff; text-shadow: 0 0 10px rgba(0,0,0,0.5);">BẮT ĐẦU VÀO TRẬN ➔</div>
     <div class="btn" style="border-color:#ff4757; color:#ff4757;" onclick="showScreen('mainMenu')">⬅ QUAY LẠI</div>
   </div>
 
@@ -355,26 +356,26 @@ game_code = """
 
     isBossStage = (gameMode === 'story' && currentStage % 10 === 0);
 
-    let enemyHp = 300;
+    let enemyHp = 350;
     let enemyScale = 1.0;
     let enemyColor = "#ff4757";
     let enemyWeapon = "sword";
 
     if(gameMode === 'story') {
       if(isBossStage) {
-        enemyHp = 900 + (currentStage * 40);
-        enemyScale = 1.8;
+        enemyHp = 1000 + (currentStage * 50);
+        enemyScale = 1.9;
         enemyColor = "#ff0055";
         enemyWeapon = "axe";
       } else {
-        enemyHp = 300 + (currentStage * 30);
+        enemyHp = 350 + (currentStage * 35);
         enemyScale = 1.0 + (currentStage * 0.02);
         let wpList = ["sword", "axe", "dagger", "spear", "staff", "bow", "laser"];
         enemyWeapon = wpList[currentStage % wpList.length];
       }
     }
 
-    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 400, maxHp: 400, atk: false, data: myData, facing: 1, walkTimer: 0, scale: 1.0, isDashing: false, isAxeSpinning: false, lastAtkTime: 0, lastSkillTime: 0 };
+    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 450, maxHp: 450, atk: false, data: myData, facing: 1, walkTimer: 0, scale: 1.0, isDashing: false, isAxeSpinning: false, lastAtkTime: 0, lastSkillTime: 0 };
     
     pEnemy = { 
       x: enemyX, y: canvas.height - 25, vy: 0, isGrounded: true, 
@@ -426,7 +427,7 @@ game_code = """
 
     if(gameMode === 'story') {
       if(won) {
-        winTxt.innerText = isBossStage ? "🏆 DIỆT BOSS THÀNH CÔNG!" : "🎉 HOÀN THÀNH MÀN " + currentStage;
+        winTxt.innerText = isBossStage ? "🏆 DIỆT BOSS HOÀN HẢO!" : "🎉 HOÀN THÀNH MÀN " + currentStage;
         winTxt.style.color = "#2ed573";
         currentStage++;
       } else {
@@ -434,7 +435,7 @@ game_code = """
         winTxt.style.color = "#ff4757";
       }
     } else {
-      winTxt.innerText = won ? "🏆 BẠN THẮNG!" : "💀 BẠN THUA!";
+      winTxt.innerText = won ? "🏆 CHIẾN THẮNG VẺ VANG!" : "💀 THẤT BẠI!";
       winTxt.style.color = won ? "#2ed573" : "#ff4757";
     }
 
@@ -474,82 +475,82 @@ game_code = """
     showScreen('mainMenu');
   }
 
-  function jump() { if (pSelf && pSelf.isGrounded && isRunning) { pSelf.vy = -11; pSelf.isGrounded = false; } }
+  function jump() { if (pSelf && pSelf.isGrounded && isRunning) { pSelf.vy = -12; pSelf.isGrounded = false; } }
 
   function attack() {
     if(!pSelf || !isRunning) return;
     
     let now = Date.now();
-    let cooldown = (pSelf.data.weapon === 'dagger') ? 150 : 200; 
+    let cooldown = (pSelf.data.weapon === 'dagger') ? 140 : 190; 
     if (now - (pSelf.lastAtkTime || 0) < cooldown) return;
     pSelf.lastAtkTime = now;
 
     pSelf.atk = true; 
-    let reach = 40;
-    let dmg = 12;
+    let reach = 45;
+    let dmg = 15;
 
-    if(pSelf.data.weapon === 'sword') { reach = 55; dmg = 14; }
-    else if(pSelf.data.weapon === 'axe') { reach = 65; dmg = 25; }
-    else if(pSelf.data.weapon === 'dagger') { reach = 35; dmg = 9; }
-    else if(pSelf.data.weapon === 'spear') { reach = 75; dmg = 18; }
+    if(pSelf.data.weapon === 'sword') { reach = 60; dmg = 18; }
+    else if(pSelf.data.weapon === 'axe') { reach = 70; dmg = 28; }
+    else if(pSelf.data.weapon === 'dagger') { reach = 38; dmg = 11; }
+    else if(pSelf.data.weapon === 'spear') { reach = 80; dmg = 22; }
 
     if(Math.abs(pSelf.x - pEnemy.x) < reach * pSelf.scale) {
       pEnemy.hp = Math.max(0, pEnemy.hp - dmg);
-      addParticles(pEnemy.x, pEnemy.y - 20 * pEnemy.scale, '#ff4757', 8);
+      addParticles(pEnemy.x, pEnemy.y - 20 * pEnemy.scale, pSelf.data.color, 12);
     }
     setTimeout(() => pSelf.atk = false, 120);
   }
 
   function createBullet(caster, target, weapon) {
     let dir = caster.facing;
-    let startX = caster.x + dir * 18 * caster.scale;
-    let startY = caster.y - 22 * caster.scale;
+    let startX = caster.x + dir * 20 * caster.scale;
+    let startY = caster.y - 24 * caster.scale;
 
     if (weapon === 'staff') {
-      bullets.push({ x: startX, y: startY, vx: dir * 7.5, color: '#fffa65', radius: 8, dmg: 18, type: 'orb' });
+      bullets.push({ x: startX, y: startY, vx: dir * 8.5, color: '#fffa65', radius: 9, dmg: 20, type: 'orb' });
     } else if (weapon === 'bow') {
-      bullets.push({ x: startX, y: startY, vx: dir * 12, color: '#c7ecee', radius: 3, dmg: 12, type: 'arrow' });
+      bullets.push({ x: startX, y: startY, vx: dir * 13, color: '#c7ecee', radius: 3.5, dmg: 14, type: 'arrow' });
     } else if (weapon === 'laser') {
-      bullets.push({ x: startX, y: startY, vx: dir * 18, color: '#66fcf1', radius: 2, dmg: 16, type: 'laser' });
+      bullets.push({ x: startX, y: startY, vx: dir * 19, color: '#66fcf1', radius: 2.5, dmg: 18, type: 'laser' });
     }
   }
 
   function triggerDash(p) {
     p.isDashing = true;
-    addParticles(p.x, p.y - 20, p.data.color, 10);
-    let dashDist = p.facing * 75;
+    addParticles(p.x, p.y - 20, p.data.color, 14);
+    let dashDist = p.facing * 85;
     p.x = Math.max(20, Math.min(canvas.width - 20, p.x + dashDist));
     
     let other = (p === pSelf) ? pEnemy : pSelf;
-    if(Math.abs(p.x - other.x) < 45) {
-      other.hp = Math.max(0, other.hp - 15);
-      addParticles(other.x, other.y - 20, '#ff4757', 12);
+    if(Math.abs(p.x - other.x) < 50) {
+      other.hp = Math.max(0, other.hp - 18);
+      addParticles(other.x, other.y - 20, '#ff4757', 16);
     }
     setTimeout(() => p.isDashing = false, 200);
   }
 
   function triggerSpearThrust(p) {
     p.isDashing = true;
-    addParticles(p.x, p.y - 20, '#f1c40f', 16);
-    let thrustDist = p.facing * 130; 
+    addParticles(p.x, p.y - 20, '#f1c40f', 20);
+    let thrustDist = p.facing * 140; 
     p.x = Math.max(20, Math.min(canvas.width - 20, p.x + thrustDist));
     
     let other = (p === pSelf) ? pEnemy : pSelf;
-    if(Math.abs(p.x - other.x) < 85) {
-      other.hp = Math.max(0, other.hp - 45); 
-      addParticles(other.x, other.y - 20, '#f1c40f', 22);
+    if(Math.abs(p.x - other.x) < 90) {
+      other.hp = Math.max(0, other.hp - 50); 
+      addParticles(other.x, other.y - 20, '#f1c40f', 26);
     }
     setTimeout(() => p.isDashing = false, 250);
   }
 
   function triggerAxeSpinSkill(p) {
     p.isAxeSpinning = true;
-    p.vy = -12; // Bay lên cao
+    p.vy = -13; 
     p.isGrounded = false;
-    addParticles(p.x, p.y - 20, '#ffa502', 18);
+    addParticles(p.x, p.y - 20, '#ffa502', 22);
 
     setTimeout(() => {
-      p.vy = 16; // Đập mạnh xuống đất
+      p.vy = 17; 
       let checkSlam = setInterval(() => {
         let ground = canvas.height - 25;
         if(p.y >= ground) {
@@ -558,11 +559,11 @@ game_code = """
           p.isAxeSpinning = false;
           clearInterval(checkSlam);
           
-          addParticles(p.x, p.y, '#ff4757', 25);
+          addParticles(p.x, p.y, '#ff4757', 30);
           let other = (p === pSelf) ? pEnemy : pSelf;
-          if(Math.abs(p.x - other.x) < 90) {
-            other.hp = Math.max(0, other.hp - 50);
-            addParticles(other.x, other.y - 20, '#ff4757', 20);
+          if(Math.abs(p.x - other.x) < 100) {
+            other.hp = Math.max(0, other.hp - 60);
+            addParticles(other.x, other.y - 20, '#ff4757', 24);
           }
         }
       }, 20);
@@ -585,7 +586,7 @@ game_code = """
     let now = Date.now();
     let skillCooldown = 0;
     if (pSelf.data.weapon === 'spear') skillCooldown = 2000;
-    else if (pSelf.data.weapon === 'axe') skillCooldown = 5000; // Hồi 5 giây cho rìu
+    else if (pSelf.data.weapon === 'axe') skillCooldown = 5000;
 
     if (now - (pSelf.lastSkillTime || 0) < skillCooldown) return;
     pSelf.lastSkillTime = now;
@@ -605,7 +606,7 @@ game_code = """
 
   function addParticles(x, y, color, count) {
     for(let i=0; i<count; i++) {
-      particles.push({ x: x, y: y, vx: (Math.random()-0.5)*8, vy: (Math.random()-0.5)*8, life: 18, color: color });
+      particles.push({ x: x, y: y, vx: (Math.random()-0.5)*9, vy: (Math.random()-0.5)*9, life: 22, color: color });
     }
   }
 
@@ -614,34 +615,34 @@ game_code = """
     animFrame++;
     let ground = canvas.height - 25;
 
-    pSelf.y += pSelf.vy; pSelf.vy += 0.55;
+    pSelf.y += pSelf.vy; pSelf.vy += 0.58;
     if (pSelf.y >= ground) { pSelf.y = ground; pSelf.vy = 0; pSelf.isGrounded = true; }
 
-    if (moveL) { pSelf.x -= 4.2; pSelf.facing = -1; pSelf.walkTimer += 0.2; }
-    else if (moveR) { pSelf.x += 4.2; pSelf.facing = 1; pSelf.walkTimer += 0.2; }
+    if (moveL) { pSelf.x -= 4.5; pSelf.facing = -1; pSelf.walkTimer += 0.25; }
+    else if (moveR) { pSelf.x += 4.5; pSelf.facing = 1; pSelf.walkTimer += 0.25; }
     else { pSelf.walkTimer = 0; }
     
     pSelf.x = Math.max(20, Math.min(canvas.width - 20, pSelf.x));
 
     if(gameMode === 'story') {
-      pEnemy.y += pEnemy.vy; pEnemy.vy += 0.55;
+      pEnemy.y += pEnemy.vy; pEnemy.vy += 0.58;
       if (pEnemy.y >= ground) { pEnemy.y = ground; pEnemy.vy = 0; pEnemy.isGrounded = true; }
       
       pEnemy.facing = pSelf.x < pEnemy.x ? -1 : 1;
-      let speed = 1.5 + (currentStage * 0.15);
-      if(isBossStage) speed = 2.2;
+      let speed = 1.6 + (currentStage * 0.15);
+      if(isBossStage) speed = 2.4;
 
-      if (!pEnemy.isAxeSpinning && Math.abs(pSelf.x - pEnemy.x) > 35 * pEnemy.scale) {
+      if (!pEnemy.isAxeSpinning && Math.abs(pSelf.x - pEnemy.x) > 40 * pEnemy.scale) {
         pEnemy.x += (pSelf.x < pEnemy.x) ? -speed : speed;
-        pEnemy.walkTimer += 0.2;
+        pEnemy.walkTimer += 0.25;
       }
 
       let now = Date.now();
-      let enemyCooldown = (pEnemy.data.weapon === 'dagger') ? 150 : 200;
+      let enemyCooldown = (pEnemy.data.weapon === 'dagger') ? 140 : 190;
       let canEnemyAtk = (now - (pEnemy.lastAtkTime || 0) > enemyCooldown);
 
-      let atkChance = 0.02 + (currentStage * 0.003);
-      if (Math.random() < 0.008 && pEnemy.isGrounded) pEnemy.vy = -11;
+      let atkChance = 0.025 + (currentStage * 0.0035);
+      if (Math.random() < 0.009 && pEnemy.isGrounded) pEnemy.vy = -12;
       
       if (Math.random() < atkChance && canEnemyAtk) { 
         pEnemy.lastAtkTime = now;
@@ -649,21 +650,21 @@ game_code = """
         setTimeout(() => pEnemy.atk = false, 120); 
         if(['staff', 'bow', 'laser'].includes(pEnemy.data.weapon)) {
           createBullet(pEnemy, pSelf, pEnemy.data.weapon); 
-        } else if(Math.abs(pSelf.x - pEnemy.x) < 55 * pEnemy.scale) {
-          pSelf.hp = Math.max(0, pSelf.hp - (8 + currentStage * 1.5));
-          addParticles(pSelf.x, pSelf.y - 20, '#ff4757', 6);
+        } else if(Math.abs(pSelf.x - pEnemy.x) < 60 * pEnemy.scale) {
+          pSelf.hp = Math.max(0, pSelf.hp - (10 + currentStage * 1.5));
+          addParticles(pSelf.x, pSelf.y - 20, '#ff4757', 8);
         }
       }
 
       if (pEnemy.data.weapon === 'spear') {
         let enemySkillCooldown = 2000;
-        if (now - (pEnemy.lastSkillTime || 0) > enemySkillCooldown && Math.abs(pSelf.x - pEnemy.x) < 140) {
+        if (now - (pEnemy.lastSkillTime || 0) > enemySkillCooldown && Math.abs(pSelf.x - pEnemy.x) < 150) {
           pEnemy.lastSkillTime = now;
           triggerSkill(pEnemy);
         }
       } else if (pEnemy.data.weapon === 'axe') {
         let enemySkillCooldown = 5000;
-        if (now - (pEnemy.lastSkillTime || 0) > enemySkillCooldown && Math.abs(pSelf.x - pEnemy.x) < 160) {
+        if (now - (pEnemy.lastSkillTime || 0) > enemySkillCooldown && Math.abs(pSelf.x - pEnemy.x) < 170) {
           pEnemy.lastSkillTime = now;
           triggerSkill(pEnemy);
         }
@@ -684,30 +685,51 @@ game_code = """
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    ctx.fillStyle = "#1f2833"; ctx.fillRect(0, ground + 20, canvas.width, 10);
-    ctx.fillStyle = "#66fcf1"; ctx.fillRect(0, ground + 18, canvas.width, 2);
+    // Vẽ nền sân đấu phong cách lưới không gian
+    ctx.strokeStyle = "rgba(102, 252, 241, 0.07)";
+    ctx.lineWidth = 1;
+    for(let i=0; i<canvas.width; i+=40) {
+      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+    }
 
+    ctx.fillStyle = "#1f2833"; ctx.fillRect(0, ground + 20, canvas.width, 12);
+    ctx.fillStyle = "#66fcf1"; 
+    ctx.shadowColor = "#66fcf1"; ctx.shadowBlur = 10;
+    ctx.fillRect(0, ground + 18, canvas.width, 3);
+    ctx.shadowBlur = 0;
+
+    // Thanh máu thiết kế sang trọng
     let w = canvas.width * 0.35;
-    ctx.fillStyle = "#1f2833"; ctx.fillRect(10, 10, w, 14); 
-    ctx.fillStyle = pSelf.data.color; ctx.fillRect(10, 10, w * (Math.max(0, pSelf.hp) / pSelf.maxHp), 14);
-    ctx.strokeStyle = "#fff"; ctx.lineWidth = 1; ctx.strokeRect(10, 10, w, 14);
+    ctx.fillStyle = "rgba(31, 40, 51, 0.8)"; ctx.fillRect(12, 12, w, 16); 
+    ctx.fillStyle = pSelf.data.color; 
+    ctx.shadowColor = pSelf.data.color; ctx.shadowBlur = 8;
+    ctx.fillRect(12, 12, w * (Math.max(0, pSelf.hp) / pSelf.maxHp), 16);
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.strokeRect(12, 12, w, 16);
 
     if(isBossStage) {
       let bossW = canvas.width * 0.6;
       let bossX = (canvas.width - bossW) / 2;
-      ctx.fillStyle = "#1f2833"; ctx.fillRect(bossX, 32, bossW, 18);
-      ctx.fillStyle = "#ff0055"; ctx.fillRect(bossX, 32, bossW * (Math.max(0, pEnemy.hp) / pEnemy.maxHp), 18);
-      ctx.strokeStyle = "#ff4757"; ctx.lineWidth = 2; ctx.strokeRect(bossX, 32, bossW, 18);
-      ctx.fillStyle = "#fff"; ctx.font = "bold 12px sans-serif"; ctx.fillText("🔥 BOSS KHỔNG LỒ (MÀN " + currentStage + ") 🔥", canvas.width/2 - 80, 26);
+      ctx.fillStyle = "rgba(31, 40, 51, 0.8)"; ctx.fillRect(bossX, 35, bossW, 20);
+      ctx.fillStyle = "#ff0055"; 
+      ctx.shadowColor = "#ff0055"; ctx.shadowBlur = 12;
+      ctx.fillRect(bossX, 35, bossW * (Math.max(0, pEnemy.hp) / pEnemy.maxHp), 20);
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = "#ff4757"; ctx.lineWidth = 2; ctx.strokeRect(bossX, 35, bossW, 20);
+      ctx.fillStyle = "#fff"; ctx.font = "bold 13px sans-serif"; ctx.fillText("🔥 BOSS KHỔNG LỒ (MÀN " + currentStage + ") 🔥", canvas.width/2 - 95, 28);
     } else {
-      ctx.fillStyle = "#1f2833"; ctx.fillRect(canvas.width - 10 - w, 10, w, 14);
-      ctx.fillStyle = pEnemy.data.color; ctx.fillRect(canvas.width - 10 - w, 10, w * (Math.max(0, pEnemy.hp) / pEnemy.maxHp), 14);
-      ctx.strokeStyle = "#fff"; ctx.lineWidth = 1; ctx.strokeRect(canvas.width - 10 - w, 10, w, 14);
+      ctx.fillStyle = "rgba(31, 40, 51, 0.8)"; ctx.fillRect(canvas.width - 12 - w, 12, w, 16);
+      ctx.fillStyle = pEnemy.data.color; 
+      ctx.shadowColor = pEnemy.data.color; ctx.shadowBlur = 8;
+      ctx.fillRect(canvas.width - 12 - w, 12, w * (Math.max(0, pEnemy.hp) / pEnemy.maxHp), 16);
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.strokeRect(canvas.width - 12 - w, 12, w, 16);
     }
 
     particles.forEach((p, i) => {
       p.x += p.vx; p.y += p.vy; p.life--;
-      ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, 3, 3);
+      ctx.fillStyle = p.color; 
+      ctx.fillRect(p.x, p.y, 3.5, 3.5);
       if(p.life <= 0) particles.splice(i, 1);
     });
 
@@ -715,19 +737,19 @@ game_code = """
       b.x += b.vx;
       ctx.fillStyle = b.color;
       ctx.shadowColor = b.color;
-      ctx.shadowBlur = 10;
+      ctx.shadowBlur = 15;
 
       if(b.type === 'laser') {
-        ctx.fillRect(b.x, b.y - 2, 25 * Math.sign(b.vx), 4);
+        ctx.fillRect(b.x, b.y - 3, 28 * Math.sign(b.vx), 6);
       } else {
         ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2); ctx.fill();
       }
       ctx.shadowBlur = 0;
 
       let target = (b.vx > 0 && (isHost || gameMode === 'story')) ? pEnemy : pSelf;
-      if (Math.abs(b.x - target.x) < 22 * target.scale && Math.abs(b.y - (target.y - 20 * target.scale)) < 30 * target.scale) {
+      if (Math.abs(b.x - target.x) < 24 * target.scale && Math.abs(b.y - (target.y - 20 * target.scale)) < 32 * target.scale) {
         target.hp = Math.max(0, target.hp - b.dmg);
-        addParticles(b.x, b.y, b.color, 10);
+        addParticles(b.x, b.y, b.color, 12);
         bullets.splice(idx, 1);
       }
     });
@@ -744,66 +766,81 @@ game_code = """
 
   function drawPlayer(p) {
     let f = p.facing, x = p.x, y = p.y, s = p.scale;
-    let legSwing = Math.sin(p.walkTimer * 5) * 10;
+    let legSwing = Math.sin(p.walkTimer * 5.5) * 12;
 
     ctx.save();
     ctx.shadowColor = p.data.color;
-    ctx.shadowBlur = (p.isDashing || p.isAxeSpinning) ? 20 : 8;
+    ctx.shadowBlur = (p.isDashing || p.isAxeSpinning) ? 25 : 10;
 
     if(p.isAxeSpinning) {
       ctx.translate(x, y - 20 * s);
-      ctx.rotate(animFrame * 0.5); // Hiệu ứng xoay tròn khi dùng skill rìu
+      ctx.rotate(animFrame * 0.6); 
       ctx.translate(-x, -(y - 20 * s));
     }
 
+    // Áo choàng động uốn lượn
     if(p.data.cape && p.data.cape !== 'none') {
-      ctx.fillStyle = p.data.cape === 'red' ? '#ff3838' : '#2f3542';
+      ctx.fillStyle = p.data.cape === 'red' ? '#ff3838' : '#1e272e';
       ctx.beginPath(); 
-      ctx.moveTo(x - f * 4 * s, y - 25 * s); 
-      ctx.lineTo(x - f * (18 + Math.sin(animFrame*0.2)*4) * s, y + 5 * s); 
-      ctx.lineTo(x - f * 4 * s, y + 2 * s); 
+      ctx.moveTo(x - f * 4 * s, y - 26 * s); 
+      ctx.lineTo(x - f * (20 + Math.sin(animFrame*0.25)*6) * s, y + 6 * s); 
+      ctx.lineTo(x - f * 4 * s, y + 3 * s); 
       ctx.fill();
     }
 
-    ctx.strokeStyle = p.data.color; ctx.lineWidth = 3 * s;
+    // Khung xương người que cách điệu bóng bẩy
+    ctx.strokeStyle = p.data.color; ctx.lineWidth = 3.5 * s;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     
-    ctx.beginPath(); ctx.arc(x, y - 35 * s, 9 * s, 0, Math.PI * 2); ctx.stroke();
+    // Đầu
+    ctx.beginPath(); ctx.arc(x, y - 36 * s, 9.5 * s, 0, Math.PI * 2); ctx.stroke();
+    // Thân
     ctx.beginPath(); ctx.moveTo(x, y - 26 * s); ctx.lineTo(x, y - 8 * s); ctx.stroke();
     
-    ctx.beginPath(); ctx.moveTo(x, y - 8 * s); ctx.lineTo(x - (8 + legSwing) * s, y + 20 * s); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(x, y - 8 * s); ctx.lineTo(x + (8 + legSwing) * s, y + 20 * s); ctx.stroke();
+    // Chân
+    ctx.beginPath(); ctx.moveTo(x, y - 8 * s); ctx.lineTo(x - (9 + legSwing) * s, y + 21 * s); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y - 8 * s); ctx.lineTo(x + (9 + legSwing) * s, y + 21 * s); ctx.stroke();
 
-    let handX = x + (p.atk ? f * 22 * s : f * 8 * s);
-    let handY = y - (p.atk ? 24 * s : 16 * s);
+    // Tay cầm vũ khí
+    let handX = x + (p.atk ? f * 24 * s : f * 9 * s);
+    let handY = y - (p.atk ? 25 * s : 16 * s);
     ctx.beginPath(); ctx.moveTo(x, y - 22 * s); ctx.lineTo(handX, handY); ctx.stroke();
 
+    // Mũ / Nón chi tiết
     if(p.data.hat === 'knight') {
-      ctx.fillStyle = '#a4b0be'; ctx.fillRect(x - 10 * s, y - 48 * s, 20 * s, 8 * s);
+      ctx.fillStyle = '#d1d8e0'; ctx.fillRect(x - 11 * s, y - 50 * s, 22 * s, 9 * s);
+      ctx.fillStyle = '#ff4757'; ctx.fillRect(x - 2 * s, y - 54 * s, 4 * s, 6 * s);
     } else if(p.data.hat === 'wizard') {
-      ctx.fillStyle = '#5f27cd'; ctx.beginPath(); ctx.moveTo(x - 12 * s, y - 42 * s); ctx.lineTo(x, y - 62 * s); ctx.lineTo(x + 12 * s, y - 42 * s); ctx.fill();
+      ctx.fillStyle = '#8854d0'; ctx.beginPath(); ctx.moveTo(x - 13 * s, y - 43 * s); ctx.lineTo(x, y - 65 * s); ctx.lineTo(x + 13 * s, y - 43 * s); ctx.fill();
     }
 
+    // Vũ khí mô hình 3D phong cách Neon
     ctx.save(); ctx.translate(handX, handY);
     if(p.data.weapon === 'sword') {
-      ctx.strokeStyle = '#fff'; ctx.lineWidth = 3 * s; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 25 * s, -18 * s); ctx.stroke();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 3.5 * s; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 28 * s, -20 * s); ctx.stroke();
+      ctx.fillStyle = '#66fcf1'; ctx.fillRect(f * 5 * s, -4 * s, 6 * s, 2 * s);
     } else if(p.data.weapon === 'axe') {
-      ctx.strokeStyle = '#dcdde1'; ctx.lineWidth = 4 * s; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 20 * s, -22 * s); ctx.stroke();
-      ctx.fillStyle = '#ff4757'; ctx.fillRect(f * 15 * s, -28 * s, 10 * s, 12 * s);
+      ctx.strokeStyle = '#dcdde1'; ctx.lineWidth = 4.5 * s; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 22 * s, -24 * s); ctx.stroke();
+      ctx.fillStyle = '#ff4757'; ctx.fillRect(f * 16 * s, -30 * s, 11 * s, 13 * s);
     } else if(p.data.weapon === 'dagger') {
-      ctx.strokeStyle = '#2ed573'; ctx.lineWidth = 2 * s; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 14 * s, -10 * s); ctx.stroke();
+      ctx.strokeStyle = '#2ed573'; ctx.lineWidth = 2.5 * s; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 16 * s, -12 * s); ctx.stroke();
     } else if(p.data.weapon === 'spear') {
-      ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 3.5 * s; 
-      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 60 * s, 0); ctx.stroke();
-      ctx.fillStyle = '#f1c40f'; ctx.fillRect(f * 15 * s - 2 * s, -3 * s, 4 * s, 6 * s);
-      ctx.fillStyle = '#ecf0f1'; ctx.beginPath(); ctx.moveTo(f * 50 * s, -6 * s); ctx.lineTo(f * 70 * s, 0); ctx.lineTo(f * 50 * s, 6 * s); ctx.fill();
-      ctx.fillStyle = '#3498db'; ctx.beginPath(); ctx.moveTo(f * 55 * s, -3 * s); ctx.lineTo(f * 65 * s, 0); ctx.lineTo(f * 55 * s, 3 * s); ctx.fill();
+      ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 4 * s; 
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 65 * s, 0); ctx.stroke();
+      ctx.fillStyle = '#f1c40f'; ctx.fillRect(f * 16 * s - 2 * s, -3.5 * s, 5 * s, 7 * s);
+      ctx.fillStyle = '#ecf0f1'; ctx.beginPath(); ctx.moveTo(f * 54 * s, -7 * s); ctx.lineTo(f * 75 * s, 0); ctx.lineTo(f * 54 * s, 7 * s); ctx.fill();
+      ctx.fillStyle = '#3498db'; ctx.beginPath(); ctx.moveTo(f * 58 * s, -3.5 * s); ctx.lineTo(f * 68 * s, 0); ctx.lineTo(f * 58 * s, 3.5 * s); ctx.fill();
     } else if(p.data.weapon === 'staff') {
-      ctx.strokeStyle = '#78e08f'; ctx.lineWidth = 3 * s; ctx.beginPath(); ctx.moveTo(0, 5 * s); ctx.lineTo(f * 18 * s, -22 * s); ctx.stroke();
-      ctx.fillStyle = '#fffa65'; ctx.beginPath(); ctx.arc(f * 18 * s, -22 * s, 6 * s, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#26de81'; ctx.lineWidth = 3.5 * s; ctx.beginPath(); ctx.moveTo(0, 6 * s); ctx.lineTo(f * 20 * s, -24 * s); ctx.stroke();
+      ctx.fillStyle = '#fed330'; ctx.shadowColor = '#fed330'; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.arc(f * 20 * s, -24 * s, 7 * s, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0;
     } else if(p.data.weapon === 'bow') {
-      ctx.strokeStyle = '#e1b12c'; ctx.lineWidth = 2 * s; ctx.beginPath(); ctx.arc(f * 6 * s, -5 * s, 14 * s, -Math.PI/2, Math.PI/2); ctx.stroke();
+      ctx.strokeStyle = '#f7b731'; ctx.lineWidth = 2.5 * s; ctx.beginPath(); ctx.arc(f * 7 * s, -6 * s, 15 * s, -Math.PI/2, Math.PI/2); ctx.stroke();
     } else if(p.data.weapon === 'laser') {
-      ctx.fillStyle = '#66fcf1'; ctx.fillRect(0, -4 * s, f * 20 * s, 8 * s);
+      ctx.fillStyle = '#66fcf1'; ctx.shadowColor = '#66fcf1'; ctx.shadowBlur = 10;
+      ctx.fillRect(0, -4.5 * s, f * 22 * s, 9 * s);
+      ctx.shadowBlur = 0;
     }
     ctx.restore();
     ctx.restore();
