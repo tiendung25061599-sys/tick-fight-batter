@@ -27,8 +27,26 @@ game_code = """
     }
     .top-btn:active { background: #ff4757; color: #fff; transform: scale(0.95); }
 
-    .screen { position: absolute; top:0; left:0; width: 100%; height: 100%; background: radial-gradient(circle at center, #1f2833 0%, #050508 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; gap: 16px; }
+    .screen { position: absolute; top:0; left:0; width: 100%; height: 100%; background: radial-gradient(circle at center, #1f2833 0%, #050508 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; gap: 14px; }
+    
+    .title-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 5px;
+    }
+    
     h1 { font-size: 32px; color: #66fcf1; text-align: center; text-shadow: 0 0 20px rgba(102, 252, 241, 0.6); letter-spacing: 3px; font-weight: 900; }
+    
+    .author-name {
+      font-size: 15px;
+      color: #70a1ff;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(112, 161, 255, 0.5);
+      text-transform: uppercase;
+    }
     
     .btn { padding: 14px 30px; font-size: 16px; font-weight: bold; background: rgba(31, 40, 51, 0.9); border: 2px solid #66fcf1; border-radius: 12px; color: #66fcf1; cursor: pointer; text-align: center; z-index: 110; min-width: 260px; box-shadow: 0 0 15px rgba(102, 252, 241, 0.25); backdrop-filter: blur(5px); transition: all 0.2s; }
     .btn:active { background: #66fcf1; color: #000; transform: scale(0.95); box-shadow: 0 0 25px #66fcf1; }
@@ -72,7 +90,10 @@ game_code = """
 
   <!-- MAIN MENU -->
   <div id="mainMenu" class="screen">
-    <h1>STICK MAN BATTER FIGHT</h1>
+    <div class="title-container">
+      <h1>STICK MAN BATTER FIGHT</h1>
+      <div class="author-name">Make by Tiến Dũng</div>
+    </div>
     <div class="btn" id="btnStory">📖 STORY MODE (VƯỢT ẢI)</div>
     <div class="btn" style="border-color:#ff4757; color:#ff4757;" id="btnMulti">🌐 MULTIPLAYER (ONLINE)</div>
     <div class="btn" style="border-color:#f7b731; color:#f7b731;" id="btnSettings">⚙️ SETTINGS (CÀI ĐẶT)</div>
