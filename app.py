@@ -123,9 +123,9 @@ game_code = """
     </div>
     <div class="select-box">
       <span>Vũ Khí:</span>
-      <select id="weaponSelect">
+      <select id="weaponSelect" onchange="updateSkillIcon()">
         <option value="sword">⚔️ Kiếm Thần (Cân Bằng)</option>
-        <option value="axe">🪓 Rìu Chiến (Sát Thương Lớn)</option>
+        <option value="axe">🪓 Rìu Chiến (Skill Bay Đập - CD 5s)</option>
         <option value="dagger">🗡️ Dao Độc (Tốc Đánh Nhanh)</option>
         <option value="spear">🔱 Giáo Dài (Skill Đâm Xa - CD 2s)</option>
         <option value="staff">🪄 Trượng Ma Thuật (Cầu Lửa)</option>
@@ -173,7 +173,7 @@ game_code = """
     </div>
     <div class="btn-group">
       <div class="btn-ctrl" id="btnAtk">⚔️<span class="key-hint">M1</span></div>
-      <div class="btn-ctrl" style="border-color:#ff4757" id="btnSkill">🔱<span class="key-hint">M2</span></div>
+      <div class="btn-ctrl" style="border-color:#ff4757" id="btnSkill">🔱<span class="key-hint" id="skillKeyHint">M2</span></div>
     </div>
   </div>
 
@@ -190,6 +190,15 @@ game_code = """
   let enemyData = { color: "#ff4757", weapon: "staff", hat: "wizard", cape: "black" };
 
   let myVoteRematch = false, enemyVoteRematch = false;
+
+  function updateSkillIcon() {
+    let wp = document.getElementById("weaponSelect").value;
+    let skillBtn = document.getElementById("btnSkill");
+    if(wp === 'axe') skillBtn.innerText = "🌀";
+    else if(wp === 'spear') skillBtn.innerText = "🔱";
+    else if(['staff', 'bow', 'laser'].includes(wp)) skillBtn.innerText = "🔥";
+    else skillBtn.innerText = "⚡";
+  }
 
   function toggleFullscreen() {
     let elem = document.documentElement;
@@ -233,8 +242,9 @@ game_code = """
     currentStage = 1;
     document.getElementById('customTitle').innerText = "STORY MODE - MÀN " + currentStage;
     showScreen('customScreen'); 
+    updateSkillIcon();
   });
-  addClickEvent('btnMulti', () => { gameMode = 'online'; showScreen('lobbyMenu'); });
+  addClickEvent('btnMulti', () => { gameMode = 'online'; showScreen('lobbyMenu'); updateSkillIcon(); });
   addClickEvent('btnSettings', () => showScreen('settingsScreen'));
   addClickEvent('btnBackToMenu', () => showScreen('mainMenu'));
   addClickEvent('btnBackFromLobby', () => showScreen('mainMenu'));
@@ -355,7 +365,7 @@ game_code = """
         enemyHp = 900 + (currentStage * 40);
         enemyScale = 1.8;
         enemyColor = "#ff0055";
-        enemyWeapon = "spear";
+        enemyWeapon = "axe";
       } else {
         enemyHp = 300 + (currentStage * 30);
         enemyScale = 1.0 + (currentStage * 0.02);
@@ -364,13 +374,13 @@ game_code = """
       }
     }
 
-    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 400, maxHp: 400, atk: false, data: myData, facing: 1, walkTimer: 0, scale: 1.0, isDashing: false, lastAtkTime: 0, lastSkillTime: 0 };
+    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 400, maxHp: 400, atk: false, data: myData, facing: 1, walkTimer: 0, scale: 1.0, isDashing: false, isAxeSpinning: false, lastAtkTime: 0, lastSkillTime: 0 };
     
     pEnemy = { 
       x: enemyX, y: canvas.height - 25, vy: 0, isGrounded: true, 
       hp: enemyHp, maxHp: enemyHp, atk: false, 
       data: (gameMode === 'story') ? { color: enemyColor, weapon: enemyWeapon, hat: isBossStage ? "knight" : "none", cape: isBossStage ? "black" : "none" } : enemyData, 
-      facing: -1, walkTimer: 0, scale: enemyScale, isDashing: false, lastAtkTime: 0, lastSkillTime: 0 
+      facing: -1, walkTimer: 0, scale: enemyScale, isDashing: false, isAxeSpinning: false, lastAtkTime: 0, lastSkillTime: 0 
     };
     
     bullets = []; particles = [];
@@ -399,6 +409,8 @@ game_code = """
       pEnemy.walkTimer = data.walkTimer;
     } else if(data.type === 'SKILL' || data.type === 'DASH') {
       triggerSkill(pEnemy);
+    } else if(data.type === 'AXE_SPIN') {
+      triggerAxeSpinSkill(pEnemy);
     } else if(data.type === 'SHOOT') {
       createBullet(pEnemy, pSelf, data.weapon);
     } else if(data.type === 'VOTE_REMATCH') {
@@ -530,9 +542,40 @@ game_code = """
     setTimeout(() => p.isDashing = false, 250);
   }
 
+  function triggerAxeSpinSkill(p) {
+    p.isAxeSpinning = true;
+    p.vy = -13; // Bay lên cao
+    p.isGrounded = false;
+    addParticles(p.x, p.y - 20, '#ffa502', 18);
+
+    // Sau khi bay lên khoảng 300ms thì bắt đầu lao mạnh xuống đất đập
+    setTimeout(() => {
+      p.vy = 18; // Lao mạnh xuống đất
+      let checkSlam = setInterval(() => {
+        let ground = canvas.height - 25;
+        if(p.y >= ground) {
+          p.y = ground;
+          p.vy = 0;
+          p.isAxeSpinning = false;
+          clearInterval(checkSlam);
+          
+          // Gây sát thương diện rộng khi đập xuống đất
+          addParticles(p.x, p.y, '#ff4757', 25);
+          let other = (p === pSelf) ? pEnemy : pSelf;
+          if(Math.abs(p.x - other.x) < 90) {
+            other.hp = Math.max(0, other.hp - 50);
+            addParticles(other.x, other.y - 20, '#ff4757', 20);
+          }
+        }
+      }, 20);
+    }, 300);
+  }
+
   function triggerSkill(p) {
     if (p.data.weapon === 'spear') {
       triggerSpearThrust(p);
+    } else if (p.data.weapon === 'axe') {
+      triggerAxeSpinSkill(p);
     } else {
       triggerDash(p);
     }
@@ -542,7 +585,10 @@ game_code = """
     if(!pSelf || !isRunning) return;
     
     let now = Date.now();
-    let skillCooldown = (pSelf.data.weapon === 'spear') ? 2000 : 0; 
+    let skillCooldown = 0;
+    if (pSelf.data.weapon === 'spear') skillCooldown = 2000;
+    else if (pSelf.data.weapon === 'axe') skillCooldown = 5000; // Hồi 5 giây cho rìu
+
     if (now - (pSelf.lastSkillTime || 0) < skillCooldown) return;
     pSelf.lastSkillTime = now;
 
@@ -553,7 +599,10 @@ game_code = """
       if(gameMode === 'online' && conn && conn.open) conn.send({ type: 'SHOOT', weapon: pSelf.data.weapon });
     }
 
-    if(gameMode === 'online' && conn && conn.open) conn.send({ type: 'SKILL' });
+    if(gameMode === 'online' && conn && conn.open) {
+      if(pSelf.data.weapon === 'axe') conn.send({ type: 'AXE_SPIN' });
+      else conn.send({ type: 'SKILL' });
+    }
   }
 
   function addParticles(x, y, color, count) {
@@ -584,7 +633,7 @@ game_code = """
       let speed = 1.5 + (currentStage * 0.15);
       if(isBossStage) speed = 2.2;
 
-      if (Math.abs(pSelf.x - pEnemy.x) > 35 * pEnemy.scale) {
+      if (!pEnemy.isAxeSpinning && Math.abs(pSelf.x - pEnemy.x) > 35 * pEnemy.scale) {
         pEnemy.x += (pSelf.x < pEnemy.x) ? -speed : speed;
         pEnemy.walkTimer += 0.2;
       }
@@ -611,6 +660,12 @@ game_code = """
       if (pEnemy.data.weapon === 'spear') {
         let enemySkillCooldown = 2000;
         if (now - (pEnemy.lastSkillTime || 0) > enemySkillCooldown && Math.abs(pSelf.x - pEnemy.x) < 140) {
+          pEnemy.lastSkillTime = now;
+          triggerSkill(pEnemy);
+        }
+      } else if (pEnemy.data.weapon === 'axe') {
+        let enemySkillCooldown = 5000;
+        if (now - (pEnemy.lastSkillTime || 0) > enemySkillCooldown && Math.abs(pSelf.x - pEnemy.x) < 160) {
           pEnemy.lastSkillTime = now;
           triggerSkill(pEnemy);
         }
@@ -695,7 +750,7 @@ game_code = """
 
     ctx.save();
     ctx.shadowColor = p.data.color;
-    ctx.shadowBlur = p.isDashing ? 20 : 8;
+    ctx.shadowBlur = (p.isDashing || p.isAxeSpinning) ? 20 : 8;
 
     if(p.data.cape && p.data.cape !== 'none') {
       ctx.fillStyle = p.data.cape === 'red' ? '#ff3838' : '#2f3542';
@@ -724,6 +779,13 @@ game_code = """
       ctx.fillStyle = '#5f27cd'; ctx.beginPath(); ctx.moveTo(x - 12 * s, y - 42 * s); ctx.lineTo(x, y - 62 * s); ctx.lineTo(x + 12 * s, y - 42 * s); ctx.fill();
     }
 
+    ctx.save(); 
+    if(p.isAxeSpinning) {
+      ctx.translate(x, y - 20 * s);
+      ctx.rotate(animFrame * 0.4); // Xoay vòng người/rìu khi kích hoạt skill
+      ctx.translate(-x, -(y - 20 * s));
+    }
+
     ctx.save(); ctx.translate(handX, handY);
     if(p.data.weapon === 'sword') {
       ctx.strokeStyle = '#fff'; ctx.lineWidth = 3 * s; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 25 * s, -18 * s); ctx.stroke();
@@ -734,25 +796,10 @@ game_code = """
       ctx.strokeStyle = '#2ed573'; ctx.lineWidth = 2 * s; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 14 * s, -10 * s); ctx.stroke();
     } else if(p.data.weapon === 'spear') {
       ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 3.5 * s; 
-      // Chĩa thẳng giáo về phía trước ngang tầm ngực nhân vật
       ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 60 * s, 0); ctx.stroke();
-      
-      ctx.fillStyle = '#f1c40f'; 
-      ctx.fillRect(f * 15 * s - 2 * s, -3 * s, 4 * s, 6 * s);
-
-      ctx.fillStyle = '#ecf0f1'; 
-      ctx.beginPath(); 
-      ctx.moveTo(f * 50 * s, -6 * s); 
-      ctx.lineTo(f * 70 * s, 0); 
-      ctx.lineTo(f * 50 * s, 6 * s); 
-      ctx.fill();
-
-      ctx.fillStyle = '#3498db'; 
-      ctx.beginPath(); 
-      ctx.moveTo(f * 55 * s, -3 * s); 
-      ctx.lineTo(f * 65 * s, 0); 
-      ctx.lineTo(f * 55 * s, 3 * s); 
-      ctx.fill();
+      ctx.fillStyle = '#f1c40f'; ctx.fillRect(f * 15 * s - 2 * s, -3 * s, 4 * s, 6 * s);
+      ctx.fillStyle = '#ecf0f1'; ctx.beginPath(); ctx.moveTo(f * 50 * s, -6 * s); ctx.lineTo(f * 70 * s, 0); ctx.lineTo(f * 50 * s, 6 * s); ctx.fill();
+      ctx.fillStyle = '#3498db'; ctx.beginPath(); ctx.moveTo(f * 55 * s, -3 * s); ctx.lineTo(f * 65 * s, 0); ctx.lineTo(f * 55 * s, 3 * s); ctx.fill();
     } else if(p.data.weapon === 'staff') {
       ctx.strokeStyle = '#78e08f'; ctx.lineWidth = 3 * s; ctx.beginPath(); ctx.moveTo(0, 5 * s); ctx.lineTo(f * 18 * s, -22 * s); ctx.stroke();
       ctx.fillStyle = '#fffa65'; ctx.beginPath(); ctx.arc(f * 18 * s, -22 * s, 6 * s, 0, Math.PI*2); ctx.fill();
@@ -761,6 +808,7 @@ game_code = """
     } else if(p.data.weapon === 'laser') {
       ctx.fillStyle = '#66fcf1'; ctx.fillRect(0, -4 * s, f * 20 * s, 8 * s);
     }
+    ctx.restore();
     ctx.restore();
     ctx.restore();
   }
@@ -801,7 +849,7 @@ game_code = """
   bindBtn("btnLeft", () => moveL = true, () => moveL = false);
   bindBtn("btnRight", () => moveR = true, () => moveR = false);
   bindBtn("btnJump", () => jump());
-  bindBtn("btnAtk", () => attack());
+  bindBtn("btnAtk", () => an effect);
   bindBtn("btnSkill", () => useSkill());
 </script>
 </body>
