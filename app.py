@@ -532,7 +532,9 @@ game_code = """
     if (weapon === 'staff') {
       bullets.push({ x: startX, y: startY, vx: dir * 9.5, color: '#fffa65', radius: 9, dmg: 22 + dmgBonus, type: 'orb', shooter: caster });
     } else if (weapon === 'bow') {
-      bullets.push({ x: startX, y: startY, vx: dir * 14, color: '#c7ecee', radius: 3.5, dmg: 16 + dmgBonus, type: 'arrow', shooter: caster });
+      // Đã chỉnh sát thương cây cung về 2
+      let bowDmg = (caster === pEnemy && gameMode === 'story') ? Math.max(2, 2 + Math.floor(currentStage / 2)) : 2;
+      bullets.push({ x: startX, y: startY, vx: dir * 14, color: '#c7ecee', radius: 3.5, dmg: bowDmg, type: 'arrow', shooter: caster });
     } else if (weapon === 'laser') {
       bullets.push({ x: startX, y: startY, vx: dir * 20, color: '#66fcf1', radius: 2.5, dmg: 20 + dmgBonus, type: 'laser', shooter: caster });
     }
