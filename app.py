@@ -14,15 +14,19 @@ game_code = """
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
     body { width: 100vw; height: 100vh; background: #0b0c10; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; position: relative; }
     
-    /* NÚT QUAY LẠI CỐ ĐỊNH Ở GÓC TRÊN BÊN PHẢI */
-    #topRightBackBtn { 
+    /* NÚT QUAY LẠI CỐ ĐỊNH Ở GÓC TRÊN BÊN PHẢI (TRONG TRẬN) */
+    .top-bar {
       position: absolute; top: 15px; right: 20px; 
-      padding: 8px 18px; background: #1f2833; border: 2px solid #ff4757; 
-      color: #ff4757; border-radius: 8px; z-index: 999; cursor: pointer; 
-      font-weight: bold; font-size: 14px; box-shadow: 0 0 10px rgba(255, 71, 87, 0.3);
-      display: none; transition: all 0.2s;
+      display: flex; gap: 10px; z-index: 999;
     }
-    #topRightBackBtn:active { background: #ff4757; color: #fff; transform: scale(0.95); }
+
+    .top-btn { 
+      padding: 8px 16px; background: #1f2833; border: 2px solid #ff4757; 
+      color: #ff4757; border-radius: 8px; cursor: pointer; 
+      font-weight: bold; font-size: 13px; box-shadow: 0 0 10px rgba(255, 71, 87, 0.3);
+      transition: all 0.2s; outline: none; display: none;
+    }
+    .top-btn:active { background: #ff4757; color: #fff; transform: scale(0.95); }
 
     .screen { position: absolute; top:0; left:0; width: 100%; height: 100%; background: radial-gradient(circle, #1f2833 0%, #0b0c10 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; gap: 14px; }
     h1 { font-size: 28px; color: #66fcf1; text-align: center; text-shadow: 0 0 15px #66fcf1; letter-spacing: 2px; }
@@ -61,14 +65,26 @@ game_code = """
 </head>
 <body>
 
-  <!-- NÚT QUAY LẠI TOP-RIGHT -->
-  <button id="topRightBackBtn" onclick="quitGame()">🏠 MENU VỀ TRANG CHÍNH</button>
+  <!-- NÚT QUAY LẠI KHI TRONG TRẬN -->
+  <div class="top-bar">
+    <button class="top-btn" id="topRightBackBtn" onclick="quitGame()">🏠 MENU VỀ TRANG CHÍNH</button>
+  </div>
 
   <!-- MAIN MENU -->
   <div id="mainMenu" class="screen">
     <h1>STICKMAN BATTLE</h1>
     <div class="btn" id="btnStory">📖 STORY MODE (VƯỢT ẢI)</div>
     <div class="btn" style="border-color:#ff4757; color:#ff4757;" id="btnMulti">🌐 MULTIPLAYER (ONLINE)</div>
+    <div class="btn" style="border-color:#f7b731; color:#f7b731;" id="btnSettings">⚙️ SETTINGS (CÀI ĐẶT)</div>
+  </div>
+
+  <!-- SETTINGS SCREEN -->
+  <div id="settingsScreen" class="screen" style="display:none;">
+    <h1>CÀI ĐẶT TRÒ CHƠI</h1>
+    <div class="select-box" style="justify-content: center;">
+      <button class="btn" id="btnFullscreenToggle" onclick="toggleFullscreen()" style="min-width: 280px; border-color:#66fcf1; color:#66fcf1;">📺 BẬT FULLSCREEN</button>
+    </div>
+    <div class="btn" style="border-color:#ff4757; color:#ff4757; margin-top: 20px;" id="btnBackToMenu">⬅ QUAY LẠI MENU</div>
   </div>
 
   <!-- LOBBY MENU -->
@@ -76,6 +92,7 @@ game_code = """
     <h1>CHẾ ĐỘ MULTIPLAYER</h1>
     <div class="btn" style="border-color:#2ed573; color:#2ed573;" id="btnCreateLobby">🎲 TẠO LOBBY MỚI</div>
     <div class="btn" style="border-color:#ffa502; color:#ffa502;" id="btnJoinLobby">🔑 THAM GIA LOBBY</div>
+    <div class="btn" style="border-color:#ff4757; color:#ff4757; margin-top: 15px;" id="btnBackFromLobby">⬅ QUAY LẠI</div>
   </div>
 
   <!-- TẠO PHÒNG -->
@@ -84,6 +101,7 @@ game_code = """
     <input type="text" id="customRoomCode" placeholder="Nhập Mã Phòng (VD: ROOM123)">
     <div id="createStatusText" style="color:#f7b731; font-size:13px;"></div>
     <div class="btn" style="border-color:#2ed573; color:#2ed573;" id="btnInitHost">🚀 KHỞI TẠO LOBBY</div>
+    <div class="btn" style="border-color:#ff4757; color:#ff4757;" onclick="showScreen('lobbyMenu')">⬅ QUAY LẠI</div>
   </div>
 
   <!-- THAM GIA PHÒNG -->
@@ -92,6 +110,7 @@ game_code = """
     <input type="text" id="joinRoomCodeInput" placeholder="Nhập Mã Phòng Người Khác...">
     <div id="joinStatusText" style="color:#f7b731; font-size:13px;"></div>
     <div class="btn" style="border-color:#2ed573; color:#2ed573;" id="btnJoinTarget">🔑 VÀO PHÒNG</div>
+    <div class="btn" style="border-color:#ff4757; color:#ff4757;" onclick="showScreen('lobbyMenu')">⬅ QUAY LẠI</div>
   </div>
 
   <!-- CẤU HÌNH TRANG BỊ -->
@@ -130,6 +149,7 @@ game_code = """
       </select>
     </div>
     <div class="btn" id="btnStartGame" style="background:#2ed573; border-color:#fff; color:#000;">BẮT ĐẦU VÀO TRẬN ➔</div>
+    <div class="btn" style="border-color:#ff4757; color:#ff4757;" onclick="showScreen('mainMenu')">⬅ QUAY LẠI</div>
   </div>
 
   <!-- GAME CANVAS -->
@@ -170,13 +190,31 @@ game_code = """
 
   let myVoteRematch = false, enemyVoteRematch = false;
 
+  // CHỨC NĂNG FULLSCREEN TRONG SETTING
+  function toggleFullscreen() {
+    let elem = document.documentElement;
+    let btnFS = document.getElementById('btnFullscreenToggle');
+    if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+      if (elem.requestFullscreen) { elem.requestFullscreen(); }
+      else if (elem.msRequestFullscreen) { elem.msRequestFullscreen(); }
+      else if (elem.mozRequestFullScreen) { elem.mozRequestFullScreen(); }
+      else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT); }
+      if(btnFS) btnFS.innerText = "📉 THOÁT FULLSCREEN";
+    } else {
+      if (document.exitFullscreen) { document.exitFullscreen(); }
+      else if (document.msExitFullscreen) { document.msExitFullscreen(); }
+      else if (document.mozCancelFullScreen) { document.mozCancelFullScreen(); }
+      else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+      if(btnFS) btnFS.innerText = "📺 BẬT FULLSCREEN";
+    }
+  }
+
   function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
     document.getElementById(id).style.display = 'flex';
     
-    // Hiển thị nút Top Right Back Btn ở tất cả màn hình trừ Màn Hình Chính
     const topBtn = document.getElementById('topRightBackBtn');
-    if (id === 'mainMenu') {
+    if (id === 'mainMenu' || id === 'settingsScreen' || id === 'lobbyMenu' || id === 'createRoomScreen' || id === 'joinRoomScreen' || id === 'customScreen') {
       topBtn.style.display = 'none';
     } else {
       topBtn.style.display = 'block';
@@ -197,6 +235,9 @@ game_code = """
     showScreen('customScreen'); 
   });
   addClickEvent('btnMulti', () => { gameMode = 'online'; showScreen('lobbyMenu'); });
+  addClickEvent('btnSettings', () => showScreen('settingsScreen'));
+  addClickEvent('btnBackToMenu', () => showScreen('mainMenu'));
+  addClickEvent('btnBackFromLobby', () => showScreen('mainMenu'));
   addClickEvent('btnCreateLobby', () => showScreen('createRoomScreen'));
   addClickEvent('btnJoinLobby', () => showScreen('joinRoomScreen'));
   addClickEvent('btnInitHost', initHostRoom);
@@ -305,26 +346,27 @@ game_code = """
 
     isBossStage = (gameMode === 'story' && currentStage % 10 === 0);
 
-    let enemyHp = 100;
+    let enemyHp = 200; // Tăng máu địch cơ bản lên 200
     let enemyScale = 1.0;
     let enemyColor = "#ff4757";
     let enemyWeapon = "staff";
 
     if(gameMode === 'story') {
       if(isBossStage) {
-        enemyHp = 250 + (currentStage * 15);
+        enemyHp = 450 + (currentStage * 20);
         enemyScale = 1.8;
         enemyColor = "#ff0055";
         enemyWeapon = "axe";
       } else {
-        enemyHp = 80 + (currentStage * 12);
+        enemyHp = 150 + (currentStage * 15);
         enemyScale = 1.0 + (currentStage * 0.02);
         let wpList = ["sword", "axe", "dagger", "staff", "bow", "laser"];
         enemyWeapon = wpList[currentStage % wpList.length];
       }
     }
 
-    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 100, maxHp: 100, atk: false, data: myData, facing: 1, walkTimer: 0, scale: 1.0 };
+    // Đã tăng Máu (HP) nhân vật lên 200
+    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 200, maxHp: 200, atk: false, data: myData, facing: 1, walkTimer: 0, scale: 1.0 };
     
     pEnemy = { 
       x: enemyX, y: canvas.height - 25, vy: 0, isGrounded: true, 
@@ -349,7 +391,6 @@ game_code = """
     if(data.type === 'INIT_PLAYER') {
       if(data.data) pEnemy.data = data.data;
     } else if(data.type === 'SYNC_POS') {
-      // Bảo vệ lượng máu không bị đè số 0 bất ngờ do mất gói tin
       if(typeof data.hp === 'number' && data.hp > 0) {
         pEnemy.hp = data.hp;
       }
