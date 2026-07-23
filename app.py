@@ -1,59 +1,107 @@
 import streamlit as st
+import random
 
-st.title("🎮 Cấu Hình Vũ Khí & Kỹ Năng Game")
-st.write("Dưới đây là thông số chi tiết của các loại vũ khí đã được cập nhật:")
+st.title("⚔️ Game Chiến Đấu: Cập Nhật Vũ Khí & Kỹ Năng")
 
-# Dữ liệu vũ khí chuẩn Python
-weapons = [
-    {
-        "name": "Cung & Súng Laser",
+# Khởi tạo trạng thái game nếu chưa có
+if "player_hp" not in st.session_state:
+    st.session_state.player_hp = 100
+    st.session_state.enemy_hp = 100
+    st.session_state.game_log = []
+    st.session_state.selected_weapon = "Cung & Súng Laser"
+
+# Danh sách vũ khí và thông số cập nhật mới
+weapons_data = {
+    "Cung & Súng Laser": {
+        "type": "normal",
         "cooldown": 0.5,
-        "effect": "Đánh thường cơ bản"
+        "damage": 15,
+        "desc": "Đánh thường nhanh (Hồi chiêu: 0.5s)"
     },
-    {
-        "name": "Trượng Ma Thuật",
+    "Trượng Ma Thuật": {
+        "type": "poison",
         "cooldown": 1.0,
-        "effect": "Gây nhiễm độc, trừ máu theo thời gian (Đòn đánh & Kỹ năng)",
-        "poison_damage_over_time": True
+        "damage": 10,
+        "desc": "Đánh thường & Skill gây nhiễm độc trừ máu theo thời gian (Hồi chiêu: 1.0s)"
     },
-    {
-        "name": "Rìu Chiến",
-        "damage_nerfed": True,
-        "special_skill": {
-            "name": "Bay lên xoay vòng dập xuống",
-            "cooldown": 30.0
-        }
+    "Rìu Chiến": {
+        "type": "heavy_skill",
+        "cooldown": 2.0,
+        "damage": 12, # Đã giảm sát thương đánh thường
+        "special_name": "Bay lên xoay vòng dập xuống",
+        "special_cooldown": 30.0,
+        "desc": "Sát thương thường giảm, có skill đặc biệt dập xuống (CD: 30s)"
     },
-    {
-        "name": "Dao Độc",
-        "skill": {
-            "name": "Phun độc",
-            "effect": "Trừ máu liên tục mỗi giây"
-        }
+    "Dao Độc": {
+        "type": "skill",
+        "cooldown": 1.0,
+        "damage": 10,
+        "skill_name": "Phun độc",
+        "desc": "Có kỹ năng phun độc gây trừ máu liên tục mỗi giây"
     },
-    {
-        "name": "Giáo Dài",
-        "skill": {
-            "name": "Lao tới",
-            "cooldown": 15.0
-        }
+    "Giáo Dài": {
+        "type": "skill",
+        "cooldown": 1.0,
+        "damage": 12,
+        "skill_name": "Lao tới",
+        "skill_cooldown": 15.0,
+        "desc": "Có kỹ năng lao tới tấn công (CD: 15s)"
     }
-]
+}
 
-# Hiển thị danh sách vũ khí lên giao diện Streamlit
-for weapon in weapons:
-    with st.expander(f"⚔️ {weapon['name']}"):
-        if "cooldown" in weapon:
-            st.write(f"- **Hồi chiêu đánh thường:** {weapon['cooldown']} giây")
-        if "effect" in weapon:
-            st.write(f"- **Hiệu ứng:** {weapon['effect']}")
-        if weapon.get("damage_nerfed"):
-            st.write("- **Trạng thái:** Đã giảm sát thương đánh thường")
-        if "special_skill" in weapon:
-            skill = weapon["special_skill"]
-            st.write(f"- **Kỹ năng đặc biệt:** {skill['name']} (Hồi chiêu: {skill['cooldown']} giây)")
-        if "skill" in weapon:
-            skill = weapon["skill"]
-            st.write(f"- **Kỹ năng:** {skill['name']} ({skill.get('effect', '')})")
+# Giao diện chọn vũ khí
+st.sidebar.header("Chọn Vũ Khí")
+chosen_weapon = st.sidebar.selectbox("Vũ khí của bạn:", list(weapons_data.keys()))
+st.session_state.selected_weapon = chosen_weapon
 
-st.success("Khởi tạo lại mã nguồn thành công! Bạn có thể tiếp tục phát triển các tính năng tiếp theo.")
+weapon_info = weapons_data[chosen_weapon]
+
+# Hiển thị thông tin trận đấu
+col1, col2 = st.columns(2)
+with col1:
+    st.metric("❤️ HP Người Chơi", st.session_state.player_hp)
+with col2:
+    st.metric("💀 HP Kẻ Địch", st.session_state.enemy_hp)
+
+st.info(f"**Vũ khí hiện tại:** {chosen_weapon}\n\n_{weapon_info['desc']}_")
+
+# Nút hành động trong game
+col_action1, col_action2 = st.columns(2)
+
+with col_action1:
+    if st.button("⚔️ Tấn Công Thường"):
+        dmg = weapon_info["damage"]
+        st.session_state.enemy_hp = max(0, st.session_state.enemy_hp - dmg)
+        st.session_state.game_log.insert(0, f"Bạn dùng **{chosen_weapon}** đánh thường gây **{dmg}** sát thương.")
+
+with col_action2:
+    # Nút kỹ năng đặc biệt tùy theo vũ khí
+    if chosen_weapon in ["Rìu Chiến", "Dao Độc", "Giáo Dài"]:
+        skill_btn_name = weapon_info.get("special_name", weapon_info.get("skill_name"))
+        if st.button(f"🔥 Dùng Kỹ Năng: {skill_btn_name}"):
+            skill_dmg = weapon_info["damage"] * 2
+            st.session_state.enemy_hp = max(0, st.session_state.enemy_hp - skill_dmg)
+            st.session_state.game_log.insert(0, f"Bạn sử dụng kỹ năng **{skill_btn_name}** gây **{skill_dmg}** sát thương và hiệu ứng đặc biệt!")
+    else:
+        st.write("*(Vũ khí này không có kỹ năng kích hoạt riêng)*")
+
+# Kẻ địch phản công đơn giản
+if st.button("🤖 Kẻ Địch Phản Công"):
+    if st.session_state.enemy_hp > 0:
+        enemy_dmg = random.randint(5, 15)
+        st.session_state.player_hp = max(0, st.session_state.player_hp - enemy_dmg)
+        st.session_state.game_log.insert(0, f"Kẻ địch phản công gây **{enemy_dmg}** sát thương cho bạn.")
+    else:
+        st.success("Kẻ địch đã bị hạ gục!")
+
+# Nút reset game
+if st.button("🔄 Chơi Lại Từ Đầu"):
+    st.session_state.player_hp = 100
+    st.session_state.enemy_hp = 100
+    st.session_state.game_log = []
+    st.rerun()
+
+# Nhật ký trận đấu
+st.markdown("### 📜 Nhật Ký Trận Đấu")
+for log in st.session_state.game_log[:5]:
+    st.write(f"- {log}")
