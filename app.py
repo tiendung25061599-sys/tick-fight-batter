@@ -124,7 +124,7 @@ game_code = """
     <div class="select-box">
       <span>Vũ Khí:</span>
       <select id="weaponSelect" onchange="updateSkillIcon()">
-        <option value="sword">⚔️ Kiếm Thần (Skill: Chém Lốc Xoáy)</option>
+        <option value="sword">⚔️ Kiếm Thần (Skill: Hút Gió & Chém Liên Tục 0.2s)</option>
         <option value="axe">🪓 Rìu Chiến (Skill: Bay Nhảy Đập)</option>
         <option value="dagger">🗡️ Dao Độc (Skill: Mưa Dao Găm)</option>
         <option value="spear">🔱 Giáo Dài (Skill: Lướt Đâm Xuyên)</option>
@@ -194,7 +194,7 @@ game_code = """
   function updateSkillIcon() {
     let wp = document.getElementById("weaponSelect").value;
     let skillBtn = document.getElementById("btnSkill");
-    if(wp === 'sword') skillBtn.innerText = "🌀";
+    if(wp === 'sword') skillBtn.innerText = "🌪️";
     else if(wp === 'axe') skillBtn.innerText = "🪓";
     else if(wp === 'dagger') skillBtn.innerText = "🗡️";
     else if(wp === 'spear') skillBtn.innerText = "🔱";
@@ -377,13 +377,13 @@ game_code = """
       }
     }
 
-    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 450, maxHp: 450, atk: false, data: myData, facing: 1, walkTimer: 0, scale: 1.0, isSpecialAction: false, lastAtkTime: 0, lastSkillTime: 0 };
+    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 450, maxHp: 450, atk: false, data: myData, facing: 1, walkTimer: 0, scale: 1.0, isSpecialAction: false, lastAtkTime: 0, lastSkillTime: 0, windEffectTimer: 0 };
     
     pEnemy = { 
       x: enemyX, y: canvas.height - 25, vy: 0, isGrounded: true, 
       hp: enemyHp, maxHp: enemyHp, atk: false, 
       data: (gameMode === 'story') ? { color: enemyColor, weapon: enemyWeapon, hat: isBossStage ? "knight" : "none", cape: isBossStage ? "black" : "none" } : enemyData, 
-      facing: -1, walkTimer: 0, scale: enemyScale, isSpecialAction: false, lastAtkTime: 0, lastSkillTime: 0 
+      facing: -1, walkTimer: 0, scale: enemyScale, isSpecialAction: false, lastAtkTime: 0, lastSkillTime: 0, windEffectTimer: 0
     };
     
     bullets = []; particles = [];
@@ -524,13 +524,37 @@ game_code = """
 
     if (wp === 'sword') {
       p.isSpecialAction = true;
-      addParticles(p.x, p.y - 20, '#66fcf1', 18);
-      let dmg = isStoryEnemy ? (35 + currentStage * 4) : 25;
-      if(Math.abs(p.x - other.x) < 85 * p.scale) {
-        other.hp = Math.max(0, other.hp - dmg);
-        addParticles(other.x, other.y - 20, '#66fcf1', 20);
-      }
-      setTimeout(() => p.isSpecialAction = false, 300);
+      p.windEffectTimer = 35; // Bật hiệu ứng gió xoáy xung quanh
+      addParticles(p.x, p.y - 20, '#66fcf1', 25);
+
+      // Giai đoạn 1: Hút kẻ địch lại gần và gây damage liên tục
+      let pullTicks = 0;
+      let pullInterval = setInterval(() => {
+        pullTicks++;
+        // Kéo địch về phía người dùng skill
+        if (Math.abs(p.x - other.x) > 15) {
+          other.x += (p.x > other.x) ? 6 : -6;
+        }
+        // Gây damage liên tục mỗi nhịp hút
+        let dotDmg = isStoryEnemy ? (8 + currentStage) : 6;
+        other.hp = Math.max(0, other.hp - dotDmg);
+        addParticles(other.x, other.y - 20, '#66fcf1', 8);
+
+        if (pullTicks >= 5) { // Sau khoảng 5 nhịp (tương đương ~0.4s)
+          clearInterval(pullInterval);
+
+          // Giai đoạn 2: Đẩy văng kẻ địch ra xa mạnh mẽ kèm sát thương cuối
+          let pushDir = (other.x >= p.x) ? 1 : -1;
+          other.x += pushDir * 90;
+          other.x = Math.max(20, Math.min(canvas.width - 20, other.x));
+          
+          let finalDmg = isStoryEnemy ? (35 + currentStage * 4) : 25;
+          other.hp = Math.max(0, other.hp - finalDmg);
+          addParticles(other.x, other.y - 20, '#ff4757', 20);
+
+          p.isSpecialAction = false;
+        }
+      }, 75);
 
     } else if (wp === 'axe') {
       p.isSpecialAction = true;
@@ -590,7 +614,8 @@ game_code = """
     
     let now = Date.now();
     let skillCooldown = 2500;
-    if (pSelf.data.weapon === 'axe') skillCooldown = 4500;
+    if (pSelf.data.weapon === 'sword') skillCooldown = 200; // Giảm hồi chiêu Kiếm xuống 0.2s
+    else if (pSelf.data.weapon === 'axe') skillCooldown = 4500;
     else if (pSelf.data.weapon === 'spear') skillCooldown = 3000;
     else if (['staff', 'bow', 'laser'].includes(pSelf.data.weapon)) skillCooldown = 200; // Hồi chiêu 0.2s cho Trượng, Cung, Laser
 
@@ -627,6 +652,7 @@ game_code = """
     else { pSelf.walkTimer = 0; }
     
     pSelf.x = Math.max(20, Math.min(canvas.width - 20, pSelf.x));
+    if (pSelf.windEffectTimer > 0) pSelf.windEffectTimer--;
 
     if(gameMode === 'story') {
       pEnemy.y += pEnemy.vy; pEnemy.vy += 0.58;
@@ -640,6 +666,7 @@ game_code = """
         pEnemy.x += (pSelf.x < pEnemy.x) ? -speed : speed;
         pEnemy.walkTimer += 0.3;
       }
+      if (pEnemy.windEffectTimer > 0) pEnemy.windEffectTimer--;
 
       let now = Date.now();
       let enemyCooldown = (pEnemy.data.weapon === 'dagger') ? 100 : 150;
@@ -661,7 +688,7 @@ game_code = """
         }
       }
 
-      let enemySkillCooldown = ['staff', 'bow', 'laser'].includes(pEnemy.data.weapon) ? 200 : 2800;
+      let enemySkillCooldown = ['staff', 'bow', 'laser', 'sword'].includes(pEnemy.data.weapon) ? 200 : 2800;
       if (now - (pEnemy.lastSkillTime || 0) > enemySkillCooldown) {
         pEnemy.lastSkillTime = now;
         executeWeaponSkill(pEnemy);
@@ -766,6 +793,23 @@ game_code = """
     ctx.save();
     ctx.shadowColor = p.data.color;
     ctx.shadowBlur = p.isSpecialAction ? 25 : 10;
+
+    // Hiệu ứng vòng gió lốc xung quanh khi dùng skill Kiếm Thần
+    if(p.windEffectTimer > 0) {
+      ctx.strokeStyle = "rgba(102, 252, 241, 0.7)";
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = "#66fcf1";
+      ctx.shadowBlur = 20;
+      ctx.beginPath();
+      let ringRadius = 45 + Math.sin(animFrame * 0.4) * 10;
+      ctx.arc(x, y - 20, ringRadius, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Vẽ các vòng xoáy phụ
+      ctx.beginPath();
+      ctx.arc(x, y - 20, ringRadius * 0.6, -animFrame * 0.3, Math.PI - animFrame * 0.3);
+      ctx.stroke();
+    }
 
     if(p.isSpecialAction && p.data.weapon === 'axe') {
       ctx.translate(x, y - 20 * s);
