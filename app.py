@@ -145,7 +145,7 @@ game_code = """
     <div class="select-box">
       <span>Vũ Khí:</span>
       <select id="weaponSelect" onchange="updateSkillIcon()">
-        <option value="sword">⚔️ Kiếm Thần (Skill: Hút Gió & Chém Liên Tục 0.2s)</option>
+        <option value="sword">⚔️ Kiếm Thần (Skill: Hút Gió & Hồi Máu 1s)</option>
         <option value="axe">🪓 Rìu Chiến (Skill: Bay Nhảy Đập)</option>
         <option value="dagger">🗡️ Dao Độc (Skill: Mưa Dao Găm)</option>
         <option value="spear">🔱 Giáo Dài (Skill: Lướt Đâm Xuyên)</option>
@@ -546,32 +546,20 @@ game_code = """
     if (wp === 'sword') {
       p.isSpecialAction = true;
       p.windEffectTimer = 35;
-      addParticles(p.x, p.y - 20, '#66fcf1', 25);
+      addParticles(p.x, p.y - 20, '#2ed573', 25);
 
-      let pullTicks = 0;
-      let pullInterval = setInterval(() => {
-        pullTicks++;
-        if (Math.abs(p.x - other.x) > 15) {
-          other.x += (p.x > other.x) ? 6 : -6;
-        }
-        let dotDmg = isStoryEnemy ? (8 + currentStage) : 6;
-        other.hp = Math.max(0, other.hp - dotDmg);
-        addParticles(other.x, other.y - 20, '#66fcf1', 8);
+      let healTicks = 0;
+      let healInterval = setInterval(() => {
+        healTicks++;
+        let healAmount = 30;
+        p.hp = Math.min(p.maxHp, p.hp + healAmount);
+        addParticles(p.x, p.y - 20, '#2ed573', 10);
 
-        if (pullTicks >= 5) {
-          clearInterval(pullInterval);
-
-          let pushDir = (other.x >= p.x) ? 1 : -1;
-          other.x += pushDir * 90;
-          other.x = Math.max(20, Math.min(canvas.width - 20, other.x));
-          
-          let finalDmg = isStoryEnemy ? (35 + currentStage * 4) : 25;
-          other.hp = Math.max(0, other.hp - finalDmg);
-          addParticles(other.x, other.y - 20, '#ff4757', 20);
-
+        if (healTicks >= 5) {
+          clearInterval(healInterval);
           p.isSpecialAction = false;
         }
-      }, 75);
+      }, 200);
 
     } else if (wp === 'axe') {
       p.isSpecialAction = true;
@@ -631,7 +619,7 @@ game_code = """
     
     let now = Date.now();
     let skillCooldown = 2500;
-    if (pSelf.data.weapon === 'sword') skillCooldown = 200;
+    if (pSelf.data.weapon === 'sword') skillCooldown = 1000;
     else if (pSelf.data.weapon === 'axe') skillCooldown = 4500;
     else if (pSelf.data.weapon === 'spear') skillCooldown = 3000;
     else if (['staff', 'bow', 'laser'].includes(pSelf.data.weapon)) skillCooldown = 200;
@@ -812,9 +800,9 @@ game_code = """
     ctx.shadowBlur = p.isSpecialAction ? 25 : 10;
 
     if(p.windEffectTimer > 0) {
-      ctx.strokeStyle = "rgba(102, 252, 241, 0.7)";
+      ctx.strokeStyle = "rgba(46, 213, 115, 0.7)";
       ctx.lineWidth = 2.5;
-      ctx.shadowColor = "#66fcf1";
+      ctx.shadowColor = "#2ed573";
       ctx.shadowBlur = 20;
       ctx.beginPath();
       let ringRadius = 45 + Math.sin(animFrame * 0.4) * 10;
