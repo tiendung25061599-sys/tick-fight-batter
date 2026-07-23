@@ -127,6 +127,7 @@ game_code = """
         <option value="sword">⚔️ Kiếm Thần (Cân Bằng)</option>
         <option value="axe">🪓 Rìu Chiến (Sát Thương Lớn)</option>
         <option value="dagger">🗡️ Dao Độc (Tốc Đánh Nhanh)</option>
+        <option value="spear">🔱 Giáo Dài (Tầm Đánh Xa)</option>
         <option value="staff">🪄 Trượng Ma Thuật (Cầu Lửa)</option>
         <option value="bow">🏹 Cung Thần (Bắn Nhanh)</option>
         <option value="laser">⚡ Súng Laser (Tia Xuyên)</option>
@@ -172,7 +173,7 @@ game_code = """
     </div>
     <div class="btn-group">
       <div class="btn-ctrl" id="btnAtk">⚔️<span class="key-hint">M1</span></div>
-      <div class="btn-ctrl" style="border-color:#ff4757" id="btnSkill">🔥<span class="key-hint">M2</span></div>
+      <div class="btn-ctrl" style="border-color:#ff4757" id="btnSkill">💨<span class="key-hint">M2</span></div>
     </div>
   </div>
 
@@ -190,7 +191,6 @@ game_code = """
 
   let myVoteRematch = false, enemyVoteRematch = false;
 
-  // CHỨC NĂNG FULLSCREEN TRONG SETTING
   function toggleFullscreen() {
     let elem = document.documentElement;
     let btnFS = document.getElementById('btnFullscreenToggle');
@@ -323,7 +323,6 @@ game_code = """
     startGame();
   }
 
-  // GAME ENGINE
   let isRunning = false;
   let pSelf, pEnemy, bullets = [], particles = [];
   let moveL = false, moveR = false;
@@ -346,7 +345,7 @@ game_code = """
 
     isBossStage = (gameMode === 'story' && currentStage % 10 === 0);
 
-    let enemyHp = 200; // Tăng máu địch cơ bản lên 200
+    let enemyHp = 200;
     let enemyScale = 1.0;
     let enemyColor = "#ff4757";
     let enemyWeapon = "staff";
@@ -356,23 +355,22 @@ game_code = """
         enemyHp = 450 + (currentStage * 20);
         enemyScale = 1.8;
         enemyColor = "#ff0055";
-        enemyWeapon = "axe";
+        enemyWeapon = "spear";
       } else {
         enemyHp = 150 + (currentStage * 15);
         enemyScale = 1.0 + (currentStage * 0.02);
-        let wpList = ["sword", "axe", "dagger", "staff", "bow", "laser"];
+        let wpList = ["sword", "axe", "dagger", "spear", "staff", "bow", "laser"];
         enemyWeapon = wpList[currentStage % wpList.length];
       }
     }
 
-    // Đã tăng Máu (HP) nhân vật lên 200
-    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 200, maxHp: 200, atk: false, data: myData, facing: 1, walkTimer: 0, scale: 1.0 };
+    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 200, maxHp: 200, atk: false, data: myData, facing: 1, walkTimer: 0, scale: 1.0, isDashing: false };
     
     pEnemy = { 
       x: enemyX, y: canvas.height - 25, vy: 0, isGrounded: true, 
       hp: enemyHp, maxHp: enemyHp, atk: false, 
       data: (gameMode === 'story') ? { color: enemyColor, weapon: enemyWeapon, hat: isBossStage ? "knight" : "none", cape: isBossStage ? "black" : "none" } : enemyData, 
-      facing: -1, walkTimer: 0, scale: enemyScale 
+      facing: -1, walkTimer: 0, scale: enemyScale, isDashing: false 
     };
     
     bullets = []; particles = [];
@@ -399,7 +397,9 @@ game_code = """
       pEnemy.atk = data.atk; 
       pEnemy.facing = data.facing;
       pEnemy.walkTimer = data.walkTimer;
-    } else if(data.type === 'SKILL') {
+    } else if(data.type === 'SKILL' || data.type === 'DASH') {
+      triggerDash(pEnemy);
+    } else if(data.type === 'SHOOT') {
       createBullet(pEnemy, pSelf, data.weapon);
     } else if(data.type === 'VOTE_REMATCH') {
       enemyVoteRematch = true;
@@ -473,6 +473,7 @@ game_code = """
     if(pSelf.data.weapon === 'sword') { reach = 55; dmg = 14; }
     else if(pSelf.data.weapon === 'axe') { reach = 65; dmg = 25; }
     else if(pSelf.data.weapon === 'dagger') { reach = 35; dmg = 9; }
+    else if(pSelf.data.weapon === 'spear') { reach = 75; dmg = 18; }
 
     if(Math.abs(pSelf.x - pEnemy.x) < reach * pSelf.scale) {
       pEnemy.hp = Math.max(0, pEnemy.hp - dmg);
@@ -495,19 +496,34 @@ game_code = """
     }
   }
 
+  function triggerDash(p) {
+    p.isDashing = true;
+    addParticles(p.x, p.y - 20, p.data.color, 10);
+    let dashDist = p.facing * 75;
+    p.x = Math.max(20, Math.min(canvas.width - 20, p.x + dashDist));
+    
+    // Gây sát thương lướt qua nếu trúng đối thủ
+    let other = (p === pSelf) ? pEnemy : pSelf;
+    if(Math.abs(p.x - other.x) < 40) {
+      other.hp = Math.max(0, other.hp - 15);
+      addParticles(other.x, other.y - 20, '#ff4757', 12);
+    }
+    setTimeout(() => p.isDashing = false, 200);
+  }
+
   function useSkill() {
     if(!pSelf || !isRunning) return;
-    pSelf.atk = true; setTimeout(() => pSelf.atk = false, 150);
     
-    if(['sword', 'axe', 'dagger'].includes(pSelf.data.weapon)) {
-      if(Math.abs(pSelf.x - pEnemy.x) < 75 * pSelf.scale) {
-        pEnemy.hp = Math.max(0, pEnemy.hp - 24);
-        addParticles(pEnemy.x, pEnemy.y - 20 * pEnemy.scale, '#66fcf1', 14);
-      }
-    } else {
+    // Skill mặc định cho mọi vũ khí: Lướt nhanh (Dash)
+    triggerDash(pSelf);
+
+    // Nếu dùng vũ khí tầm xa thì bắn thêm đạn
+    if(['staff', 'bow', 'laser'].includes(pSelf.data.weapon)) {
       createBullet(pSelf, pEnemy, pSelf.data.weapon);
+      if(gameMode === 'online' && conn && conn.open) conn.send({ type: 'SHOOT', weapon: pSelf.data.weapon });
     }
-    if(gameMode === 'online' && conn && conn.open) conn.send({ type: 'SKILL', weapon: pSelf.data.weapon });
+
+    if(gameMode === 'online' && conn && conn.open) conn.send({ type: 'DASH' });
   }
 
   function addParticles(x, y, color, count) {
@@ -530,7 +546,6 @@ game_code = """
     
     pSelf.x = Math.max(20, Math.min(canvas.width - 20, pSelf.x));
 
-    // STORY MODE AI
     if(gameMode === 'story') {
       pEnemy.y += pEnemy.vy; pEnemy.vy += 0.55;
       if (pEnemy.y >= ground) { pEnemy.y = ground; pEnemy.vy = 0; pEnemy.isGrounded = true; }
@@ -552,14 +567,13 @@ game_code = """
         setTimeout(() => pEnemy.atk = false, 120); 
         if(['staff', 'bow', 'laser'].includes(pEnemy.data.weapon)) {
           createBullet(pEnemy, pSelf, pEnemy.data.weapon); 
-        } else if(Math.abs(pSelf.x - pEnemy.x) < 50 * pEnemy.scale) {
+        } else if(Math.abs(pSelf.x - pEnemy.x) < 55 * pEnemy.scale) {
           pSelf.hp = Math.max(0, pSelf.hp - (8 + currentStage * 1.5));
           addParticles(pSelf.x, pSelf.y - 20, '#ff4757', 6);
         }
       }
     }
 
-    // GỬI VỊ TRÍ 2 CHIỀU AN TOÀN
     if(gameMode === 'online' && conn && conn.open) {
       conn.send({ 
         type: 'SYNC_POS', 
@@ -572,20 +586,16 @@ game_code = """
       });
     }
 
-    // DRAW SCENE
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Mặt đất
     ctx.fillStyle = "#1f2833"; ctx.fillRect(0, ground + 20, canvas.width, 10);
     ctx.fillStyle = "#66fcf1"; ctx.fillRect(0, ground + 18, canvas.width, 2);
 
-    // MÁU PLAYER
     let w = canvas.width * 0.35;
     ctx.fillStyle = "#1f2833"; ctx.fillRect(10, 10, w, 14); 
     ctx.fillStyle = pSelf.data.color; ctx.fillRect(10, 10, w * (Math.max(0, pSelf.hp) / pSelf.maxHp), 14);
     ctx.strokeStyle = "#fff"; ctx.lineWidth = 1; ctx.strokeRect(10, 10, w, 14);
 
-    // MÁU ENEMY
     if(isBossStage) {
       let bossW = canvas.width * 0.6;
       let bossX = (canvas.width - bossW) / 2;
@@ -599,14 +609,12 @@ game_code = """
       ctx.strokeStyle = "#fff"; ctx.lineWidth = 1; ctx.strokeRect(canvas.width - 10 - w, 10, w, 14);
     }
 
-    // Particles
     particles.forEach((p, i) => {
       p.x += p.vx; p.y += p.vy; p.life--;
       ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, 3, 3);
       if(p.life <= 0) particles.splice(i, 1);
     });
 
-    // Bullets
     bullets.forEach((b, idx) => {
       b.x += b.vx;
       ctx.fillStyle = b.color;
@@ -644,7 +652,7 @@ game_code = """
 
     ctx.save();
     ctx.shadowColor = p.data.color;
-    ctx.shadowBlur = 8;
+    ctx.shadowBlur = p.isDashing ? 20 : 8;
 
     if(p.data.cape && p.data.cape !== 'none') {
       ctx.fillStyle = p.data.cape === 'red' ? '#ff3838' : '#2f3542';
@@ -681,6 +689,9 @@ game_code = """
       ctx.fillStyle = '#ff4757'; ctx.fillRect(f * 15 * s, -28 * s, 10 * s, 12 * s);
     } else if(p.data.weapon === 'dagger') {
       ctx.strokeStyle = '#2ed573'; ctx.lineWidth = 2 * s; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 14 * s, -10 * s); ctx.stroke();
+    } else if(p.data.weapon === 'spear') {
+      ctx.strokeStyle = '#ffa502'; ctx.lineWidth = 3 * s; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 38 * s, -28 * s); ctx.stroke();
+      ctx.fillStyle = '#ff4757'; ctx.beginPath(); ctx.moveTo(f * 38 * s, -28 * s); ctx.lineTo(f * 32 * s, -22 * s); ctx.lineTo(f * 30 * s, -32 * s); ctx.fill();
     } else if(p.data.weapon === 'staff') {
       ctx.strokeStyle = '#78e08f'; ctx.lineWidth = 3 * s; ctx.beginPath(); ctx.moveTo(0, 5 * s); ctx.lineTo(f * 18 * s, -22 * s); ctx.stroke();
       ctx.fillStyle = '#fffa65'; ctx.beginPath(); ctx.arc(f * 18 * s, -22 * s, 6 * s, 0, Math.PI*2); ctx.fill();
@@ -693,7 +704,6 @@ game_code = """
     ctx.restore();
   }
 
-  // CONTROLS PC
   window.addEventListener('keydown', (e) => {
     let k = e.key.toLowerCase();
     if (k === 'a' || k === 'arrowleft') { moveL = true; document.getElementById('btnLeft').classList.add('active'); }
@@ -718,7 +728,6 @@ game_code = """
   });
   window.addEventListener('contextmenu', e => e.preventDefault());
 
-  // TOUCH CONTROLS
   function bindBtn(id, start, end) {
     let el = document.getElementById(id);
     if(!el) return;
