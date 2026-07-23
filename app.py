@@ -149,9 +149,9 @@ game_code = """
         <option value="axe">🪓 Rìu Chiến (Skill: Bay Nhảy Đập)</option>
         <option value="dagger">🗡️ Dao Độc (Skill: Mưa Dao Găm)</option>
         <option value="spear">🔱 Giáo Dài (Skill: Lướt Đâm Xuyên)</option>
-        <option value="staff">🪄 Trượng Ma Thuật (Skill: Bắn Cầu Lửa 0.2s)</option>
+        <option value="staff">🪄 Trượng Ma Thuật (Skill: Bắn Cầu Lửa 10s)</option>
         <option value="bow">🏹 Cung Thần (Skill: Bắn Mũi Tên Đôi 0.2s)</option>
-        <option value="laser">⚡ Súng Laser (Skill: Tia Xuyên Phá 0.2s)</option>
+        <option value="laser">⚡ Súng Laser (Skill: Tia Xuyên Phá 10s)</option>
       </select>
     </div>
     <div class="select-box">
@@ -532,7 +532,6 @@ game_code = """
     if (weapon === 'staff') {
       bullets.push({ x: startX, y: startY, vx: dir * 9.5, color: '#fffa65', radius: 9, dmg: 22 + dmgBonus, type: 'orb', shooter: caster });
     } else if (weapon === 'bow') {
-      // Đã chỉnh sát thương cây cung về 2
       let bowDmg = (caster === pEnemy && gameMode === 'story') ? Math.max(2, 2 + Math.floor(currentStage / 2)) : 2;
       bullets.push({ x: startX, y: startY, vx: dir * 14, color: '#c7ecee', radius: 3.5, dmg: bowDmg, type: 'arrow', shooter: caster });
     } else if (weapon === 'laser') {
@@ -620,11 +619,10 @@ game_code = """
     if(!pSelf || !isRunning) return;
     
     let now = Date.now();
-    let skillCooldown = 2500;
-    if (pSelf.data.weapon === 'sword') skillCooldown = 1000;
-    else if (pSelf.data.weapon === 'axe') skillCooldown = 4500;
-    else if (pSelf.data.weapon === 'spear') skillCooldown = 3000;
-    else if (['staff', 'bow', 'laser'].includes(pSelf.data.weapon)) skillCooldown = 200;
+    let skillCooldown = 10000; // Tất cả đều 10 giây (10000ms)
+    if (pSelf.data.weapon === 'bow') {
+      skillCooldown = 200; // Trừ cung giữ nguyên 0.2s (200ms)
+    }
 
     if (now - (pSelf.lastSkillTime || 0) < skillCooldown) return;
     pSelf.lastSkillTime = now;
@@ -695,7 +693,7 @@ game_code = """
         }
       }
 
-      let enemySkillCooldown = ['staff', 'bow', 'laser', 'sword'].includes(pEnemy.data.weapon) ? 200 : 2800;
+      let enemySkillCooldown = (pEnemy.data.weapon === 'bow') ? 200 : 10000;
       if (now - (pEnemy.lastSkillTime || 0) > enemySkillCooldown) {
         pEnemy.lastSkillTime = now;
         executeWeaponSkill(pEnemy);
