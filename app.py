@@ -14,7 +14,6 @@ game_code = """
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
     body { width: 100vw; height: 100vh; background: #050508; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; position: relative; }
     
-    /* TOP BAR NÚT QUAY LẠI */
     .top-bar {
       position: absolute; top: 15px; right: 20px; 
       display: flex; gap: 10px; z-index: 999;
@@ -685,7 +684,6 @@ game_code = """
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Vẽ nền sân đấu phong cách lưới không gian
     ctx.strokeStyle = "rgba(102, 252, 241, 0.07)";
     ctx.lineWidth = 1;
     for(let i=0; i<canvas.width; i+=40) {
@@ -698,7 +696,6 @@ game_code = """
     ctx.fillRect(0, ground + 18, canvas.width, 3);
     ctx.shadowBlur = 0;
 
-    // Thanh máu thiết kế sang trọng
     let w = canvas.width * 0.35;
     ctx.fillStyle = "rgba(31, 40, 51, 0.8)"; ctx.fillRect(12, 12, w, 16); 
     ctx.fillStyle = pSelf.data.color; 
@@ -778,7 +775,6 @@ game_code = """
       ctx.translate(-x, -(y - 20 * s));
     }
 
-    // Áo choàng động uốn lượn
     if(p.data.cape && p.data.cape !== 'none') {
       ctx.fillStyle = p.data.cape === 'red' ? '#ff3838' : '#1e272e';
       ctx.beginPath(); 
@@ -788,25 +784,19 @@ game_code = """
       ctx.fill();
     }
 
-    // Khung xương người que cách điệu bóng bẩy
     ctx.strokeStyle = p.data.color; ctx.lineWidth = 3.5 * s;
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     
-    // Đầu
     ctx.beginPath(); ctx.arc(x, y - 36 * s, 9.5 * s, 0, Math.PI * 2); ctx.stroke();
-    // Thân
     ctx.beginPath(); ctx.moveTo(x, y - 26 * s); ctx.lineTo(x, y - 8 * s); ctx.stroke();
     
-    // Chân
     ctx.beginPath(); ctx.moveTo(x, y - 8 * s); ctx.lineTo(x - (9 + legSwing) * s, y + 21 * s); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(x, y - 8 * s); ctx.lineTo(x + (9 + legSwing) * s, y + 21 * s); ctx.stroke();
 
-    // Tay cầm vũ khí
     let handX = x + (p.atk ? f * 24 * s : f * 9 * s);
     let handY = y - (p.atk ? 25 * s : 16 * s);
     ctx.beginPath(); ctx.moveTo(x, y - 22 * s); ctx.lineTo(handX, handY); ctx.stroke();
 
-    // Mũ / Nón chi tiết
     if(p.data.hat === 'knight') {
       ctx.fillStyle = '#d1d8e0'; ctx.fillRect(x - 11 * s, y - 50 * s, 22 * s, 9 * s);
       ctx.fillStyle = '#ff4757'; ctx.fillRect(x - 2 * s, y - 54 * s, 4 * s, 6 * s);
@@ -814,34 +804,72 @@ game_code = """
       ctx.fillStyle = '#8854d0'; ctx.beginPath(); ctx.moveTo(x - 13 * s, y - 43 * s); ctx.lineTo(x, y - 65 * s); ctx.lineTo(x + 13 * s, y - 43 * s); ctx.fill();
     }
 
-    // Vũ khí mô hình 3D phong cách Neon
+    // NÂNG CẤP MÔ HÌNH VŨ KHÍ CHI TIẾT & SANG TRỌNG
     ctx.save(); ctx.translate(handX, handY);
+    
     if(p.data.weapon === 'sword') {
-      ctx.strokeStyle = '#fff'; ctx.lineWidth = 3.5 * s; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 28 * s, -20 * s); ctx.stroke();
-      ctx.fillStyle = '#66fcf1'; ctx.fillRect(f * 5 * s, -4 * s, 6 * s, 2 * s);
-    } else if(p.data.weapon === 'axe') {
-      ctx.strokeStyle = '#dcdde1'; ctx.lineWidth = 4.5 * s; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 22 * s, -24 * s); ctx.stroke();
-      ctx.fillStyle = '#ff4757'; ctx.fillRect(f * 16 * s, -30 * s, 11 * s, 13 * s);
-    } else if(p.data.weapon === 'dagger') {
-      ctx.strokeStyle = '#2ed573'; ctx.lineWidth = 2.5 * s; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 16 * s, -12 * s); ctx.stroke();
-    } else if(p.data.weapon === 'spear') {
-      ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 4 * s; 
-      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 65 * s, 0); ctx.stroke();
-      ctx.fillStyle = '#f1c40f'; ctx.fillRect(f * 16 * s - 2 * s, -3.5 * s, 5 * s, 7 * s);
-      ctx.fillStyle = '#ecf0f1'; ctx.beginPath(); ctx.moveTo(f * 54 * s, -7 * s); ctx.lineTo(f * 75 * s, 0); ctx.lineTo(f * 54 * s, 7 * s); ctx.fill();
-      ctx.fillStyle = '#3498db'; ctx.beginPath(); ctx.moveTo(f * 58 * s, -3.5 * s); ctx.lineTo(f * 68 * s, 0); ctx.lineTo(f * 58 * s, 3.5 * s); ctx.fill();
-    } else if(p.data.weapon === 'staff') {
-      ctx.strokeStyle = '#26de81'; ctx.lineWidth = 3.5 * s; ctx.beginPath(); ctx.moveTo(0, 6 * s); ctx.lineTo(f * 20 * s, -24 * s); ctx.stroke();
-      ctx.fillStyle = '#fed330'; ctx.shadowColor = '#fed330'; ctx.shadowBlur = 10;
-      ctx.beginPath(); ctx.arc(f * 20 * s, -24 * s, 7 * s, 0, Math.PI*2); ctx.fill();
+      // Kiếm Thần: Lưỡi sáng bóng năng lượng xanh cyan + chuôi vàng
+      ctx.shadowColor = '#66fcf1'; ctx.shadowBlur = 12;
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 3.5 * s; 
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 30 * s, -22 * s); ctx.stroke();
+      ctx.fillStyle = '#f1c40f'; ctx.fillRect(f * 2 * s, -3 * s, 6 * s, 3 * s); // Chuôi kiếm
+      ctx.fillStyle = '#66fcf1'; ctx.fillRect(f * 12 * s, -10 * s, 4 * s, 4 * s); // Hạt năng lượng
       ctx.shadowBlur = 0;
+      
+    } else if(p.data.weapon === 'axe') {
+      // Rìu Chiến: Cán gỗ chắc chắn kết hợp lưỡi rìu thép đỏ rực chiến tranh
+      ctx.strokeStyle = '#576574'; ctx.lineWidth = 4.5 * s; 
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 24 * s, -26 * s); ctx.stroke();
+      ctx.fillStyle = '#ff4757'; ctx.shadowColor = '#ff4757'; ctx.shadowBlur = 12;
+      ctx.beginPath(); 
+      ctx.moveTo(f * 18 * s, -32 * s); ctx.lineTo(f * 28 * s, -36 * s); 
+      ctx.lineTo(f * 26 * s, -20 * s); ctx.lineTo(f * 16 * s, -22 * s); ctx.fill();
+      ctx.shadowBlur = 0;
+      
+    } else if(p.data.weapon === 'dagger') {
+      // Dao Độc: Kiểu dáng lưỡi liềm nhỏ sắc bén màu lục phát sáng độc dược
+      ctx.shadowColor = '#2ed573'; ctx.shadowBlur = 10;
+      ctx.strokeStyle = '#2ed573'; ctx.lineWidth = 3 * s; 
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 18 * s, -14 * s); ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.fillRect(f * 8 * s, -6 * s, 4 * s, 2 * s);
+      ctx.shadowBlur = 0;
+      
+    } else if(p.data.weapon === 'spear') {
+      // Giáo Dài: Cán dài, thân bọc đai vàng và ngọn giáo 3 tầng kim loại rực rỡ
+      ctx.strokeStyle = '#744210'; ctx.lineWidth = 4 * s; 
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 70 * s, 0); ctx.stroke();
+      ctx.fillStyle = '#f1c40f'; ctx.fillRect(f * 16 * s, -4 * s, 6 * s, 8 * s); // Đai vàng
+      ctx.fillStyle = '#ecf0f1'; ctx.shadowColor = '#3498db'; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.moveTo(f * 56 * s, -8 * s); ctx.lineTo(f * 80 * s, 0); ctx.lineTo(f * 56 * s, 8 * s); ctx.fill();
+      ctx.fillStyle = '#e74c3c'; ctx.fillRect(f * 62 * s, -2 * s, 6 * s, 4 * s); // Tâm ngọc đỏ
+      ctx.shadowBlur = 0;
+      
+    } else if(p.data.weapon === 'staff') {
+      // Trượng Ma Thuật: Gậy pháp sư uốn lượn kèm cầu năng lượng cầu vồng xoáy
+      ctx.strokeStyle = '#10ac84'; ctx.lineWidth = 4 * s; 
+      ctx.beginPath(); ctx.moveTo(0, 6 * s); ctx.lineTo(f * 22 * s, -26 * s); ctx.stroke();
+      ctx.fillStyle = '#fffa65'; ctx.shadowColor = '#fffa65'; ctx.shadowBlur = 18;
+      ctx.beginPath(); ctx.arc(f * 22 * s, -26 * s, 8.5 * s, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#ff6b81'; ctx.beginPath(); ctx.arc(f * 22 * s, -26 * s, 3.5 * s, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0;
+      
     } else if(p.data.weapon === 'bow') {
-      ctx.strokeStyle = '#f7b731'; ctx.lineWidth = 2.5 * s; ctx.beginPath(); ctx.arc(f * 7 * s, -6 * s, 15 * s, -Math.PI/2, Math.PI/2); ctx.stroke();
+      // Cung Thần: Cung uốn cong mạ vàng đi kèm dây cung năng lượng căng tràn
+      ctx.strokeStyle = '#f7b731'; ctx.lineWidth = 3 * s; 
+      ctx.shadowColor = '#f7b731'; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.arc(f * 8 * s, -7 * s, 17 * s, -Math.PI/1.8, Math.PI/1.8); ctx.stroke();
+      ctx.strokeStyle = '#66fcf1'; ctx.lineWidth = 1.5 * s;
+      ctx.beginPath(); ctx.moveTo(f * 8 * s, -24 * s); ctx.lineTo(f * 8 * s, 10 * s); ctx.stroke();
+      ctx.shadowBlur = 0;
+      
     } else if(p.data.weapon === 'laser') {
-      ctx.fillStyle = '#66fcf1'; ctx.shadowColor = '#66fcf1'; ctx.shadowBlur = 10;
-      ctx.fillRect(0, -4.5 * s, f * 22 * s, 9 * s);
+      // Súng Laser: Khung súng bọc thép công nghệ cao phát tia chớp xanh ngắt
+      ctx.fillStyle = '#222f3e'; ctx.fillRect(0, -5 * s, f * 24 * s, 10 * s);
+      ctx.fillStyle = '#66fcf1'; ctx.shadowColor = '#66fcf1'; ctx.shadowBlur = 15;
+      ctx.fillRect(f * 6 * s, -2.5 * s, f * 18 * s, 5 * s);
       ctx.shadowBlur = 0;
     }
+    
     ctx.restore();
     ctx.restore();
   }
