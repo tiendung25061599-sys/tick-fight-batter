@@ -364,13 +364,13 @@ game_code = """
       }
     }
 
-    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 400, maxHp: 400, atk: false, data: myData, facing: 1, walkTimer: 0, scale: 1.0, isDashing: false, lastAtkTime: 0 };
+    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 400, maxHp: 400, atk: false, data: myData, facing: 1, walkTimer: 0, scale: 1.0, isDashing: false, lastAtkTime: 0, lastSkillTime: 0 };
     
     pEnemy = { 
       x: enemyX, y: canvas.height - 25, vy: 0, isGrounded: true, 
       hp: enemyHp, maxHp: enemyHp, atk: false, 
       data: (gameMode === 'story') ? { color: enemyColor, weapon: enemyWeapon, hat: isBossStage ? "knight" : "none", cape: isBossStage ? "black" : "none" } : enemyData, 
-      facing: -1, walkTimer: 0, scale: enemyScale, isDashing: false, lastAtkTime: 0 
+      facing: -1, walkTimer: 0, scale: enemyScale, isDashing: false, lastAtkTime: 0, lastSkillTime: 0 
     };
     
     bullets = []; particles = [];
@@ -398,7 +398,7 @@ game_code = """
       pEnemy.facing = data.facing;
       pEnemy.walkTimer = data.walkTimer;
     } else if(data.type === 'SKILL' || data.type === 'DASH') {
-      triggerDash(pEnemy);
+      triggerSkill(pEnemy);
     } else if(data.type === 'SHOOT') {
       createBullet(pEnemy, pSelf, data.weapon);
     } else if(data.type === 'VOTE_REMATCH') {
@@ -467,9 +467,8 @@ game_code = """
   function attack() {
     if(!pSelf || !isRunning) return;
     
-    // TÍNH TOÁN COOLDOWN TẤN CÔNG (0.2s cho tất cả trừ dao găm)
     let now = Date.now();
-    let cooldown = (pSelf.data.weapon === 'dagger') ? 150 : 200; // 0.2 giây = 200ms
+    let cooldown = (pSelf.data.weapon === 'dagger') ? 150 : 200; 
     if (now - (pSelf.lastAtkTime || 0) < cooldown) return;
     pSelf.lastAtkTime = now;
 
@@ -517,17 +516,46 @@ game_code = """
     setTimeout(() => p.isDashing = false, 200);
   }
 
+  function triggerSpearThrust(p) {
+    p.isDashing = true;
+    addParticles(p.x, p.y - 20, '#f1c40f', 14);
+    let thrustDist = p.facing * 120; // Lướt xa hơn một chút
+    p.x = Math.max(20, Math.min(canvas.width - 20, p.x + thrustDist));
+    
+    let other = (p === pSelf) ? pEnemy : pSelf;
+    // Tầm sát thương rộng hơn cho kỹ năng Giáo Dài
+    if(Math.abs(p.x - other.x) < 70 * p.scale) {
+      other.hp = Math.max(0, other.hp - 40); // Gây sát thương lớn (40 dmg)
+      addParticles(other.x, other.y - 20, '#f1c40f', 20);
+    }
+    setTimeout(() => p.isDashing = false, 250);
+  }
+
+  function triggerSkill(p) {
+    if (p.data.weapon === 'spear') {
+      triggerSpearThrust(p);
+    } else {
+      triggerDash(p);
+    }
+  }
+
   function useSkill() {
     if(!pSelf || !isRunning) return;
     
-    triggerDash(pSelf);
+    // Kiểm tra hồi chiêu skill 5 giây riêng cho Giáo Dài, các vũ khí khác giữ nguyên
+    let now = Date.now();
+    let skillCooldown = (pSelf.data.weapon === 'spear') ? 5000 : 0; // 5 giây = 5000ms
+    if (now - (pSelf.lastSkillTime || 0) < skillCooldown) return;
+    pSelf.lastSkillTime = now;
+
+    triggerSkill(pSelf);
 
     if(['staff', 'bow', 'laser'].includes(pSelf.data.weapon)) {
       createBullet(pSelf, pEnemy, pSelf.data.weapon);
       if(gameMode === 'online' && conn && conn.open) conn.send({ type: 'SHOOT', weapon: pSelf.data.weapon });
     }
 
-    if(gameMode === 'online' && conn && conn.open) conn.send({ type: 'DASH' });
+    if(gameMode === 'online' && conn && conn.open) conn.send({ type: 'SKILL' });
   }
 
   function addParticles(x, y, color, count) {
@@ -579,6 +607,15 @@ game_code = """
         } else if(Math.abs(pSelf.x - pEnemy.x) < 55 * pEnemy.scale) {
           pSelf.hp = Math.max(0, pSelf.hp - (8 + currentStage * 1.5));
           addParticles(pSelf.x, pSelf.y - 20, '#ff4757', 6);
+        }
+      }
+
+      // Boss / AI dùng skill Giáo Dài với hồi chiêu 5 giây nếu cầm giáo
+      if (pEnemy.data.weapon === 'spear') {
+        let enemySkillCooldown = 5000;
+        if (now - (pEnemy.lastSkillTime || 0) > enemySkillCooldown && Math.abs(pSelf.x - pEnemy.x) < 130) {
+          pEnemy.lastSkillTime = now;
+          triggerSkill(pEnemy);
         }
       }
     }
