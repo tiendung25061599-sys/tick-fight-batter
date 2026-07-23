@@ -145,13 +145,14 @@ game_code = """
     <div class="select-box">
       <span>Vũ Khí:</span>
       <select id="weaponSelect" onchange="updateSkillIcon()">
-        <option value="sword">⚔️ Kiếm Thần (Skill: Hút Gió & Hồi Máu 1s)</option>
-        <option value="axe">🪓 Rìu Chiến (Skill: Bay Nhảy Đập)</option>
-        <option value="dagger">🗡️ Dao Độc (Skill: Mưa Dao Găm)</option>
-        <option value="spear">🔱 Giáo Dài (Skill: Lướt Đâm Xuyên)</option>
+        <option value="sword">⚔️ Kiếm Thần (Skill: Hút Gió & Hồi Máu 10s)</option>
+        <option value="axe">🪓 Rìu Chiến (Skill: Bay Nhảy Đập 10s)</option>
+        <option value="dagger">🗡️ Dao Độc (Skill: Mưa Dao Găm 10s)</option>
+        <option value="spear">🔱 Giáo Dài (Skill: Lướt Đâm Xuyên 10s)</option>
         <option value="staff">🪄 Trượng Ma Thuật (Skill: Bắn Cầu Lửa 10s)</option>
         <option value="bow">🏹 Cung Thần (Skill: Bắn Mũi Tên Đôi 0.2s)</option>
         <option value="laser">⚡ Súng Laser (Skill: Tia Xuyên Phá 10s)</option>
+        <option value="muscle">💪 Cơ Bắp Thần Thánh (Skill: Bay Lên Quay Lửa & Đập Sóng Xung Kích 10s)</option>
       </select>
     </div>
     <div class="select-box">
@@ -222,6 +223,7 @@ game_code = """
     else if(wp === 'staff') skillBtn.innerText = "🔥";
     else if(wp === 'bow') skillBtn.innerText = "🏹";
     else if(wp === 'laser') skillBtn.innerText = "⚡";
+    else if(wp === 'muscle') skillBtn.innerText = "💪";
   }
 
   function toggleFullscreen() {
@@ -393,7 +395,7 @@ game_code = """
       } else {
         enemyHp = 450 + (currentStage * 65);
         enemyScale = 1.0 + (currentStage * 0.03);
-        let wpList = ["sword", "axe", "dagger", "spear", "staff", "bow", "laser"];
+        let wpList = ["sword", "axe", "dagger", "spear", "staff", "bow", "laser", "muscle"];
         enemyWeapon = wpList[currentStage % wpList.length];
       }
     }
@@ -514,6 +516,7 @@ game_code = """
     else if(pSelf.data.weapon === 'axe') { reach = 70; dmg = 28; }
     else if(pSelf.data.weapon === 'dagger') { reach = 38; dmg = 11; }
     else if(pSelf.data.weapon === 'spear') { reach = 80; dmg = 22; }
+    else if(pSelf.data.weapon === 'muscle') { reach = 75; dmg = 32; }
 
     let other = pEnemy;
     if(Math.abs(pSelf.x - other.x) < reach * pSelf.scale) {
@@ -607,6 +610,40 @@ game_code = """
       }
       setTimeout(() => p.isSpecialAction = false, 250);
 
+    } else if (wp === 'muscle') {
+      p.isSpecialAction = true;
+      p.vy = -16; p.isGrounded = false;
+      addParticles(p.x, p.y - 20, '#ff4757', 30);
+
+      let flameSpinTimer = 0;
+      let spinInterval = setInterval(() => {
+        flameSpinTimer++;
+        addParticles(p.x + (Math.random()-0.5)*40, p.y - 30 + (Math.random()-0.5)*40, '#ff4757', 5);
+        addParticles(p.x + (Math.random()-0.5)*40, p.y - 30 + (Math.random()-0.5)*40, '#ffa502', 5);
+        if(Math.abs(p.x - other.x) < 70) {
+          other.hp = Math.max(0, other.hp - 4);
+        }
+        if(flameSpinTimer >= 15) {
+          clearInterval(spinInterval);
+          p.vy = 22;
+          let checkMuscleSlam = setInterval(() => {
+            let ground = canvas.height - 25;
+            if(p.y >= ground) {
+              p.y = ground; p.vy = 0; p.isSpecialAction = false;
+              clearInterval(checkMuscleSlam);
+              addParticles(p.x, p.y, '#ff4757', 45);
+              let muscleSlamDmg = isStoryEnemy ? (90 + currentStage * 10) : 75;
+              if(Math.abs(p.x - other.x) < 140) {
+                other.hp = Math.max(0, other.hp - muscleSlamDmg);
+                other.x += (other.x > p.x) ? 90 : -90;
+                other.x = Math.max(20, Math.min(canvas.width - 20, other.x));
+                addParticles(other.x, other.y - 20, '#ff4757', 30);
+              }
+            }
+          }, 20);
+        }
+      }, 50);
+
     } else if (['staff', 'bow', 'laser'].includes(wp)) {
       createBullet(p, other, wp);
       if(wp === 'bow') {
@@ -619,9 +656,9 @@ game_code = """
     if(!pSelf || !isRunning) return;
     
     let now = Date.now();
-    let skillCooldown = 10000; // Tất cả đều 10 giây (10000ms)
+    let skillCooldown = 10000;
     if (pSelf.data.weapon === 'bow') {
-      skillCooldown = 200; // Trừ cung giữ nguyên 0.2s (200ms)
+      skillCooldown = 200;
     }
 
     if (now - (pSelf.lastSkillTime || 0) < skillCooldown) return;
@@ -814,7 +851,7 @@ game_code = """
       ctx.stroke();
     }
 
-    if(p.isSpecialAction && p.data.weapon === 'axe') {
+    if(p.isSpecialAction && (p.data.weapon === 'axe' || p.data.weapon === 'muscle')) {
       ctx.translate(x, y - 20 * s);
       ctx.rotate(animFrame * 0.6); 
       ctx.translate(-x, -(y - 20 * s));
@@ -904,6 +941,36 @@ game_code = """
       ctx.fillStyle = '#222f3e'; ctx.fillRect(0, -5 * s, f * 24 * s, 10 * s);
       ctx.fillStyle = '#66fcf1'; ctx.shadowColor = '#66fcf1'; ctx.shadowBlur = 15;
       ctx.fillRect(f * 6 * s, -2.5 * s, f * 18 * s, 5 * s);
+      ctx.shadowBlur = 0;
+
+    } else if(p.data.weapon === 'muscle') {
+      // Vẽ cánh tay cơ bắp dựa theo hình mẫu
+      ctx.fillStyle = '#f5c6a5';
+      ctx.strokeStyle = '#2d3436';
+      ctx.lineWidth = 2 * s;
+      ctx.shadowColor = '#ff4757';
+      ctx.shadowBlur = 15;
+      
+      ctx.save();
+      ctx.scale(f, 1);
+      
+      // Bắp tay trước/sau và nắm đấm gồng
+      ctx.beginPath();
+      ctx.arc(10 * s, -10 * s, 12 * s, 0, Math.PI * 2);
+      ctx.arc(22 * s, -18 * s, 10 * s, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+
+      // Cẳng tay gồng lên
+      ctx.beginPath();
+      ctx.roundRect(14 * s, -28 * s, 14 * s, 22 * s, 6 * s);
+      ctx.fill(); ctx.stroke();
+
+      // Nắm đấm phía trên
+      ctx.beginPath();
+      ctx.arc(21 * s, -36 * s, 9 * s, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+
+      ctx.restore();
       ctx.shadowBlur = 0;
     }
     
