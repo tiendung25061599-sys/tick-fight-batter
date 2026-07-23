@@ -3,7 +3,6 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Stick Man Batter Fight", layout="wide")
 
-# (The complete and properly closed HTML/JavaScript game code)
 game_code = """
 <!DOCTYPE html>
 <html>
@@ -416,7 +415,6 @@ game_code = """
     document.getElementById("rematchBtn").innerText = gameMode === 'story' ? "⏭️ MÀN TIẾP THEO" : "🔄 CHƠI TIẾP";
     document.getElementById("voteStatusText").innerText = "";
 
-    вища = true;
     isRunning = true;
     requestAnimationFrame(loop);
   }
@@ -469,7 +467,6 @@ game_code = """
 
   function requestRematch() {
     if(gameMode === 'story') {
-      document.getElementById('customTitle').innerText = "STORY MODE - MÀN " + currentStage;
       startGame();
     } else {
       myVoteRematch = true;
@@ -515,11 +512,11 @@ game_code = """
     let reach = 45;
     let dmg = 15;
 
-    if(pSelf.data.weapon === 'sword') { reach = 65; dmg = 18; }
-    else if(pSelf.data.weapon === 'axe') { reach = 75; dmg = 28; }
-    else if(pSelf.data.weapon === 'dagger') { reach = 42; dmg = 11; }
-    else if(pSelf.data.weapon === 'spear') { reach = 85; dmg = 22; }
-    else if(pSelf.data.weapon === 'muscle') { reach = 85; dmg = 32; }
+    if(pSelf.data.weapon === 'sword') { reach = 60; dmg = 18; }
+    else if(pSelf.data.weapon === 'axe') { reach = 70; dmg = 28; }
+    else if(pSelf.data.weapon === 'dagger') { reach = 38; dmg = 11; }
+    else if(pSelf.data.weapon === 'spear') { reach = 80; dmg = 22; }
+    else if(pSelf.data.weapon === 'muscle') { reach = 75; dmg = 32; }
 
     let other = pEnemy;
     if(Math.abs(pSelf.x - other.x) < reach * pSelf.scale) {
@@ -684,72 +681,6 @@ game_code = """
     }
   }
 
-  function drawStickMan(ctx, p) {
-    ctx.save();
-    ctx.translate(p.x, p.y);
-    ctx.scale(p.facing * p.scale, p.scale);
-
-    let color = p.data.color || '#66fcf1';
-    ctx.strokeStyle = color;
-    ctx.fillStyle = color;
-    ctx.lineWidth = 3;
-    ctx.lineCap = 'round';
-
-    // Head
-    ctx.beginPath();
-    ctx.arc(0, -42, 10, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Hat
-    if (p.data.hat === 'knight') {
-      ctx.fillStyle = '#a4b0be';
-      ctx.fillRect(-12, -56, 24, 6);
-      ctx.fillRect(-8, -64, 16, 8);
-    } else if (p.data.hat === 'wizard') {
-      ctx.fillStyle = '#7158e2';
-      ctx.beginPath();
-      ctx.moveTo(0, -72); ctx.lineTo(-14, -52); ctx.lineTo(14, -52); ctx.closePath();
-      ctx.fill();
-    }
-
-    // Cape
-    if (p.data.cape && p.data.cape !== 'none') {
-      ctx.fillStyle = (p.data.cape === 'red') ? '#ff4757' : '#2f3640';
-      ctx.beginPath();
-      ctx.moveTo(-4, -34);
-      ctx.lineTo(-18, -5);
-      ctx.lineTo(-8, -2);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    // Body
-    ctx.beginPath();
-    ctx.moveTo(0, -32);
-    ctx.lineTo(0, -12);
-    ctx.stroke();
-
-    // Walking animation for limbs
-    let legOffset = Math.sin(p.walkTimer) * 10;
-    
-    // Legs
-    ctx.beginPath();
-    ctx.moveTo(0, -12);
-    ctx.lineTo(-8 + legOffset, 0);
-    ctx.moveTo(0, -12);
-    ctx.lineTo(8 - legOffset, 0);
-    ctx.stroke();
-
-    // Arms & Weapon attack swing
-    let armAngle = p.atk ? -Math.PI / 3 : Math.sin(p.walkTimer) * 0.5;
-    ctx.beginPath();
-    ctx.moveTo(0, -26);
-    ctx.lineTo(14 + Math.cos(armAngle)*10, -20 + Math.sin(armAngle)*10);
-    ctx.stroke();
-
-    ctx.restore();
-  }
-
   function loop() {
     if (!isRunning) return;
     animFrame++;
@@ -818,49 +749,20 @@ game_code = """
       });
     }
 
-    // Bullets update
-    for(let i = bullets.length - 1; i >= 0; i--) {
-      let b = bullets[i];
-      b.x += b.vx;
-      let target = (b.shooter === pSelf) ? pEnemy : pSelf;
-
-      if(Math.abs(b.x - target.x) < 25 * target.scale && Math.abs(b.y - (target.y - 25)) < 30 * target.scale) {
-        target.hp = Math.max(0, target.hp - b.dmg);
-        addParticles(b.x, b.y, b.color, 8);
-        bullets.splice(i, 1);
-        continue;
-      }
-      if(b.x < 0 || b.x > canvas.width) {
-        bullets.splice(i, 1);
-      }
-    }
-
-    // Check Win/Loss
-    if(pSelf.hp <= 0) {
-      triggerEndGame(false);
-      return;
-    } else if(pEnemy.hp <= 0) {
-      triggerEndGame(true);
-      return;
-    }
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Background Grid
     ctx.strokeStyle = "rgba(102, 252, 241, 0.07)";
     ctx.lineWidth = 1;
     for(let i=0; i<canvas.width; i+=40) {
       ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
     }
 
-    // Ground platform
     ctx.fillStyle = "#1f2833"; ctx.fillRect(0, ground + 20, canvas.width, 12);
     ctx.fillStyle = "#66fcf1"; 
     ctx.shadowColor = "#66fcf1"; ctx.shadowBlur = 10;
     ctx.fillRect(0, ground + 18, canvas.width, 3);
     ctx.shadowBlur = 0;
 
-    // UI Health Bars
     let w = canvas.width * 0.35;
     ctx.fillStyle = "rgba(31, 40, 51, 0.8)"; ctx.fillRect(12, 12, w, 16); 
     ctx.fillStyle = pSelf.data.color; 
@@ -869,72 +771,254 @@ game_code = """
     ctx.shadowBlur = 0;
     ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.strokeRect(12, 12, w, 16);
 
-    // Enemy Health Bar
-    ctx.fillStyle = "rgba(31, 40, 51, 0.8)"; ctx.fillRect(canvas.width - w - 12, 12, w, 16);
-    ctx.fillStyle = pEnemy.data.color;
-    ctx.shadowColor = pEnemy.data.color; ctx.shadowBlur = 8;
-    ctx.fillRect(canvas.width - w - 12, 12, w * (Math.max(0, pEnemy.hp) / pEnemy.maxHp), 16);
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.strokeRect(canvas.width - w - 12, 12, w, 16);
-
-    // Draw characters
-    drawStickMan(ctx, pSelf);
-    drawStickMan(ctx, pEnemy);
-
-    // Draw Bullets
-    for(let b of bullets) {
-      ctx.save();
-      ctx.fillStyle = b.color;
-      ctx.shadowColor = b.color; ctx.shadowBlur = 8;
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
+    if(isBossStage) {
+      let bossW = canvas.width * 0.6;
+      let bossX = (canvas.width - bossW) / 2;
+      ctx.fillStyle = "rgba(31, 40, 51, 0.8)"; ctx.fillRect(bossX, 35, bossW, 20);
+      ctx.fillStyle = "#ff0055"; 
+      ctx.shadowColor = "#ff0055"; ctx.shadowBlur = 12;
+      ctx.fillRect(bossX, 35, bossW * (Math.max(0, pEnemy.hp) / pEnemy.maxHp), 20);
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = "#ff4757"; ctx.lineWidth = 2; ctx.strokeRect(bossX, 35, bossW, 20);
+      ctx.fillStyle = "#fff"; ctx.font = "bold 13px sans-serif"; ctx.fillText("🔥 BOSS KHỔNG LỒ (MÀN " + currentStage + ") 🔥", canvas.width/2 - 95, 28);
+    } else {
+      ctx.fillStyle = "rgba(31, 40, 51, 0.8)"; ctx.fillRect(canvas.width - 12 - w, 12, w, 16);
+      ctx.fillStyle = pEnemy.data.color; 
+      ctx.shadowColor = pEnemy.data.color; ctx.shadowBlur = 8;
+      ctx.fillRect(canvas.width - 12 - w, 12, w * (Math.max(0, pEnemy.hp) / pEnemy.maxHp), 16);
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.strokeRect(canvas.width - 12 - w, 12, w, 16);
     }
 
-    // Draw Particles
-    for(let i = particles.length - 1; i >= 0; i--) {
-      let pt = particles[i];
-      pt.x += pt.vx; pt.y += pt.vy; pt.life--;
-      ctx.fillStyle = pt.color;
-      ctx.fillRect(pt.x, pt.y, 3, 3);
-      if(pt.life <= 0) particles.splice(i, 1);
+    particles.forEach((p, i) => {
+      p.x += p.vx; p.y += p.vy; p.life--;
+      ctx.fillStyle = p.color; 
+      ctx.fillRect(p.x, p.y, 3.5, 3.5);
+      if(p.life <= 0) particles.splice(i, 1);
+    });
+
+    bullets.forEach((b, idx) => {
+      b.x += b.vx;
+      ctx.fillStyle = b.color;
+      ctx.shadowColor = b.color;
+      ctx.shadowBlur = 15;
+
+      if(b.type === 'laser') {
+        ctx.fillRect(b.x, b.y - 3, 28 * Math.sign(b.vx), 6);
+      } else {
+        ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.shadowBlur = 0;
+
+      let target = (b.shooter === pEnemy) ? pSelf : pEnemy;
+      if (Math.abs(b.x - target.x) < 24 * target.scale && Math.abs(b.y - (target.y - 20 * target.scale)) < 32 * target.scale) {
+        target.hp = Math.max(0, target.hp - b.dmg);
+        addParticles(b.x, b.y, b.color, 12);
+        bullets.splice(idx, 1);
+      }
+    });
+
+    drawPlayer(pSelf); drawPlayer(pEnemy);
+
+    if (pSelf.hp <= 0 || pEnemy.hp <= 0) {
+      triggerEndGame(pSelf.hp > 0);
+      return;
     }
 
     requestAnimationFrame(loop);
   }
 
-  // Keyboard and Touch Control Event Listeners
+  function drawPlayer(p) {
+    let f = p.facing, x = p.x, y = p.y, s = p.scale;
+    let legSwing = Math.sin(p.walkTimer * 5.5) * 12;
+
+    ctx.save();
+    ctx.shadowColor = p.data.color;
+    ctx.shadowBlur = p.isSpecialAction ? 25 : 10;
+
+    if(p.windEffectTimer > 0) {
+      ctx.strokeStyle = "rgba(46, 213, 115, 0.7)";
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = "#2ed573";
+      ctx.shadowBlur = 20;
+      ctx.beginPath();
+      let ringRadius = 45 + Math.sin(animFrame * 0.4) * 10;
+      ctx.arc(x, y - 20, ringRadius, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(x, y - 20, ringRadius * 0.6, -animFrame * 0.3, Math.PI - animFrame * 0.3);
+      ctx.stroke();
+    }
+
+    if(p.isSpecialAction && (p.data.weapon === 'axe' || p.data.weapon === 'muscle')) {
+      ctx.translate(x, y - 20 * s);
+      ctx.rotate(animFrame * 0.6); 
+      ctx.translate(-x, -(y - 20 * s));
+    }
+
+    if(p.data.cape && p.data.cape !== 'none') {
+      ctx.fillStyle = p.data.cape === 'red' ? '#ff3838' : '#1e272e';
+      ctx.beginPath(); 
+      ctx.moveTo(x - f * 4 * s, y - 26 * s); 
+      ctx.lineTo(x - f * (20 + Math.sin(animFrame*0.25)*6) * s, y + 6 * s); 
+      ctx.lineTo(x - f * 4 * s, y + 3 * s); 
+      ctx.fill();
+    }
+
+    ctx.strokeStyle = p.data.color; ctx.lineWidth = 3.5 * s;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    
+    ctx.beginPath(); ctx.arc(x, y - 36 * s, 9.5 * s, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y - 26 * s); ctx.lineTo(x, y - 8 * s); ctx.stroke();
+    
+    ctx.beginPath(); ctx.moveTo(x, y - 8 * s); ctx.lineTo(x - (9 + legSwing) * s, y + 21 * s); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y - 8 * s); ctx.lineTo(x + (9 + legSwing) * s, y + 21 * s); ctx.stroke();
+
+    let handX = x + (p.atk ? f * 24 * s : f * 9 * s);
+    let handY = y - (p.atk ? 25 * s : 16 * s);
+    ctx.beginPath(); ctx.moveTo(x, y - 22 * s); ctx.lineTo(handX, handY); ctx.stroke();
+
+    if(p.data.hat === 'knight') {
+      ctx.fillStyle = '#d1d8e0'; ctx.fillRect(x - 11 * s, y - 50 * s, 22 * s, 9 * s);
+      ctx.fillStyle = '#ff4757'; ctx.fillRect(x - 2 * s, y - 54 * s, 4 * s, 6 * s);
+    } else if(p.data.hat === 'wizard') {
+      ctx.fillStyle = '#8854d0'; ctx.beginPath(); ctx.moveTo(x - 13 * s, y - 43 * s); ctx.lineTo(x, y - 65 * s); ctx.lineTo(x + 13 * s, y - 43 * s); ctx.fill();
+    }
+
+    ctx.save(); ctx.translate(handX, handY);
+    
+    if(p.data.weapon === 'sword') {
+      ctx.shadowColor = '#66fcf1'; ctx.shadowBlur = 12;
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 3.5 * s; 
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 30 * s, -22 * s); ctx.stroke();
+      ctx.fillStyle = '#f1c40f'; ctx.fillRect(f * 2 * s, -3 * s, 6 * s, 3 * s);
+      ctx.fillStyle = '#66fcf1'; ctx.fillRect(f * 12 * s, -10 * s, 4 * s, 4 * s);
+      ctx.shadowBlur = 0;
+      
+    } else if(p.data.weapon === 'axe') {
+      ctx.strokeStyle = '#576574'; ctx.lineWidth = 4.5 * s; 
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 22 * s, -26 * s); ctx.stroke();
+      ctx.fillStyle = '#ff4757'; ctx.shadowColor = '#ff4757'; ctx.shadowBlur = 12;
+      ctx.beginPath(); 
+      ctx.moveTo(f * 14 * s, -34 * s); ctx.lineTo(f * 26 * s, -28 * s); 
+      ctx.lineTo(f * 22 * s, -18 * s); ctx.lineTo(f * 12 * s, -22 * s); ctx.fill();
+      ctx.shadowBlur = 0;
+      
+    } else if(p.data.weapon === 'dagger') {
+      ctx.shadowColor = '#2ed573'; ctx.shadowBlur = 10;
+      ctx.strokeStyle = '#2ed573'; ctx.lineWidth = 3 * s; 
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 18 * s, -14 * s); ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.fillRect(f * 8 * s, -6 * s, 4 * s, 2 * s);
+      ctx.shadowBlur = 0;
+      
+    } else if(p.data.weapon === 'spear') {
+      ctx.strokeStyle = '#744210'; ctx.lineWidth = 4 * s; 
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 70 * s, 0); ctx.stroke();
+      ctx.fillStyle = '#f1c40f'; ctx.fillRect(f * 16 * s, -4 * s, 6 * s, 8 * s);
+      ctx.fillStyle = '#ecf0f1'; ctx.shadowColor = '#3498db'; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.moveTo(f * 56 * s, -8 * s); ctx.lineTo(f * 80 * s, 0); ctx.lineTo(f * 56 * s, 8 * s); ctx.fill();
+      ctx.fillStyle = '#e74c3c'; ctx.fillRect(f * 62 * s, -2 * s, 6 * s, 4 * s);
+      ctx.shadowBlur = 0;
+      
+    } else if(p.data.weapon === 'staff') {
+      ctx.strokeStyle = '#10ac84'; ctx.lineWidth = 4 * s; 
+      ctx.beginPath(); ctx.moveTo(0, 6 * s); ctx.lineTo(f * 22 * s, -26 * s); ctx.stroke();
+      ctx.fillStyle = '#fffa65'; ctx.shadowColor = '#fffa65'; ctx.shadowBlur = 18;
+      ctx.beginPath(); ctx.arc(f * 22 * s, -26 * s, 8.5 * s, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#ff6b81'; ctx.beginPath(); ctx.arc(f * 22 * s, -26 * s, 3.5 * s, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0;
+      
+    } else if(p.data.weapon === 'bow') {
+      ctx.strokeStyle = '#f7b731'; ctx.lineWidth = 3 * s; 
+      ctx.shadowColor = '#f7b731'; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.arc(f * 8 * s, -7 * s, 17 * s, -Math.PI/1.8, Math.PI/1.8); ctx.stroke();
+      ctx.strokeStyle = '#66fcf1'; ctx.lineWidth = 1.5 * s;
+      ctx.beginPath(); ctx.moveTo(f * 8 * s, -24 * s); ctx.lineTo(f * 8 * s, 10 * s); ctx.stroke();
+      ctx.shadowBlur = 0;
+      
+    } else if(p.data.weapon === 'laser') {
+      ctx.fillStyle = '#222f3e'; ctx.fillRect(0, -5 * s, f * 24 * s, 10 * s);
+      ctx.fillStyle = '#66fcf1'; ctx.shadowColor = '#66fcf1'; ctx.shadowBlur = 15;
+      ctx.fillRect(f * 6 * s, -2.5 * s, f * 18 * s, 5 * s);
+      ctx.shadowBlur = 0;
+
+    } else if(p.data.weapon === 'muscle') {
+      // Vẽ cánh tay cơ bắp dựa theo hình mẫu
+      ctx.fillStyle = '#f5c6a5';
+      ctx.strokeStyle = '#2d3436';
+      ctx.lineWidth = 2 * s;
+      ctx.shadowColor = '#ff4757';
+      ctx.shadowBlur = 15;
+      
+      ctx.save();
+      ctx.scale(f, 1);
+      
+      // Bắp tay trước/sau và nắm đấm gồng
+      ctx.beginPath();
+      ctx.arc(10 * s, -10 * s, 12 * s, 0, Math.PI * 2);
+      ctx.arc(22 * s, -18 * s, 10 * s, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+
+      // Cẳng tay gồng lên
+      ctx.beginPath();
+      ctx.roundRect(14 * s, -28 * s, 14 * s, 22 * s, 6 * s);
+      ctx.fill(); ctx.stroke();
+
+      // Nắm đấm phía trên
+      ctx.beginPath();
+      ctx.arc(21 * s, -36 * s, 9 * s, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+
+      ctx.restore();
+      ctx.shadowBlur = 0;
+    }
+    
+    ctx.restore();
+    ctx.restore();
+  }
+
   window.addEventListener('keydown', (e) => {
-    if(e.key === 'a' || e.key === 'ArrowLeft') moveL = true;
-    if(e.key === 'd' || e.key === 'ArrowRight') moveR = true;
-    if(e.key === 'w' || e.key === 'ArrowUp') jump();
-    if(e.key === ' ' || e.key === 'j') attack();
-    if(e.key === 'k' || e.key === 'Shift') useSkill();
+    let k = e.key.toLowerCase();
+    if (k === 'a' || k === 'arrowleft') { moveL = true; document.getElementById('btnLeft').classList.add('active'); }
+    if (k === 'd' || k === 'arrowright') { moveR = true; document.getElementById('btnRight').classList.add('active'); }
+    if (k === 'w' || k === ' ' || k === 'arrowup') { jump(); document.getElementById('btnJump').classList.add('active'); }
   });
 
   window.addEventListener('keyup', (e) => {
-    if(e.key === 'a' || e.key === 'ArrowLeft') moveL = false;
-    if(e.key === 'd' || e.key === 'ArrowRight') moveR = false;
+    let k = e.key.toLowerCase();
+    if (k === 'a' || k === 'arrowleft') { moveL = false; document.getElementById('btnLeft').classList.remove('active'); }
+    if (k === 'd' || k === 'arrowright') { moveR = false; document.getElementById('btnRight').classList.remove('active'); }
+    if (k === 'w' || k === ' ' || k === 'arrowup') { document.getElementById('btnJump').classList.remove('active'); }
   });
 
-  function bindTouch(id, startFn, endFn) {
+  window.addEventListener('mousedown', (e) => {
+    if(e.button === 0) { attack(); document.getElementById('btnAtk').classList.add('active'); }
+    if(e.button === 2) { useSkill(); document.getElementById('btnSkill').classList.add('active'); }
+  });
+  window.addEventListener('mouseup', (e) => {
+    if(e.button === 0) document.getElementById('btnAtk').classList.remove('active');
+    if(e.button === 2) document.getElementById('btnSkill').classList.remove('active');
+  });
+  window.addEventListener('contextmenu', e => e.preventDefault());
+
+  function bindBtn(id, start, end) {
     let el = document.getElementById(id);
     if(!el) return;
-    el.addEventListener('touchstart', (e) => { e.preventDefault(); if(startFn) startFn(); });
-    el.addEventListener('touchend', (e) => { e.preventDefault(); if(endFn) endFn(); });
-    el.addEventListener('mousedown', (e) => { e.preventDefault(); if(startFn) startFn(); });
-    el.addEventListener('mouseup', (e) => { e.preventDefault(); if(endFn) endFn(); });
+    el.addEventListener("mousedown", (e)=>{ e.stopPropagation(); start(); });
+    el.addEventListener("mouseup", (e)=>{ e.stopPropagation(); if(end) end(); });
+    el.addEventListener("touchstart", (e)=>{e.preventDefault(); start();});
+    el.addEventListener("touchend", (e)=>{e.preventDefault(); if(end) end();});
   }
 
-  bindTouch('btnLeft', () => moveL = true, () => moveL = false);
-  bindTouch('btnRight', () => moveR = true, () => moveR = false);
-  bindTouch('btnJump', jump, null);
-  bindTouch('btnAtk', attack, null);
-  bindTouch('btnSkill', useSkill, null);
+  bindBtn("btnLeft", () => moveL = true, () => moveL = false);
+  bindBtn("btnRight", () => moveR = true, () => moveR = false);
+  bindBtn("btnJump", () => jump());
+  bindBtn("btnAtk", () => attack());
+  bindBtn("btnSkill", () => useSkill());
 </script>
 </body>
 </html>
 """
 
-components.html(game_code, height=650, scrolling=False)
+components.html(game_code, height=720)
