@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Stickman Battle Online & Story", layout="wide")
+st.set_page_config(page_title="Stick Man Batter Fight", layout="wide")
 
 game_code = """
 <!DOCTYPE html>
@@ -72,7 +72,7 @@ game_code = """
 
   <!-- MAIN MENU -->
   <div id="mainMenu" class="screen">
-    <h1>STICKMAN BATTLE</h1>
+    <h1>STICK MAN BATTER FIGHT</h1>
     <div class="btn" id="btnStory">📖 STORY MODE (VƯỢT ẢI)</div>
     <div class="btn" style="border-color:#ff4757; color:#ff4757;" id="btnMulti">🌐 MULTIPLAYER (ONLINE)</div>
     <div class="btn" style="border-color:#f7b731; color:#f7b731;" id="btnSettings">⚙️ SETTINGS (CÀI ĐẶT)</div>
@@ -524,26 +524,22 @@ game_code = """
 
     if (wp === 'sword') {
       p.isSpecialAction = true;
-      p.windEffectTimer = 35; // Bật hiệu ứng gió xoáy xung quanh
+      p.windEffectTimer = 35;
       addParticles(p.x, p.y - 20, '#66fcf1', 25);
 
-      // Giai đoạn 1: Hút kẻ địch lại gần và gây damage liên tục
       let pullTicks = 0;
       let pullInterval = setInterval(() => {
         pullTicks++;
-        // Kéo địch về phía người dùng skill
         if (Math.abs(p.x - other.x) > 15) {
           other.x += (p.x > other.x) ? 6 : -6;
         }
-        // Gây damage liên tục mỗi nhịp hút
         let dotDmg = isStoryEnemy ? (8 + currentStage) : 6;
         other.hp = Math.max(0, other.hp - dotDmg);
         addParticles(other.x, other.y - 20, '#66fcf1', 8);
 
-        if (pullTicks >= 5) { // Sau khoảng 5 nhịp (tương đương ~0.4s)
+        if (pullTicks >= 5) {
           clearInterval(pullInterval);
 
-          // Giai đoạn 2: Đẩy văng kẻ địch ra xa mạnh mẽ kèm sát thương cuối
           let pushDir = (other.x >= p.x) ? 1 : -1;
           other.x += pushDir * 90;
           other.x = Math.max(20, Math.min(canvas.width - 20, other.x));
@@ -614,10 +610,10 @@ game_code = """
     
     let now = Date.now();
     let skillCooldown = 2500;
-    if (pSelf.data.weapon === 'sword') skillCooldown = 200; // Giảm hồi chiêu Kiếm xuống 0.2s
+    if (pSelf.data.weapon === 'sword') skillCooldown = 200;
     else if (pSelf.data.weapon === 'axe') skillCooldown = 4500;
     else if (pSelf.data.weapon === 'spear') skillCooldown = 3000;
-    else if (['staff', 'bow', 'laser'].includes(pSelf.data.weapon)) skillCooldown = 200; // Hồi chiêu 0.2s cho Trượng, Cung, Laser
+    else if (['staff', 'bow', 'laser'].includes(pSelf.data.weapon)) skillCooldown = 200;
 
     if (now - (pSelf.lastSkillTime || 0) < skillCooldown) return;
     pSelf.lastSkillTime = now;
@@ -794,7 +790,6 @@ game_code = """
     ctx.shadowColor = p.data.color;
     ctx.shadowBlur = p.isSpecialAction ? 25 : 10;
 
-    // Hiệu ứng vòng gió lốc xung quanh khi dùng skill Kiếm Thần
     if(p.windEffectTimer > 0) {
       ctx.strokeStyle = "rgba(102, 252, 241, 0.7)";
       ctx.lineWidth = 2.5;
@@ -805,7 +800,6 @@ game_code = """
       ctx.arc(x, y - 20, ringRadius, 0, Math.PI * 2);
       ctx.stroke();
 
-      // Vẽ các vòng xoáy phụ
       ctx.beginPath();
       ctx.arc(x, y - 20, ringRadius * 0.6, -animFrame * 0.3, Math.PI - animFrame * 0.3);
       ctx.stroke();
