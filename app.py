@@ -542,7 +542,7 @@ game_code = """
     if(!pSelf || !isRunning) return;
     
     let now = Date.now();
-    let skillCooldown = (pSelf.data.weapon === 'spear') ? 2000 : 0; // Đã giảm hồi chiêu skill giáo xuống 2 giây
+    let skillCooldown = (pSelf.data.weapon === 'spear') ? 2000 : 0; 
     if (now - (pSelf.lastSkillTime || 0) < skillCooldown) return;
     pSelf.lastSkillTime = now;
 
@@ -734,23 +734,24 @@ game_code = """
       ctx.strokeStyle = '#2ed573'; ctx.lineWidth = 2 * s; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 14 * s, -10 * s); ctx.stroke();
     } else if(p.data.weapon === 'spear') {
       ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 3.5 * s; 
-      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 52 * s, -42 * s); ctx.stroke();
+      // Chĩa thẳng giáo về phía trước ngang tầm ngực nhân vật
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 60 * s, 0); ctx.stroke();
       
       ctx.fillStyle = '#f1c40f'; 
-      ctx.fillRect(f * 10 * s - 2 * s, -10 * s, 4 * s, 6 * s);
+      ctx.fillRect(f * 15 * s - 2 * s, -3 * s, 4 * s, 6 * s);
 
       ctx.fillStyle = '#ecf0f1'; 
       ctx.beginPath(); 
-      ctx.moveTo(f * 45 * s, -35 * s); 
-      ctx.lineTo(f * 60 * s, -52 * s); 
-      ctx.lineTo(f * 52 * s, -38 * s); 
+      ctx.moveTo(f * 50 * s, -6 * s); 
+      ctx.lineTo(f * 70 * s, 0); 
+      ctx.lineTo(f * 50 * s, 6 * s); 
       ctx.fill();
 
       ctx.fillStyle = '#3498db'; 
       ctx.beginPath(); 
-      ctx.moveTo(f * 52 * s, -44 * s); 
-      ctx.lineTo(f * 60 * s, -52 * s); 
-      ctx.lineTo(f * 50 * s, -40 * s); 
+      ctx.moveTo(f * 55 * s, -3 * s); 
+      ctx.lineTo(f * 65 * s, 0); 
+      ctx.lineTo(f * 55 * s, 3 * s); 
       ctx.fill();
     } else if(p.data.weapon === 'staff') {
       ctx.strokeStyle = '#78e08f'; ctx.lineWidth = 3 * s; ctx.beginPath(); ctx.moveTo(0, 5 * s); ctx.lineTo(f * 18 * s, -22 * s); ctx.stroke();
