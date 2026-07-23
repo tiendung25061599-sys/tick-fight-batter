@@ -544,13 +544,12 @@ game_code = """
 
   function triggerAxeSpinSkill(p) {
     p.isAxeSpinning = true;
-    p.vy = -13; // Bay lên cao
+    p.vy = -12; // Bay lên cao
     p.isGrounded = false;
     addParticles(p.x, p.y - 20, '#ffa502', 18);
 
-    // Sau khi bay lên khoảng 300ms thì bắt đầu lao mạnh xuống đất đập
     setTimeout(() => {
-      p.vy = 18; // Lao mạnh xuống đất
+      p.vy = 16; // Đập mạnh xuống đất
       let checkSlam = setInterval(() => {
         let ground = canvas.height - 25;
         if(p.y >= ground) {
@@ -559,7 +558,6 @@ game_code = """
           p.isAxeSpinning = false;
           clearInterval(checkSlam);
           
-          // Gây sát thương diện rộng khi đập xuống đất
           addParticles(p.x, p.y, '#ff4757', 25);
           let other = (p === pSelf) ? pEnemy : pSelf;
           if(Math.abs(p.x - other.x) < 90) {
@@ -568,7 +566,7 @@ game_code = """
           }
         }
       }, 20);
-    }, 300);
+    }, 280);
   }
 
   function triggerSkill(p) {
@@ -752,6 +750,12 @@ game_code = """
     ctx.shadowColor = p.data.color;
     ctx.shadowBlur = (p.isDashing || p.isAxeSpinning) ? 20 : 8;
 
+    if(p.isAxeSpinning) {
+      ctx.translate(x, y - 20 * s);
+      ctx.rotate(animFrame * 0.5); // Hiệu ứng xoay tròn khi dùng skill rìu
+      ctx.translate(-x, -(y - 20 * s));
+    }
+
     if(p.data.cape && p.data.cape !== 'none') {
       ctx.fillStyle = p.data.cape === 'red' ? '#ff3838' : '#2f3542';
       ctx.beginPath(); 
@@ -779,13 +783,6 @@ game_code = """
       ctx.fillStyle = '#5f27cd'; ctx.beginPath(); ctx.moveTo(x - 12 * s, y - 42 * s); ctx.lineTo(x, y - 62 * s); ctx.lineTo(x + 12 * s, y - 42 * s); ctx.fill();
     }
 
-    ctx.save(); 
-    if(p.isAxeSpinning) {
-      ctx.translate(x, y - 20 * s);
-      ctx.rotate(animFrame * 0.4); // Xoay vòng người/rìu khi kích hoạt skill
-      ctx.translate(-x, -(y - 20 * s));
-    }
-
     ctx.save(); ctx.translate(handX, handY);
     if(p.data.weapon === 'sword') {
       ctx.strokeStyle = '#fff'; ctx.lineWidth = 3 * s; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 25 * s, -18 * s); ctx.stroke();
@@ -808,7 +805,6 @@ game_code = """
     } else if(p.data.weapon === 'laser') {
       ctx.fillStyle = '#66fcf1'; ctx.fillRect(0, -4 * s, f * 20 * s, 8 * s);
     }
-    ctx.restore();
     ctx.restore();
     ctx.restore();
   }
@@ -849,7 +845,7 @@ game_code = """
   bindBtn("btnLeft", () => moveL = true, () => moveL = false);
   bindBtn("btnRight", () => moveR = true, () => moveR = false);
   bindBtn("btnJump", () => jump());
-  bindBtn("btnAtk", () => an effect);
+  bindBtn("btnAtk", () => attack());
   bindBtn("btnSkill", () => useSkill());
 </script>
 </body>
