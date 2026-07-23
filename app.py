@@ -3,11 +3,14 @@ import random
 
 st.title("⚔️ Game Đánh Nhau Cơ Bản")
 
-# Khởi tạo trạng thái game gốc
+# Khởi tạo toàn bộ trạng thái game ban đầu ở đây (Tránh lỗi thiếu biến)
 if "player_hp" not in st.session_state:
     st.session_state.player_hp = 100
+if "enemy_hp" not in st.session_state:
     st.session_state.enemy_hp = 100
+if "player_gold" not in st.session_state:
     st.session_state.player_gold = 0
+if "game_log" not in st.session_state:
     st.session_state.game_log = []
 
 # Chọn nhân vật ban đầu
@@ -56,6 +59,7 @@ if st.button("🤖 Kẻ Địch Phản Công"):
 if st.button("🔄 Chơi Lại"):
     st.session_state.player_hp = 100
     st.session_state.enemy_hp = 100
+    st.session_state.player_gold = 0
     st.session_state.game_log = []
     st.rerun()
 
