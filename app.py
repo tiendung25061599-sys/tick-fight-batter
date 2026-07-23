@@ -153,14 +153,14 @@ game_code = """
     <div class="select-box">
       <span>Vũ Khí:</span>
       <select id="weaponSelect" onchange="updateSkillIcon()">
-        <option value="sword">⚔️ Kiếm Thần (Skill: Hút Gió & Hồi Máu 10s)</option>
-        <option value="axe">🪓 Rìu Chiến (Skill: Bay Nhảy Đập 10s)</option>
-        <option value="dagger">🗡️ Dao Độc (Skill: Mưa Dao Găm 10s)</option>
-        <option value="spear">🔱 Giáo Dài (Skill: Lướt Đâm Xuyên 10s)</option>
-        <option value="staff">🪄 Trượng Ma Thuật (Skill: Bắn Cầu Lửa 10s)</option>
-        <option value="bow">🏹 Cung Thần (Skill: Bắn Mũi Tên Đôi 0.2s)</option>
-        <option value="laser">⚡ Súng Laser (Skill: Tia Xuyên Phá 10s)</option>
-        <option value="muscle">💪 Cơ Bắp Thần Thánh (Skill: Bay Lên Quay Lửa 10s)</option>
+        <option value="sword">⚔️ Kiếm Thần (Skill: Hút Gió & Hồi Máu)</option>
+        <option value="axe">🪓 Rìu Chiến (Skill: Bay Nhảy Đập)</option>
+        <option value="dagger">🗡️ Dao Độc (Skill: Tấn Công Nhanh)</option>
+        <option value="spear">🔱 Giáo Dài (Skill: Đâm Xuyên)</option>
+        <option value="staff">🪄 Trượng Ma Thuật (Skill: Bắn Cầu Lửa)</option>
+        <option value="bow">🏹 Cung Thần (Skill: Bắn Mũi Tên)</option>
+        <option value="laser">⚡ Súng Laser (Skill: Tia Xuyên Phá)</option>
+        <option value="muscle">💪 Cơ Bắp Thần Thánh (Skill: Xoay Lửa)</option>
       </select>
     </div>
     <div class="select-box">
@@ -226,14 +226,14 @@ game_code = """
   function updateSkillIcon() {
     let wp = document.getElementById("weaponSelect").value;
     let skillBtn = document.getElementById("btnSkill");
-    if(wp === 'sword') skillBtn.innerText = "🌪️";
-    else if(wp === 'axe') skillBtn.innerText = "🪓";
-    else if(wp === 'dagger') skillBtn.innerText = "🗡️";
-    else if(wp === 'spear') skillBtn.innerText = "🔱";
-    else if(wp === 'staff') skillBtn.innerText = "🔥";
-    else if(wp === 'bow') skillBtn.innerText = "🏹";
-    else if(wp === 'laser') skillBtn.innerText = "⚡";
-    else if(wp === 'muscle') skillBtn.innerText = "💪";
+    if(wp === 'sword') skillBtn.innerHTML = "🌪️<span class='key-hint'>M2</span>";
+    else if(wp === 'axe') skillBtn.innerHTML = "🪓<span class='key-hint'>M2</span>";
+    else if(wp === 'dagger') skillBtn.innerHTML = "🗡️<span class='key-hint'>M2</span>";
+    else if(wp === 'spear') skillBtn.innerHTML = "🔱<span class='key-hint'>M2</span>";
+    else if(wp === 'staff') skillBtn.innerHTML = "🔥<span class='key-hint'>M2</span>";
+    else if(wp === 'bow') skillBtn.innerHTML = "🏹<span class='key-hint'>M2</span>";
+    else if(wp === 'laser') skillBtn.innerHTML = "⚡<span class='key-hint'>M2</span>";
+    else if(wp === 'muscle') skillBtn.innerHTML = "💪<span class='key-hint'>M2</span>";
   }
 
   function toggleFullscreen() {
@@ -640,13 +640,18 @@ game_code = """
       }, 280);
     } else if (['staff', 'bow', 'laser'].includes(wp)) {
       createBullet(p, null, wp);
+    } else {
+      // Các skill khác như dagger, spear, muscle
+      p.isSpecialAction = true;
+      addParticles(p.x, p.y - 20, '#ff4757', 20);
+      setTimeout(() => p.isSpecialAction = false, 400);
     }
   }
 
   function useSkill() {
     if(!pSelf || !isRunning) return;
     let now = Date.now();
-    if (now - (pSelf.lastSkillTime || 0) < 10000) return;
+    if (now - (pSelf.lastSkillTime || 0) < 5000) return; // Giảm cooldown xuống 5s cho dễ test
     pSelf.lastSkillTime = now;
     executeWeaponSkill(pSelf);
 
@@ -869,6 +874,7 @@ game_code = """
     if (k === 'a' || k === 'arrowleft') moveL = true;
     if (k === 'd' || k === 'arrowright') moveR = true;
     if (k === 'w' || k === ' ' || k === 'arrowup') jump();
+    if (k === 'e' || k === 'k') useSkill(); // Phím tắt phụ cho skill
   });
 
   window.addEventListener('keyup', (e) => {
@@ -879,7 +885,7 @@ game_code = """
 
   window.addEventListener('mousedown', (e) => {
     if(e.button === 0) attack();
-    if(e.button === 2) useSkill();
+    if(e.button === 2) { e.preventDefault(); useSkill(); }
   });
   window.addEventListener('contextmenu', e => e.preventDefault());
 
@@ -888,8 +894,8 @@ game_code = """
     if(!el) return;
     el.addEventListener("mousedown", (e)=>{ e.stopPropagation(); start(); });
     el.addEventListener("mouseup", (e)=>{ e.stopPropagation(); if(end) end(); });
-    el.addEventListener("touchstart", (e)=>{e.preventDefault(); start();});
-    el.addEventListener("touchend", (e)=>{e.preventDefault(); if(end) end();});
+    el.addEventListener("touchstart", (e)=>{ e.preventDefault(); start(); });
+    el.addEventListener("touchend", (e)=>{ e.preventDefault(); if(end) end(); });
   }
 
   bindBtn("btnLeft", () => moveL = true, () => moveL = false);
