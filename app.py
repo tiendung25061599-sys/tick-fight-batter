@@ -218,10 +218,10 @@ game_code = """
 
   let myData = { color: "#66fcf1", weapon: "sword", hat: "knight", cape: "red" };
   let remotePeerData = { color: "#ff4757", weapon: "staff", hat: "wizard", cape: "black" };
-  let pRemote = null; // Dùng cho multiplayer khi 2 người chơi chung team hoặc đối đầu
+  let pRemote = null;
 
   let myVoteRematch = false, enemyVoteRematch = false;
-  let enemies = []; // Danh sách kẻ địch / zombie chung
+  let enemies = [];
 
   function updateSkillIcon() {
     let wp = document.getElementById("weaponSelect").value;
@@ -406,7 +406,7 @@ game_code = """
     canvas.height = window.innerHeight * 0.52;
 
     let startX = isHost ? 80 : canvas.width - 80;
-    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 450, maxHp: 450, atk: false, data: myData, facing: isHost ? 1 : -1, walkTimer: 0, scale: 1.0, isSpecialAction: false, lastAtkTime: 0, lastSkillTime: 0, windEffectTimer: 0 };
+    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 450, maxHp: 450, atk: false, data: myData, facing: isHost ? 1 : -1, walkTimer: 0, scale: 1.0, isSpecialAction: false, lastAtkTime: 0, lastSkillTime: 0 };
     
     pRemote = null;
     enemies = [];
@@ -430,16 +430,13 @@ game_code = """
         }
       }
     } else {
-      // Multiplayer online
       if(playSubType === 'classic') {
-        // Chế độ cổ điển: 2 người đánh nhau 1v1
         let remoteStartX = isHost ? canvas.width - 80 : 80;
         pRemote = { x: remoteStartX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 450, maxHp: 450, atk: false, data: remotePeerData, facing: isHost ? -1 : 1, walkTimer: 0, scale: 1.0, lastAtkTime: 0 };
         enemies.push(pRemote);
       } else {
-        // Chế độ chiến dịch Multiplayer: 2 người là ĐỒNG MINH cùng đánh zombie!
-        let remoteStartX = isHost ? 150 : canvas.width - 150;
-        pRemote = { x: remoteStartX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 450, maxHp: 450, atk: false, data: remotePeerData, facing: 1, walkTimer: 0, scale: 1.0, lastAtkTime: 0 };
+        let remoteStartX = isHost ? 160 : canvas.width - 160;
+        pRemote = { x: remoteStartX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 450, maxHp: 450, atk: false, data: remotePeerData, facing: isHost ? -1 : 1, walkTimer: 0, scale: 1.0, lastAtkTime: 0 };
         
         if(isBossStage) {
           enemies.push(createEnemyObject(canvas.width / 2, 2200 + currentStage*150, 2.2, "#ff0055", "axe", true));
@@ -471,7 +468,7 @@ game_code = """
       x: x, y: canvas.height - 25, vy: 0, isGrounded: true, 
       hp: hp, maxHp: hp, atk: false, 
       data: { color: color, weapon: weapon, hat: isBoss ? "knight" : "none", cape: isBoss ? "black" : "none" }, 
-      facing: -1, walkTimer: 0, scale: scale, isSpecialAction: false, lastAtkTime: 0, lastSkillTime: 0, windEffectTimer: 0, isBoss: isBoss
+      facing: -1, walkTimer: 0, scale: scale, isSpecialAction: false, lastAtkTime: 0, lastSkillTime: 0, isBoss: isBoss
     };
   }
 
@@ -482,11 +479,15 @@ game_code = """
       if(data.subType) playSubType = data.subType;
     } else if(data.type === 'SYNC_POS') {
       if(pRemote) {
-        if(playSubType === 'classic') {
-          if(typeof data.hp === 'number') pRemote.hp = data.hp;
+        if(playSubType === 'classic' && typeof data.hp === 'number') {
+          pRemote.hp = data.hp;
         }
-        pRemote.x = data.x; pRemote.y = data.y; pRemote.atk = data.atk; 
-        pRemote.facing = data.facing; pRemote.walkTimer = data.walkTimer;
+        pRemote.x = data.x; 
+        pRemote.y = data.y; 
+        pRemote.vy = data.vy !== undefined ? data.vy : pRemote.vy;
+        pRemote.atk = data.atk; 
+        pRemote.facing = data.facing; 
+        pRemote.walkTimer = data.walkTimer;
       }
       if(playSubType === 'campaign' && isHost && data.zombieHps && Array.isArray(data.zombieHps)) {
         for(let i=0; i<enemies.length; i++) {
@@ -504,7 +505,7 @@ game_code = """
     } else if(data.type === 'SKILL') {
       if(pRemote) executeWeaponSkill(pRemote);
     } else if(data.type === 'SHOOT') {
-      if(pRemote) createBullet(pRemote, playSubType === 'classic' ? pSelf : null, data.weapon);
+      if(pRemote) createBullet(pRemote, null, data.weapon);
     } else if(data.type === 'VOTE_REMATCH') {
       enemyVoteRematch = true;
       checkBothVoted();
@@ -582,7 +583,7 @@ game_code = """
       }
     } else {
       enemies.forEach(en => {
-        if(en.hp > 0 && Math.abs(pSelf.x - en.x) < reach * pSelf.scale) {
+        if(en.hp > 0 && Math.abs(pSelf.x - en.x) < reach * en.scale) {
           en.hp = Math.max(0, en.hp - dmg);
           addParticles(en.x, en.y - 20 * en.scale, pSelf.data.color, 12);
         }
@@ -610,7 +611,6 @@ game_code = """
     let wp = p.data.weapon;
     if (wp === 'sword') {
       p.isSpecialAction = true;
-      p.windEffectTimer = 35;
       addParticles(p.x, p.y - 20, '#2ed573', 25);
       let healTicks = 0;
       let healInterval = setInterval(() => {
@@ -677,9 +677,7 @@ game_code = """
     else if (moveR) { pSelf.x += 4.5; pSelf.facing = 1; pSelf.walkTimer += 0.25; }
     else { pSelf.walkTimer = 0; }
     pSelf.x = Math.max(20, Math.min(canvas.width - 20, pSelf.x));
-    if (pSelf.windEffectTimer > 0) pSelf.windEffectTimer--;
 
-    // Xử lý AI của kẻ địch/zombie (Chơi đơn hoặc Host quản lý trong Multiplayer Campaign)
     if(gameMode === 'single' || (gameMode === 'online' && playSubType === 'campaign' && isHost)) {
       let targets = (playSubType === 'campaign' && pRemote) ? [pSelf, pRemote] : [pSelf];
       
@@ -688,7 +686,6 @@ game_code = """
         en.y += en.vy; en.vy += 0.58;
         if (en.y >= ground) { en.y = ground; en.vy = 0; en.isGrounded = true; }
         
-        // Tìm mục tiêu gần nhất
         let closestTarget = targets[0];
         if(targets.length > 1 && Math.abs(targets[1].x - en.x) < Math.abs(targets[0].x - en.x)) {
           closestTarget = targets[1];
@@ -718,7 +715,7 @@ game_code = """
     }
 
     if(gameMode === 'online' && conn && conn.open) {
-      let payload = { type: 'SYNC_POS', x: pSelf.x, y: pSelf.y, hp: pSelf.hp, atk: pSelf.atk, facing: pSelf.facing, walkTimer: pSelf.walkTimer };
+      let payload = { type: 'SYNC_POS', x: pSelf.x, y: pSelf.y, vy: pSelf.vy, hp: pSelf.hp, atk: pSelf.atk, facing: pSelf.facing, walkTimer: pSelf.walkTimer };
       if(playSubType === 'campaign' && isHost) {
         payload.zombieHps = enemies.map(e => e.hp);
         conn.send({ type: 'SYNC_ZOMBIES', enemies: enemies.map(e => ({ x: e.x, y: e.y, hp: e.hp })) });
@@ -728,18 +725,15 @@ game_code = """
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Vẽ sàn & background
     ctx.fillStyle = "#1f2833"; ctx.fillRect(0, ground + 20, canvas.width, 12);
     ctx.fillStyle = "#66fcf1"; ctx.fillRect(0, ground + 18, canvas.width, 3);
 
-    // Thanh HP người chơi
     let w = canvas.width * 0.35;
     ctx.fillStyle = "rgba(31, 40, 51, 0.8)"; ctx.fillRect(12, 12, w, 16); 
     ctx.fillStyle = pSelf.data.color; 
     ctx.fillRect(12, 12, w * (Math.max(0, pSelf.hp) / pSelf.maxHp), 16);
     ctx.strokeStyle = "#fff"; ctx.strokeRect(12, 12, w, 16);
 
-    // Thanh HP Đồng đội / Đối thủ / Hoặc Boss/Zombie chính
     if(playSubType === 'classic' && pRemote) {
       ctx.fillStyle = "rgba(31, 40, 51, 0.8)"; ctx.fillRect(canvas.width - 12 - w, 12, w, 16);
       ctx.fillStyle = pRemote.data.color; 
@@ -783,7 +777,6 @@ game_code = """
     if(pRemote) drawPlayer(pRemote);
     enemies.forEach(en => { if(en.hp > 0) drawPlayer(en); });
 
-    // Kiểm tra điều kiện thắng thua
     if(playSubType === 'classic' && pRemote) {
       if (pSelf.hp <= 0 || pRemote.hp <= 0) {
         triggerEndGame(pSelf.hp > 0);
@@ -804,25 +797,69 @@ game_code = """
   function drawPlayer(p) {
     let f = p.facing, x = p.x, y = p.y, s = p.scale;
     let legSwing = Math.sin(p.walkTimer * 5.5) * 12;
+    let wp = p.data.weapon || 'sword';
 
     ctx.save();
     ctx.strokeStyle = p.data.color; ctx.lineWidth = 3.5 * s;
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     
+    // Đầu
     ctx.beginPath(); ctx.arc(x, y - 36 * s, 9.5 * s, 0, Math.PI * 2); ctx.stroke();
+    
+    // Mũ / Nón
+    if(p.data.hat === 'knight') {
+      ctx.fillStyle = '#f7b731';
+      ctx.beginPath(); ctx.arc(x, y - 38 * s, 10 * s, Math.PI, 0, false); ctx.fill();
+    } else if(p.data.hat === 'wizard') {
+      ctx.fillStyle = '#a55eea';
+      ctx.beginPath(); ctx.moveTo(x - 12*s, y - 42*s); ctx.lineTo(x + 12*s, y - 42*s); ctx.lineTo(x, y - 56*s); ctx.closePath(); ctx.fill();
+    }
+
+    // Áo choàng
+    if(p.data.cape === 'red') {
+      ctx.fillStyle = '#ff4757';
+      ctx.beginPath(); ctx.moveTo(x, y - 28*s); ctx.lineTo(x - f * 14*s, y - 10*s); ctx.lineTo(x - f * 6*s, y - 4*s); ctx.closePath(); ctx.fill();
+    } else if(p.data.cape === 'black') {
+      ctx.fillStyle = '#333333';
+      ctx.beginPath(); ctx.moveTo(x, y - 28*s); ctx.lineTo(x - f * 14*s, y - 10*s); ctx.lineTo(x - f * 6*s, y - 4*s); ctx.closePath(); ctx.fill();
+    }
+
+    // Thân & Chân
     ctx.beginPath(); ctx.moveTo(x, y - 26 * s); ctx.lineTo(x, y - 8 * s); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(x, y - 8 * s); ctx.lineTo(x - (9 + legSwing) * s, y + 21 * s); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(x, y - 8 * s); ctx.lineTo(x + (9 + legSwing) * s, y + 21 * s); ctx.stroke();
 
-    let handDistance = p.atk ? 38 * s : 12 * s;
+    // Tay & Vũ khí chi tiết
+    let handDistance = p.atk ? 38 * s : 14 * s;
     let handX = x + f * handDistance;
     let handY = y - 18 * s;
     
     ctx.beginPath(); ctx.moveTo(x, y - 22 * s); ctx.lineTo(handX, handY); ctx.stroke();
     
     ctx.save(); ctx.translate(handX, handY);
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = 3.5 * s;
-    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 25 * s, -18 * s); ctx.stroke();
+    ctx.lineWidth = 3 * s;
+
+    if(wp === 'sword') {
+      ctx.strokeStyle = '#c5c6c0'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 30 * s, -22 * s); ctx.stroke();
+      ctx.strokeStyle = '#66fcf1'; ctx.beginPath(); ctx.moveTo(-4*s, 4*s); ctx.lineTo(4*s, -4*s); ctx.stroke();
+    } else if(wp === 'axe') {
+      ctx.strokeStyle = '#8b4513'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 24*s, -20*s); ctx.stroke();
+      ctx.fillStyle = '#ff4757'; ctx.beginPath(); ctx.arc(f * 22*s, -18*s, 8*s, 0, Math.PI*2); ctx.fill();
+    } else if(wp === 'dagger') {
+      ctx.strokeStyle = '#a4b0be'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 18*s, -12*s); ctx.stroke();
+    } else if(wp === 'spear') {
+      ctx.strokeStyle = '#dcdde1'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 42*s, -32*s); ctx.stroke();
+    } else if(wp === 'staff') {
+      ctx.strokeStyle = '#9b59b6'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 28*s, -28*s); ctx.stroke();
+      ctx.fillStyle = '#fffa65'; ctx.beginPath(); ctx.arc(f * 28*s, -28*s, 5*s, 0, Math.PI*2); ctx.fill();
+    } else if(wp === 'bow') {
+      ctx.strokeStyle = '#e1b12c'; ctx.beginPath(); ctx.arc(0, 0, 16*s, -Math.PI/2, Math.PI/2, false); ctx.stroke();
+    } else if(wp === 'laser') {
+      ctx.strokeStyle = '#00d2d3'; ctx.lineWidth = 4*s; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f * 26*s, -16*s); ctx.stroke();
+    } else if(wp === 'muscle') {
+      ctx.strokeStyle = p.data.color; ctx.lineWidth = 6*s; ctx.beginPath(); ctx.arc(0, 0, 10*s, 0, Math.PI*2); ctx.stroke();
+    }
+    
     ctx.restore();
     ctx.restore();
   }
