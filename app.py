@@ -17,12 +17,12 @@ game_code = """
     .screen { position: absolute; top:0; left:0; width: 100%; height: 100%; background: #0f0f13; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; gap: 12px; }
     h1 { font-size: 24px; color: #00d2d3; text-align: center; }
     
-    .btn { padding: 12px 24px; font-size: 15px; font-weight: bold; background: #222233; border: 2px solid #00d2d3; border-radius: 8px; color: white; cursor: pointer; text-align: center; z-index: 20; min-width: 200px; }
+    .btn { padding: 12px 24px; font-size: 15px; font-weight: bold; background: #222233; border: 2px solid #00d2d3; border-radius: 8px; color: white; cursor: pointer; text-align: center; z-index: 20; min-width: 220px; }
     .btn:active { background: #00d2d3; color: #000; transform: scale(0.95); }
     
-    input, select { padding: 8px; font-size: 15px; border-radius: 8px; border: 1px solid #00d2d3; background: #1a1a24; color: white; text-align: center; }
+    input, select { padding: 8px 12px; font-size: 15px; border-radius: 8px; border: 1px solid #00d2d3; background: #1a1a24; color: white; text-align: center; width: 220px; }
     .select-box { display: flex; gap: 10px; align-items: center; background: #1a1a24; padding: 8px 12px; border-radius: 8px; width: 85%; max-width: 350px; justify-content: space-between; }
-    #statusText { color: #ffa502; font-weight: bold; }
+    #statusText { color: #ffa502; font-weight: bold; font-size: 14px; text-align: center; }
     
     #gameCanvas { background: #111118; border: 2px solid #333; border-radius: 10px; width: 95vw; height: 52vh; }
     #backBtn { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); padding: 6px 14px; background: #333; border: 1px solid #fff; color: #fff; border-radius: 6px; z-index: 50; cursor: pointer; }
@@ -58,23 +58,47 @@ game_code = """
   <div id="mainMenu" class="screen">
     <h1>STICKMAN BATTLE ONLINE</h1>
     <div class="btn" onclick="startSingle()">🤖 CHƠI VỚI BOT</div>
-    <div class="btn" style="border-color:#ff6b81" onclick="showLobby()">🌐 CHƠI 2 MÁY (ONLINE)</div>
+    <div class="btn" style="border-color:#ff6b81" onclick="showLobbyMenu()">🌐 MULTIPLAYER (ONLINE)</div>
   </div>
 
-  <!-- LOBBY ONLINE -->
+  <!-- LOBBY SELECTION MENU -->
   <div id="lobbyMenu" class="screen" style="display:none;">
-    <h1>PHÒNG ONLINE</h1>
-    <div id="statusText">Chưa kết nối</div>
-    <div class="btn" onclick="createRoom()">🎲 TẠO PHÒNG MỚI</div>
-    <p style="color:#888;">--- HOẶC ---</p>
-    <input type="text" id="roomCodeInput" placeholder="Nhập mã phòng bạn bè...">
-    <div class="btn" style="border-color:#2ed573" onclick="joinRoom()">🔑 VÀO PHÒNG</div>
-    <div class="btn" style="border-color:#ff6b81" onclick="showScreen('mainMenu')">⬅ TRỞ VỀ</div>
+    <h1>CHẾ ĐỘ MULTIPLAYER</h1>
+    <div class="btn" style="border-color:#2ed573" onclick="showCreateRoomScreen()">🎲 TẠO LOBBY MỚI</div>
+    <div class="btn" style="border-color:#eccc68" onclick="showJoinRoomScreen()">🔑 THAM GIA LOBBY</div>
+    <div class="btn" style="border-color:#ff6b81" onclick="showScreen('mainMenu')">⬅ TRỜ VỀ</div>
+  </div>
+
+  <!-- TẠO PHÒNG (CREATE ROOM) -->
+  <div id="createRoomScreen" class="screen" style="display:none;">
+    <h1>TẠO PHÒNG MỚI</h1>
+    <input type="text" id="customRoomCode" placeholder="Nhập Mã Phòng (VD: ROOM123)">
+    <div class="select-box">
+      <span>Số người chơi tối đa:</span>
+      <select id="maxPlayersSelect">
+        <option value="2">2 Người (1v1)</option>
+        <option value="3">3 Người</option>
+        <option value="4">4 Người</option>
+      </select>
+    </div>
+    <div id="createStatusText" style="color:#ffa502; font-size:13px;"></div>
+    <div class="btn" style="border-color:#2ed573" onclick="initHostRoom()">🚀 KHOẢI TẠO LOBBY</div>
+    <div class="btn" style="border-color:#ff6b81" onclick="showScreen('lobbyMenu')">⬅ TRỞ VỀ</div>
+  </div>
+
+  <!-- THAM GIA PHÒNG (JOIN ROOM) -->
+  <div id="joinRoomScreen" class="screen" style="display:none;">
+    <h1>THAM GIA PHÒNG</h1>
+    <input type="text" id="joinRoomCodeInput" placeholder="Nhập Mã Phòng Người Khác...">
+    <div id="joinStatusText" style="color:#ffa502; font-size:13px;"></div>
+    <div class="btn" style="border-color:#2ed573" onclick="joinTargetRoom()">🔑 VÀO PHÒNG</div>
+    <div class="btn" style="border-color:#ff6b81" onclick="showScreen('lobbyMenu')">⬅ TRỜ VỀ</div>
   </div>
 
   <!-- CẤU HÌNH TRANG BỊ -->
   <div id="customScreen" class="screen" style="display:none;">
     <h1>TRANG BỊ CHIẾN BẤT</h1>
+    <div id="statusText">Đang chuẩn bị...</div>
     <div class="select-box">
       <span>Màu Skin:</span>
       <input type="color" id="skinColor" value="#00d2d3">
@@ -137,7 +161,7 @@ game_code = """
   
   let peer = null, conn = null;
   let isHost = false, gameMode = 'single';
-  let myId = "", targetId = "";
+  let roomCode = "", maxPlayers = 2;
 
   let myData = { color: "#00d2d3", weapon: "sword", hat: "knight", cape: "red" };
   let enemyData = { color: "#ff6b81", weapon: "staff", hat: "wizard", cape: "black" };
@@ -150,33 +174,68 @@ game_code = """
   }
 
   function startSingle() { gameMode = 'single'; showScreen('customScreen'); }
-  function showLobby() { gameMode = 'online'; showScreen('lobbyMenu'); initPeer(); }
+  function showLobbyMenu() { gameMode = 'online'; showScreen('lobbyMenu'); }
+  function showCreateRoomScreen() { showScreen('createRoomScreen'); }
+  function showJoinRoomScreen() { showScreen('joinRoomScreen'); }
 
-  function initPeer() {
-    if(peer) return;
-    document.getElementById("statusText").innerText = "Đang kết nối Peer...";
+  // KHỞI TẠO HOST
+  function initHostRoom() {
+    let codeInput = document.getElementById("customRoomCode").value.trim();
+    if(!codeInput) { alert("Vui lòng nhập Mã Phòng!"); return; }
+    roomCode = codeInput;
+    maxPlayers = parseInt(document.getElementById("maxPlayersSelect").value);
+    
+    document.getElementById("createStatusText").innerText = "Đang tạo Lobby...";
+    
+    if(peer) peer.destroy();
+    peer = new Peer(roomCode);
+
+    peer.on('open', (id) => {
+      isHost = true;
+      document.getElementById("createStatusText").innerText = "Lobby thành công! Đang chờ người vào...";
+      document.getElementById("statusText").innerText = "Lobby: " + roomCode + " (Tối đa " + maxPlayers + " người)";
+      showScreen('customScreen');
+    });
+
+    peer.on('connection', (c) => {
+      conn = c;
+      setupConnection();
+    });
+
+    peer.on('error', (err) => {
+      alert("Mã phòng này đã tồn tại hoặc không hợp lệ. Vui lòng chọn mã khác!");
+      document.getElementById("createStatusText").innerText = "";
+    });
+  }
+
+  // KHỞI TẠO CLIENT
+  function joinTargetRoom() {
+    let codeInput = document.getElementById("joinRoomCodeInput").value.trim();
+    if(!codeInput) { alert("Vui lòng nhập Mã Phòng!"); return; }
+    roomCode = codeInput;
+
+    document.getElementById("joinStatusText").innerText = "Đang kết nối tới " + roomCode + "...";
+
+    if(peer) peer.destroy();
     peer = new Peer();
-    peer.on('open', (id) => { myId = id; document.getElementById("statusText").innerText = "Sẵn sàng tạo/vào phòng!"; });
-    peer.on('connection', (c) => { conn = c; isHost = true; setupConnection(); });
-  }
 
-  function createRoom() {
-    if(!myId) return;
-    alert("MÃ PHÒNG CỦA BẠN LÀ:\\n\\n" + myId);
-    document.getElementById("statusText").innerText = "Đang chờ đối thủ vào...";
-  }
+    peer.on('open', () => {
+      conn = peer.connect(roomCode);
+      isHost = false;
+      setupConnection();
+    });
 
-  function joinRoom() {
-    let code = document.getElementById("roomCodeInput").value.trim();
-    if(!code) return alert("Nhập mã phòng!");
-    targetId = code;
-    conn = peer.connect(targetId);
-    isHost = false;
-    setupConnection();
+    peer.on('error', (err) => {
+      alert("Không tìm thấy phòng hoặc mã phòng sai!");
+      document.getElementById("joinStatusText").innerText = "";
+    });
   }
 
   function setupConnection() {
-    conn.on('open', () => setTimeout(() => showScreen('customScreen'), 300));
+    conn.on('open', () => {
+      document.getElementById("statusText").innerText = "Đã kết nối vào phòng " + roomCode + "!";
+      setTimeout(() => showScreen('customScreen'), 300);
+    });
     conn.on('data', (data) => handleNetworkData(data));
   }
 
@@ -252,7 +311,7 @@ game_code = """
     } else {
       myVoteRematch = true;
       document.getElementById("rematchBtn").style.opacity = "0.5";
-      document.getElementById("rematchBtn").innerText = "⏳ ĐÃ CHỌN (ĐỢI ĐỐI THỦ)";
+      document.getElementById("rematchBtn").innerText = "⏳ ĐÃ BÌNH CHỌN (ĐỢI ĐỐI THỦ)";
       if(conn) conn.send({ type: 'VOTE_REMATCH' });
       checkBothVoted();
     }
@@ -263,7 +322,7 @@ game_code = """
       if(myVoteRematch && enemyVoteRematch) {
         startGame();
       } else if(enemyVoteRematch && !myVoteRematch) {
-        document.getElementById("voteStatusText").innerText = "Đối thủ muốn chơi tiếp! Bấm 'Chơi tiếp' để bắt đầu.";
+        document.getElementById("voteStatusText").innerText = "Đối thủ đã bình chọn chơi tiếp! Bấm 'Chơi tiếp' để vào trận.";
       }
     }
   }
@@ -271,6 +330,7 @@ game_code = """
   function quitGame() {
     isRunning = false;
     if(conn) { conn.close(); conn = null; }
+    if(peer) { peer.destroy(); peer = null; }
     canvas.style.display = 'none';
     document.getElementById("backBtn").style.display = 'none';
     document.getElementById("gameControls").style.display = 'none';
