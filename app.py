@@ -512,11 +512,11 @@ game_code = """
     let reach = 45;
     let dmg = 15;
 
-    if(pSelf.data.weapon === 'sword') { reach = 60; dmg = 18; }
-    else if(pSelf.data.weapon === 'axe') { reach = 70; dmg = 28; }
-    else if(pSelf.data.weapon === 'dagger') { reach = 38; dmg = 11; }
-    else if(pSelf.data.weapon === 'spear') { reach = 80; dmg = 22; }
-    else if(pSelf.data.weapon === 'muscle') { reach = 75; dmg = 32; }
+    if(pSelf.data.weapon === 'sword') { reach = 65; dmg = 18; }
+    else if(pSelf.data.weapon === 'axe') { reach = 75; dmg = 28; }
+    else if(pSelf.data.weapon === 'dagger') { reach = 42; dmg = 11; }
+    else if(pSelf.data.weapon === 'spear') { reach = 85; dmg = 22; }
+    else if(pSelf.data.weapon === 'muscle') { reach = 85; dmg = 32; }
 
     let other = pEnemy;
     if(Math.abs(pSelf.x - other.x) < reach * pSelf.scale) {
@@ -875,9 +875,15 @@ game_code = """
     ctx.beginPath(); ctx.moveTo(x, y - 8 * s); ctx.lineTo(x - (9 + legSwing) * s, y + 21 * s); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(x, y - 8 * s); ctx.lineTo(x + (9 + legSwing) * s, y + 21 * s); ctx.stroke();
 
-    let handX = x + (p.atk ? f * 24 * s : f * 9 * s);
-    let handY = y - (p.atk ? 25 * s : 16 * s);
-    ctx.beginPath(); ctx.moveTo(x, y - 22 * s); ctx.lineTo(handX, handY); ctx.stroke();
+    // Khi đánh, duỗi thẳng tay ra hết cỡ theo hướng nhìn (facing)
+    let handDistance = p.atk ? 38 * s : 12 * s;
+    let handX = x + f * handDistance;
+    let handY = y - 18 * s;
+    
+    ctx.beginPath(); 
+    ctx.moveTo(x, y - 22 * s); 
+    ctx.lineTo(handX, handY); 
+    ctx.stroke();
 
     if(p.data.hat === 'knight') {
       ctx.fillStyle = '#d1d8e0'; ctx.fillRect(x - 11 * s, y - 50 * s, 22 * s, 9 * s);
@@ -944,7 +950,6 @@ game_code = """
       ctx.shadowBlur = 0;
 
     } else if(p.data.weapon === 'muscle') {
-      // Vẽ cánh tay cơ bắp dựa theo hình mẫu
       ctx.fillStyle = '#f5c6a5';
       ctx.strokeStyle = '#2d3436';
       ctx.lineWidth = 2 * s;
@@ -954,18 +959,15 @@ game_code = """
       ctx.save();
       ctx.scale(f, 1);
       
-      // Bắp tay trước/sau và nắm đấm gồng
       ctx.beginPath();
       ctx.arc(10 * s, -10 * s, 12 * s, 0, Math.PI * 2);
       ctx.arc(22 * s, -18 * s, 10 * s, 0, Math.PI * 2);
       ctx.fill(); ctx.stroke();
 
-      // Cẳng tay gồng lên
       ctx.beginPath();
       ctx.roundRect(14 * s, -28 * s, 14 * s, 22 * s, 6 * s);
       ctx.fill(); ctx.stroke();
 
-      // Nắm đấm phía trên
       ctx.beginPath();
       ctx.arc(21 * s, -36 * s, 9 * s, 0, Math.PI * 2);
       ctx.fill(); ctx.stroke();
