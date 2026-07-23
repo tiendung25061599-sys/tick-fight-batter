@@ -124,13 +124,13 @@ game_code = """
     <div class="select-box">
       <span>Vũ Khí:</span>
       <select id="weaponSelect" onchange="updateSkillIcon()">
-        <option value="sword">⚔️ Kiếm Thần (Cân Bằng)</option>
-        <option value="axe">🪓 Rìu Chiến (Skill Bay Đập - CD 5s)</option>
-        <option value="dagger">🗡️ Dao Độc (Tốc Đánh Nhanh)</option>
-        <option value="spear">🔱 Giáo Dài (Skill Đâm Xa - CD 2s)</option>
-        <option value="staff">🪄 Trượng Ma Thuật (Cầu Lửa)</option>
-        <option value="bow">🏹 Cung Thần (Bắn Nhanh)</option>
-        <option value="laser">⚡ Súng Laser (Tia Xuyên)</option>
+        <option value="sword">⚔️ Kiếm Thần (Skill: Chém Lốc Xoáy)</option>
+        <option value="axe">🪓 Rìu Chiến (Skill: Bay Nhảy Đập)</option>
+        <option value="dagger">🗡️ Dao Độc (Skill: Mưa Dao Găm)</option>
+        <option value="spear">🔱 Giáo Dài (Skill: Lướt Đâm Xuyên)</option>
+        <option value="staff">🪄 Trượng Ma Thuật (Skill: Quả Cầu Lửa)</option>
+        <option value="bow">🏹 Cung Thần (Skill: Bắn Mũi Tên Đôi)</option>
+        <option value="laser">⚡ Súng Laser (Skill: Tia Xuyên Phá)</option>
       </select>
     </div>
     <div class="select-box">
@@ -173,7 +173,7 @@ game_code = """
     </div>
     <div class="btn-group">
       <div class="btn-ctrl" id="btnAtk">⚔️<span class="key-hint">M1</span></div>
-      <div class="btn-ctrl" style="border-color:#ff4757" id="btnSkill">🔱<span class="key-hint" id="skillKeyHint">M2</span></div>
+      <div class="btn-ctrl" style="border-color:#ff4757" id="btnSkill">🌀<span class="key-hint" id="skillKeyHint">M2</span></div>
     </div>
   </div>
 
@@ -194,10 +194,13 @@ game_code = """
   function updateSkillIcon() {
     let wp = document.getElementById("weaponSelect").value;
     let skillBtn = document.getElementById("btnSkill");
-    if(wp === 'axe') skillBtn.innerText = "🌀";
+    if(wp === 'sword') skillBtn.innerText = "🌀";
+    else if(wp === 'axe') skillBtn.innerText = "🪓";
+    else if(wp === 'dagger') skillBtn.innerText = "🗡️";
     else if(wp === 'spear') skillBtn.innerText = "🔱";
-    else if(['staff', 'bow', 'laser'].includes(wp)) skillBtn.innerText = "🔥";
-    else skillBtn.innerText = "⚡";
+    else if(wp === 'staff') skillBtn.innerText = "🔥";
+    else if(wp === 'bow') skillBtn.innerText = "🏹";
+    else if(wp === 'laser') skillBtn.innerText = "⚡";
   }
 
   function toggleFullscreen() {
@@ -374,13 +377,13 @@ game_code = """
       }
     }
 
-    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 450, maxHp: 450, atk: false, data: myData, facing: 1, walkTimer: 0, scale: 1.0, isDashing: false, isAxeSpinning: false, lastAtkTime: 0, lastSkillTime: 0 };
+    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 450, maxHp: 450, atk: false, data: myData, facing: 1, walkTimer: 0, scale: 1.0, isSpecialAction: false, lastAtkTime: 0, lastSkillTime: 0 };
     
     pEnemy = { 
       x: enemyX, y: canvas.height - 25, vy: 0, isGrounded: true, 
       hp: enemyHp, maxHp: enemyHp, atk: false, 
       data: (gameMode === 'story') ? { color: enemyColor, weapon: enemyWeapon, hat: isBossStage ? "knight" : "none", cape: isBossStage ? "black" : "none" } : enemyData, 
-      facing: -1, walkTimer: 0, scale: enemyScale, isDashing: false, isAxeSpinning: false, lastAtkTime: 0, lastSkillTime: 0 
+      facing: -1, walkTimer: 0, scale: enemyScale, isSpecialAction: false, lastAtkTime: 0, lastSkillTime: 0 
     };
     
     bullets = []; particles = [];
@@ -407,10 +410,8 @@ game_code = """
       pEnemy.atk = data.atk; 
       pEnemy.facing = data.facing;
       pEnemy.walkTimer = data.walkTimer;
-    } else if(data.type === 'SKILL' || data.type === 'DASH') {
-      triggerSkill(pEnemy);
-    } else if(data.type === 'AXE_SPIN') {
-      triggerAxeSpinSkill(pEnemy);
+    } else if(data.type === 'SKILL') {
+      executeWeaponSkill(pEnemy);
     } else if(data.type === 'SHOOT') {
       createBullet(pEnemy, pSelf, data.weapon);
     } else if(data.type === 'VOTE_REMATCH') {
@@ -493,9 +494,10 @@ game_code = """
     else if(pSelf.data.weapon === 'dagger') { reach = 38; dmg = 11; }
     else if(pSelf.data.weapon === 'spear') { reach = 80; dmg = 22; }
 
-    if(Math.abs(pSelf.x - pEnemy.x) < reach * pSelf.scale) {
-      pEnemy.hp = Math.max(0, pEnemy.hp - dmg);
-      addParticles(pEnemy.x, pEnemy.y - 20 * pEnemy.scale, pSelf.data.color, 12);
+    let other = pEnemy;
+    if(Math.abs(pSelf.x - other.x) < reach * pSelf.scale) {
+      other.hp = Math.max(0, other.hp - dmg);
+      addParticles(other.x, other.y - 20 * other.scale, pSelf.data.color, 12);
     }
     setTimeout(() => pSelf.atk = false, 120);
   }
@@ -504,7 +506,6 @@ game_code = """
     let dir = caster.facing;
     let startX = caster.x + dir * 20 * caster.scale;
     let startY = caster.y - 24 * caster.scale;
-
     let dmgBonus = (caster === pEnemy && gameMode === 'story') ? (10 + currentStage * 2) : 0;
 
     if (weapon === 'staff') {
@@ -516,71 +517,77 @@ game_code = """
     }
   }
 
-  function triggerDash(p) {
-    p.isDashing = true;
-    addParticles(p.x, p.y - 20, p.data.color, 14);
-    let dashDist = p.facing * 95;
-    p.x = Math.max(20, Math.min(canvas.width - 20, p.x + dashDist));
-    
+  // --- CÁC HÀM KỸ NĂNG RIÊNG CHO TỪNG VŨ KHÍ ---
+  function executeWeaponSkill(p) {
     let other = (p === pSelf) ? pEnemy : pSelf;
-    let dashDmg = (p === pEnemy && gameMode === 'story') ? (25 + currentStage * 3) : 18;
-    if(Math.abs(p.x - other.x) < 55) {
-      other.hp = Math.max(0, other.hp - dashDmg);
-      addParticles(other.x, other.y - 20, '#ff4757', 16);
-    }
-    setTimeout(() => p.isDashing = false, 200);
-  }
+    let wp = p.data.weapon;
+    let isStoryEnemy = (p === pEnemy && gameMode === 'story');
 
-  function triggerSpearThrust(p) {
-    p.isDashing = true;
-    addParticles(p.x, p.y - 20, '#f1c40f', 20);
-    let thrustDist = p.facing * 150; 
-    p.x = Math.max(20, Math.min(canvas.width - 20, p.x + thrustDist));
-    
-    let other = (p === pSelf) ? pEnemy : pSelf;
-    let thrustDmg = (p === pEnemy && gameMode === 'story') ? (60 + currentStage * 6) : 50;
-    if(Math.abs(p.x - other.x) < 100) {
-      other.hp = Math.max(0, other.hp - thrustDmg); 
-      addParticles(other.x, other.y - 20, '#f1c40f', 26);
-    }
-    setTimeout(() => p.isDashing = false, 250);
-  }
+    if (wp === 'sword') {
+      // Kiếm Thần: Chém Lốc Xoáy diện rộng
+      p.isSpecialAction = true;
+      addParticles(p.x, p.y - 20, '#66fcf1', 18);
+      let dmg = isStoryEnemy ? (35 + currentStage * 4) : 25;
+      if(Math.abs(p.x - other.x) < 85 * p.scale) {
+        other.hp = Math.max(0, other.hp - dmg);
+        addParticles(other.x, other.y - 20, '#66fcf1', 20);
+      }
+      setTimeout(() => p.isSpecialAction = false, 300);
 
-  function triggerAxeSpinSkill(p) {
-    p.isAxeSpinning = true;
-    p.vy = -14; 
-    p.isGrounded = false;
-    addParticles(p.x, p.y - 20, '#ffa502', 22);
+    } else if (wp === 'axe') {
+      // Rìu Chiến: Bay lên đập đất cực mạnh
+      p.isSpecialAction = true;
+      p.vy = -14; p.isGrounded = false;
+      addParticles(p.x, p.y - 20, '#ffa502', 22);
 
-    setTimeout(() => {
-      p.vy = 18; 
-      let checkSlam = setInterval(() => {
-        let ground = canvas.height - 25;
-        if(p.y >= ground) {
-          p.y = ground;
-          p.vy = 0;
-          p.isAxeSpinning = false;
-          clearInterval(checkSlam);
-          
-          addParticles(p.x, p.y, '#ff4757', 30);
-          let other = (p === pSelf) ? pEnemy : pSelf;
-          let slamDmg = (p === pEnemy && gameMode === 'story') ? (75 + currentStage * 8) : 60;
-          if(Math.abs(p.x - other.x) < 110) {
-            other.hp = Math.max(0, other.hp - slamDmg);
-            addParticles(other.x, other.y - 20, '#ff4757', 24);
+      setTimeout(() => {
+        p.vy = 18;
+        let checkSlam = setInterval(() => {
+          let ground = canvas.height - 25;
+          if(p.y >= ground) {
+            p.y = ground; p.vy = 0; p.isSpecialAction = false;
+            clearInterval(checkSlam);
+            addParticles(p.x, p.y, '#ff4757', 30);
+            let slamDmg = isStoryEnemy ? (75 + currentStage * 8) : 60;
+            if(Math.abs(p.x - other.x) < 110) {
+              other.hp = Math.max(0, other.hp - slamDmg);
+              addParticles(other.x, other.y - 20, '#ff4757', 24);
+            }
           }
-        }
-      }, 20);
-    }, 280);
-  }
+        }, 20);
+      }, 280);
 
-  function triggerSkill(p) {
-    if (p.data.weapon === 'spear') {
-      triggerSpearThrust(p);
-    } else if (p.data.weapon === 'axe') {
-      triggerAxeSpinSkill(p);
-    } else {
-      triggerDash(p);
+    } else if (wp === 'dagger') {
+      // Dao Độc: Mưa dao găm phóng nhanh liên tục
+      p.isSpecialAction = true;
+      addParticles(p.x, p.y - 20, '#2ed573', 15);
+      let daggerDmg = isStoryEnemy ? (12 + currentStage * 2) : 10;
+      for(let i=0; i<3; i++) {
+        setTimeout(() => {
+          bullets.push({ x: p.x + p.facing*20, y: p.y - 25, vx: p.facing * (16 + i*2), color: '#2ed573', radius: 4, dmg: daggerDmg, type: 'arrow', shooter: p });
+        }, i * 70);
+      }
+      setTimeout(() => p.isSpecialAction = false, 250);
+
+    } else if (wp === 'spear') {
+      // Giáo Dài: Lướt đâm xuyên qua đối thủ
+      p.isSpecialAction = true;
+      addParticles(p.x, p.y - 20, '#f1c40f', 20);
+      let dashDist = p.facing * 150;
+      p.x = Math.max(20, Math.min(canvas.width - 20, p.x + dashDist));
+      let thrustDmg = isStoryEnemy ? (60 + currentStage * 6) : 50;
+      if(Math.abs(p.x - other.x) < 100) {
+        other.hp = Math.max(0, other.hp - thrustDmg);
+        addParticles(other.x, other.y - 20, '#f1c40f', 26);
+      }
+      setTimeout(() => p.isSpecialAction = false, 250);
+
+    } else if (['staff', 'bow', 'laser'].includes(wp)) {
+      // Súng/Cung/Trượng: Bắn skill tầm xa đặc biệt
+      createBullet(p, other, wp);
+      if(wp === 'bow') {
+        setTimeout(() => createBullet(p, other, wp), 100); // Bắn 2 phát cho Cung
+      }
     }
   }
 
@@ -588,23 +595,21 @@ game_code = """
     if(!pSelf || !isRunning) return;
     
     let now = Date.now();
-    let skillCooldown = 0;
-    if (pSelf.data.weapon === 'spear') skillCooldown = 2000;
-    else if (pSelf.data.weapon === 'axe') skillCooldown = 5000;
+    let skillCooldown = 2500;
+    if (pSelf.data.weapon === 'axe') skillCooldown = 4500;
+    else if (pSelf.data.weapon === 'spear') skillCooldown = 3000;
 
     if (now - (pSelf.lastSkillTime || 0) < skillCooldown) return;
     pSelf.lastSkillTime = now;
 
-    triggerSkill(pSelf);
-
-    if(['staff', 'bow', 'laser'].includes(pSelf.data.weapon)) {
-      createBullet(pSelf, pEnemy, pSelf.data.weapon);
-      if(gameMode === 'online' && conn && conn.open) conn.send({ type: 'SHOOT', weapon: pSelf.data.weapon });
-    }
+    executeWeaponSkill(pSelf);
 
     if(gameMode === 'online' && conn && conn.open) {
-      if(pSelf.data.weapon === 'axe') conn.send({ type: 'AXE_SPIN' });
-      else conn.send({ type: 'SKILL' });
+      if(['staff', 'bow', 'laser'].includes(pSelf.data.weapon)) {
+        conn.send({ type: 'SHOOT', weapon: pSelf.data.weapon });
+      } else {
+        conn.send({ type: 'SKILL' });
+      }
     }
   }
 
@@ -636,7 +641,7 @@ game_code = """
       let speed = 2.3 + (currentStage * 0.18);
       if(isBossStage) speed = 3.2;
 
-      if (!pEnemy.isAxeSpinning && Math.abs(pSelf.x - pEnemy.x) > 40 * pEnemy.scale) {
+      if (!pEnemy.isSpecialAction && Math.abs(pSelf.x - pEnemy.x) > 40 * pEnemy.scale) {
         pEnemy.x += (pSelf.x < pEnemy.x) ? -speed : speed;
         pEnemy.walkTimer += 0.3;
       }
@@ -661,24 +666,10 @@ game_code = """
         }
       }
 
-      if (pEnemy.data.weapon === 'spear') {
-        let enemySkillCooldown = 1500;
-        if (now - (pEnemy.lastSkillTime || 0) > enemySkillCooldown && Math.abs(pSelf.x - pEnemy.x) < 180) {
-          pEnemy.lastSkillTime = now;
-          triggerSkill(pEnemy);
-        }
-      } else if (pEnemy.data.weapon === 'axe') {
-        let enemySkillCooldown = 3500;
-        if (now - (pEnemy.lastSkillTime || 0) > enemySkillCooldown && Math.abs(pSelf.x - pEnemy.x) < 200) {
-          pEnemy.lastSkillTime = now;
-          triggerSkill(pEnemy);
-        }
-      } else {
-        let enemySkillCooldown = 2500;
-        if (now - (pEnemy.lastSkillTime || 0) > enemySkillCooldown && Math.abs(pSelf.x - pEnemy.x) < 140) {
-          pEnemy.lastSkillTime = now;
-          triggerSkill(pEnemy);
-        }
+      let enemySkillCooldown = 2800;
+      if (now - (pEnemy.lastSkillTime || 0) > enemySkillCooldown && Math.abs(pSelf.x - pEnemy.x) < 180) {
+        pEnemy.lastSkillTime = now;
+        executeWeaponSkill(pEnemy);
       }
     }
 
@@ -779,9 +770,9 @@ game_code = """
 
     ctx.save();
     ctx.shadowColor = p.data.color;
-    ctx.shadowBlur = (p.isDashing || p.isAxeSpinning) ? 25 : 10;
+    ctx.shadowBlur = p.isSpecialAction ? 25 : 10;
 
-    if(p.isAxeSpinning) {
+    if(p.isSpecialAction && p.data.weapon === 'axe') {
       ctx.translate(x, y - 20 * s);
       ctx.rotate(animFrame * 0.6); 
       ctx.translate(-x, -(y - 20 * s));
