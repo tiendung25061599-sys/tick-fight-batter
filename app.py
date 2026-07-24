@@ -146,13 +146,13 @@ game_code = """
       <span>Vũ Khí:</span>
       <select id="weaponSelect" onchange="updateSkillIcon()">
         <option value="sword">⚔️ Kiếm Thần (Skill: Hồi Máu 10s)</option>
-        <option value="axe">🪓 Rìu Chiến (Skill: Bay Lên Trời Đập Rìu 10s)</option>
+        <option value="axe">🪓 Rìu Chiến (Skill: Bay Xoay Tròn Đập Rìu 10s)</option>
         <option value="dagger">🗡️ Dao Độc (Skill: Mưa Dao Găm 10s)</option>
         <option value="spear">🔱 Giáo Dài (Skill: Lướt Đâm Xuyên Gây Sát Thương 10s)</option>
         <option value="staff">🪄 Trượng Ma Thuật (Skill: Bắn Cầu Lửa 10s)</option>
         <option value="bow">🏹 Cung Thần (Skill: Bắn Mũi Tên Đôi 0.2s)</option>
         <option value="laser">⚡ Súng Laser (Skill: Tia Xuyên Phá 10s)</option>
-        <option value="muscle">💪 Cơ Bắp Thần Thánh (Skill: Bay Lên Trời Đập Sóng 10s)</option>
+        <option value="muscle">💪 Cơ Bắp Thần Thánh (Skill: Bay Xoay Tròn Đập Sóng 10s)</option>
       </select>
     </div>
     <div class="select-box">
@@ -400,13 +400,13 @@ game_code = """
       }
     }
 
-    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 450, maxHp: 450, atk: false, data: myData, facing: 1, walkTimer: 0, scale: 1.0, isSpecialAction: false, lastAtkTime: 0, lastSkillTime: 0 };
+    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 450, maxHp: 450, atk: false, data: myData, facing: 1, walkTimer: 0, scale: 1.0, isSpecialAction: false, isSpinning: false, spinAngle: 0, lastAtkTime: 0, lastSkillTime: 0 };
     
     pEnemy = { 
       x: enemyX, y: canvas.height - 25, vy: 0, isGrounded: true, 
       hp: enemyHp, maxHp: enemyHp, atk: false, 
       data: (gameMode === 'story') ? { color: enemyColor, weapon: enemyWeapon, hat: isBossStage ? "knight" : "none", cape: isBossStage ? "black" : "none" } : enemyData, 
-      facing: -1, walkTimer: 0, scale: enemyScale, isSpecialAction: false, lastAtkTime: 0, lastSkillTime: 0
+      facing: -1, walkTimer: 0, scale: enemyScale, isSpecialAction: false, isSpinning: false, spinAngle: 0, lastAtkTime: 0, lastSkillTime: 0
     };
     
     bullets = []; particles = [];
@@ -555,19 +555,33 @@ game_code = """
       setTimeout(() => p.isSpecialAction = false, 250);
 
     } else if (wp === 'axe' || wp === 'muscle') {
-      // RÌU CHIẾN & CƠ BẮP: Bay lên trời rồi đập xuống cực mạnh (Model giữ nguyên bình thường)
+      // RÌU CHIẾN & CƠ BẮP: Bay lên trời, XOAY TRÒN liên tục rồi đập xuống cực mạnh
       p.isSpecialAction = true;
+      p.isSpinning = true;
+      p.spinAngle = 0;
       p.vy = -16; p.isGrounded = false;
       let effectColor = (wp === 'axe') ? '#ff4757' : '#ffa502';
       addParticles(p.x, p.y - 20, effectColor, 30);
+
+      let spinInterval = setInterval(() => {
+        if (!p.isSpecialAction) {
+          clearInterval(spinInterval);
+          p.isSpinning = false;
+          return;
+        }
+        p.spinAngle += 0.35; // Tốc độ xoay vòng
+      }, 20);
 
       setTimeout(() => {
         p.vy = 22;
         let checkSlam = setInterval(() => {
           let ground = canvas.height - 25;
           if(p.y >= ground) {
-            p.y = ground; p.vy = 0; p.isSpecialAction = false;
+            p.y = ground; p.vy = 0; 
+            p.isSpecialAction = false; 
+            p.isSpinning = false;
             clearInterval(checkSlam);
+            clearInterval(spinInterval);
             addParticles(p.x, p.y, effectColor, 40);
             let slamDmg = isStoryEnemy ? (90 + currentStage * 9) : 75;
             if(Math.abs(p.x - other.x) < 140) {
@@ -791,6 +805,14 @@ game_code = """
   function drawStickman(p) {
     ctx.save();
     ctx.translate(p.x, p.y);
+
+    // Hiệu ứng xoay tròn toàn thân khi kích hoạt skill xoay
+    if (p.isSpinning) {
+      ctx.translate(0, -30);
+      ctx.rotate(p.spinAngle);
+      ctx.translate(0, 30);
+    }
+
     ctx.scale(p.facing * p.scale, p.scale);
 
     let col = p.data.color;
