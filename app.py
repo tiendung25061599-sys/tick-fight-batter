@@ -145,7 +145,7 @@ game_code = """
     <div class="select-box">
       <span>Vũ Khí:</span>
       <select id="weaponSelect" onchange="updateSkillIcon()">
-        <option value="sword">⚔️ Kiếm Thần (Skill: Hồi Máu 10s)</option>
+        <option value="sword">⚔️ Kiếm Thần (Skill: Lốc Xoáy Kiếm 10s)</option>
         <option value="axe">🪓 Rìu Chiến (Skill: Bay Xoay Tròn Đập Rìu 10s)</option>
         <option value="dagger">🗡️ Dao Độc (Skill: Mưa Dao Găm 10s)</option>
         <option value="spear">🔱 Giáo Dài (Skill: Lướt Đâm Xuyên Gây Sát Thương 10s)</option>
@@ -216,7 +216,7 @@ game_code = """
   function updateSkillIcon() {
     let wp = document.getElementById("weaponSelect").value;
     let skillBtn = document.getElementById("btnSkill");
-    if(wp === 'sword') skillBtn.innerText = "💖";
+    if(wp === 'sword') skillBtn.innerText = "🌪️";
     else if(wp === 'axe') skillBtn.innerText = "🪓";
     else if(wp === 'dagger') skillBtn.innerText = "🗡️";
     else if(wp === 'spear') skillBtn.innerText = "🔱";
@@ -516,7 +516,6 @@ game_code = """
     else if(pSelf.data.weapon === 'axe') { 
       reach = 75; 
       dmg = 32; 
-      // Hiệu ứng chém quét góc rộng bằng rìu chiến
       for(let i=0; i<4; i++) {
         particles.push({ 
           x: pSelf.x + pSelf.facing * (25 + i * 12), 
@@ -562,11 +561,37 @@ game_code = """
     let isStoryEnemy = (p === pEnemy && gameMode === 'story');
 
     if (wp === 'sword') {
+      // SKILL MỚI: LỐC XOÁY KIẾM (WHIRLWIND SWORD DASH)
       p.isSpecialAction = true;
-      addParticles(p.x, p.y - 20, '#2ed573', 30);
-      let healAmount = isStoryEnemy ? (50 + currentStage * 5) : 100;
-      p.hp = Math.min(p.maxHp, p.hp + healAmount);
-      setTimeout(() => p.isSpecialAction = false, 250);
+      p.isSpinning = true;
+      p.spinAngle = 0;
+      let dashDir = p.facing;
+      addParticles(p.x, p.y - 20, '#66fcf1', 35);
+
+      let spinInterval = setInterval(() => {
+        if (!p.isSpecialAction) {
+          clearInterval(spinInterval);
+          p.isSpinning = false;
+          return;
+        }
+        p.spinAngle += 0.5;
+        p.x += dashDir * 8;
+        p.x = Math.max(20, Math.min(canvas.width - 20, p.x));
+        particles.push({ x: p.x + (Math.random()-0.5)*20, y: p.y - Math.random()*40, vx: (Math.random()-0.5)*4, vy: -Math.random()*4, life: 15, color: '#66fcf1' });
+      }, 20);
+
+      setTimeout(() => {
+        p.isSpecialAction = false;
+        p.isSpinning = false;
+        clearInterval(spinInterval);
+        let tornadoDmg = isStoryEnemy ? (65 + currentStage * 7) : 50;
+        if(Math.abs(p.x - other.x) < 90) {
+          other.hp = Math.max(0, other.hp - tornadoDmg);
+          other.x += dashDir * 50;
+          other.x = Math.max(20, Math.min(canvas.width - 20, other.x));
+          addParticles(other.x, other.y - 20, '#66fcf1', 30);
+        }
+      }, 350);
 
     } else if (wp === 'axe' || wp === 'muscle') {
       p.isSpecialAction = true;
@@ -898,7 +923,6 @@ game_code = """
 
     } else {
       ctx.strokeStyle = col; ctx.fillStyle = col;
-      // Animation vung tay mạnh mẽ hơn cho rìu chiến và các vũ khí cận chiến
       let baseArmAngle = p.atk ? 1.3 : (Math.sin(p.walkTimer) * 0.6);
       ctx.beginPath();
       ctx.moveTo(0, -bodyHeight - 10);
@@ -909,7 +933,6 @@ game_code = """
 
       ctx.save();
       ctx.translate(handX, handY);
-      // Hiệu ứng xoay vung chém mượt mà, uy lực khi `p.atk` active
       if (p.atk) ctx.rotate(0.9);
 
       if(wp === 'sword') {
@@ -920,32 +943,25 @@ game_code = """
         ctx.fillStyle = "#f1c40f"; ctx.fillRect(-4, -1, 8, 3);
         ctx.fillStyle = "#e67e22"; ctx.fillRect(-2, 2, 4, 8);
       } else if(wp === 'axe') {
-        // MÔ HÌNH RÌU CHIẾN NÂNG CẤP HOÀNH TRÁNG (DOUBLE-BIT BATTLE AXE)
-        // Cán rìu bọc thép
         ctx.strokeStyle = "#4b6584"; ctx.lineWidth = 5;
         ctx.beginPath(); ctx.moveTo(-2, 4); ctx.lineTo(28, -28); ctx.stroke();
         
-        // Quấn tay cầm
         ctx.strokeStyle = "#f1c40f"; ctx.lineWidth = 3;
         ctx.beginPath(); ctx.moveTo(4, -2); ctx.lineTo(12, -10); ctx.stroke();
 
-        // Lưỡi rìu kép cực ngầu với hiệu ứng phát sáng rực lửa
         ctx.fillStyle = "#ff4757"; ctx.shadowColor = "#ff4757"; ctx.shadowBlur = 18;
         ctx.beginPath();
-        // Cánh rìu trên
         ctx.moveTo(22, -24);
         ctx.quadraticCurveTo(42, -36, 36, -46);
         ctx.quadraticCurveTo(22, -34, 20, -26);
         ctx.fill();
         
-        // Cánh rìu dưới
         ctx.beginPath();
         ctx.moveTo(22, -24);
         ctx.quadraticCurveTo(42, -12, 36, -2);
         ctx.quadraticCurveTo(22, -14, 20, -22);
         ctx.fill();
 
-        // Lõi năng lượng phát sáng tâm lưỡi rìu
         ctx.fillStyle = "#ffa502";
         ctx.shadowColor = "#ffa502"; ctx.shadowBlur = 12;
         ctx.beginPath();
