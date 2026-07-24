@@ -57,7 +57,7 @@ game_code = """
     .select-box { display: flex; gap: 12px; align-items: center; background: rgba(31, 40, 51, 0.7); padding: 10px 16px; border-radius: 12px; width: 85%; max-width: 380px; justify-content: space-between; border: 1px solid rgba(69, 162, 158, 0.5); backdrop-filter: blur(5px); }
     #statusText { color: #f7b731; font-weight: bold; font-size: 15px; text-align: center; text-shadow: 0 0 10px rgba(247, 183, 49, 0.4); }
     
-    #gameCanvas { background: radial-gradient(circle at center, #111318 0%, #030305 100%); border: 2px solid #45a29e; border-radius: 16px; width: 96vw; height: 54vh; display: none; position: relative; z-index: 1; box-shadow: 0 0 30px rgba(69, 162, 158, 0.4); }
+    #gameCanvas { background: radial-gradient(circle at center, #111318 0%, #030305 100%); border: 2px solid #45a29e; border-radius: 16px; width: 96vw; height: 75vh; display: none; position: relative; z-index: 1; box-shadow: 0 0 30px rgba(69, 162, 158, 0.4); }
     
     #endGameOverlay {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -152,7 +152,7 @@ game_code = """
         <option value="staff">🪄 Trượng Ma Thuật (Skill: Bắn Cầu Lửa 10s)</option>
         <option value="bow">🏹 Cung Thần (Skill: Bắn Mũi Tên Đôi 0.2s)</option>
         <option value="laser">⚡ Súng Laser (Skill: Tia Xuyên Phá 10s)</option>
-        <option value="muscle">💪 Cơ Bắp Thần Thánh (Skill: Bay Xoay Tròn Đập Sóng 10s)</option>
+        <option value="muscle">💪 Cánh Tay Cơ Bắp (Skill: Bay Xoay Tròn Đập Sóng 10s)</option>
       </select>
     </div>
     <div class="select-box">
@@ -374,7 +374,7 @@ game_code = """
     document.getElementById("gameControls").style.display = 'flex';
 
     canvas.width = window.innerWidth * 0.95;
-    canvas.height = window.innerHeight * 0.52;
+    canvas.height = window.innerHeight * 0.75;
 
     let startX = isHost || gameMode === 'story' ? 80 : canvas.width - 80;
     let enemyX = isHost || gameMode === 'story' ? canvas.width - 80 : 80;
@@ -498,7 +498,7 @@ game_code = """
     showScreen('mainMenu');
   }
 
-  function jump() { if (pSelf && pSelf.isGrounded && isRunning) { pSelf.vy = -12; pSelf.isGrounded = false; } }
+  function jump() { if (pSelf && pSelf.isGrounded && isRunning) { pSelf.vy = -13; pSelf.isGrounded = false; } }
 
   function attack() {
     if(!pSelf || !isRunning) return;
@@ -555,11 +555,10 @@ game_code = """
       setTimeout(() => p.isSpecialAction = false, 250);
 
     } else if (wp === 'axe' || wp === 'muscle') {
-      // RÌU CHIẾN & CƠ BẮP: Bay lên trời, XOAY TRÒN liên tục rồi đập xuống cực mạnh
       p.isSpecialAction = true;
       p.isSpinning = true;
       p.spinAngle = 0;
-      p.vy = -16; p.isGrounded = false;
+      p.vy = -18; p.isGrounded = false;
       let effectColor = (wp === 'axe') ? '#ff4757' : '#ffa502';
       addParticles(p.x, p.y - 20, effectColor, 30);
 
@@ -569,11 +568,11 @@ game_code = """
           p.isSpinning = false;
           return;
         }
-        p.spinAngle += 0.35; // Tốc độ xoay vòng
+        p.spinAngle += 0.35;
       }, 20);
 
       setTimeout(() => {
-        p.vy = 22;
+        p.vy = 24;
         let checkSlam = setInterval(() => {
           let ground = canvas.height - 25;
           if(p.y >= ground) {
@@ -606,7 +605,6 @@ game_code = """
       setTimeout(() => p.isSpecialAction = false, 250);
 
     } else if (wp === 'spear') {
-      // GIÁO DÀI: Lướt đâm xuyên qua đối thủ gây sát thương mạnh
       p.isSpecialAction = true;
       addParticles(p.x, p.y - 20, '#f1c40f', 22);
       let dashDist = p.facing * 160;
@@ -806,7 +804,6 @@ game_code = """
     ctx.save();
     ctx.translate(p.x, p.y);
 
-    // Hiệu ứng xoay tròn toàn thân khi kích hoạt skill xoay
     if (p.isSpinning) {
       ctx.translate(0, -30);
       ctx.rotate(p.spinAngle);
@@ -825,7 +822,6 @@ game_code = """
 
     let legOffset = Math.sin(p.walkTimer) * 12;
 
-    // Chân
     ctx.beginPath();
     ctx.moveTo(0, -bodyHeight);
     ctx.lineTo(-8 + legOffset, 0);
@@ -833,18 +829,15 @@ game_code = """
     ctx.lineTo(8 - legOffset, 0);
     ctx.stroke();
 
-    // Thân
     ctx.beginPath();
     ctx.moveTo(0, -bodyHeight - headRadius * 2);
     ctx.lineTo(0, -bodyHeight);
     ctx.stroke();
 
-    // Đầu
     ctx.beginPath();
     ctx.arc(0, -bodyHeight - headRadius * 2 - headRadius, headRadius, 0, Math.PI * 2);
     ctx.fill();
 
-    // Áo choàng
     if(p.data.cape === 'red') {
       ctx.fillStyle = "#ff4757"; ctx.shadowColor = "#ff4757";
       ctx.beginPath(); ctx.moveTo(0, -bodyHeight - 16); ctx.lineTo(-18, -bodyHeight + 5); ctx.lineTo(-4, -bodyHeight + 10); ctx.fill();
@@ -853,7 +846,6 @@ game_code = """
       ctx.beginPath(); ctx.moveTo(0, -bodyHeight - 16); ctx.lineTo(-18, -bodyHeight + 5); ctx.lineTo(-4, -bodyHeight + 10); ctx.fill();
     }
 
-    // Mũ / Nón
     if(p.data.hat === 'knight') {
       ctx.fillStyle = "#f1c40f"; ctx.strokeStyle = "#f1c40f"; ctx.shadowColor = "#f1c40f";
       ctx.beginPath(); ctx.arc(0, -bodyHeight - headRadius * 2 - headRadius, headRadius + 2, Math.PI, Math.PI * 2); ctx.fill();
@@ -863,7 +855,6 @@ game_code = """
       ctx.beginPath(); ctx.moveTo(-14, -bodyHeight - headRadius * 2); ctx.lineTo(14, -bodyHeight - headRadius * 2); ctx.lineTo(0, -bodyHeight - headRadius * 2 - 28); ctx.closePath(); ctx.fill();
     }
 
-    // Tay và Vũ khí
     ctx.strokeStyle = col; ctx.fillStyle = col;
     let armAngle = p.atk ? 0.8 : (Math.sin(p.walkTimer) * 0.6);
     ctx.beginPath();
@@ -873,7 +864,6 @@ game_code = """
     ctx.lineTo(handX, handY);
     ctx.stroke();
 
-    // Vẽ vũ khí chi tiết chuẩn
     ctx.save();
     ctx.translate(handX, handY);
     if (p.atk) ctx.rotate(0.5);
@@ -931,9 +921,24 @@ game_code = """
       if(p.atk) { ctx.fillRect(24, -2, 10, 2); }
       ctx.shadowBlur = 0;
     } else if(wp === 'muscle') {
-      ctx.fillStyle = "#ff4757"; ctx.shadowColor = "#ffa502"; ctx.shadowBlur = 15;
-      ctx.beginPath(); ctx.arc(5, -5, 10, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = "#ffa502"; ctx.beginPath(); ctx.arc(2, -8, 5, 0, Math.PI*2); ctx.fill();
+      // Mô hình Cánh Tay Cơ Bắp (Muscular Arm Model)
+      ctx.fillStyle = col; 
+      ctx.shadowColor = "#ffa502"; ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(10, -14, 22, -16);
+      ctx.quadraticCurveTo(30, -10, 24, -2);
+      ctx.lineTo(35, -6);
+      ctx.lineTo(30, 6);
+      ctx.lineTo(2, 6);
+      ctx.closePath();
+      ctx.fill();
+      
+      ctx.strokeStyle = "#ffa502"; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(8, -8);
+      ctx.quadraticCurveTo(16, -12, 22, -8);
+      ctx.stroke();
       ctx.shadowBlur = 0;
     }
 
