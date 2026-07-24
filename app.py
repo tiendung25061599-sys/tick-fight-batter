@@ -1,92 +1,169 @@
-class Character:
-    def __init__(self, name, hp, mana, physical_attack):
-        self.name = name
-        self.hp = hp
-        self.max_mana = mana
-        self.mana = mana
-        self.physical_attack = physical_attack
-        self.is_stunned = False
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Găng Tay Bão Táp - Trận Chiến</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        h2 { color: #4facfe; text-align: center; }
+        .stats-box {
+            display: flex;
+            justify-content: space-between;
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+        }
+        .character { width: 48%; }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        #btn-attack { background-color: #ff9800; color: white; }
+        #btn-attack:hover { background-color: #f57c00; }
+        #btn-skill { background-color: #4facfe; color: white; }
+        #btn-skill:hover { background-color: #00f2fe; color: #121212; }
+        button:disabled { background-color: #444; color: #888; cursor: not-allowed; }
+        #log {
+            background: #181818;
+            border: 1px solid #333;
+            padding: 15px;
+            border-radius: 8px;
+            height: 250px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .log-hit { color: #ffb74d; }
+        .log-crit { color: #ff5252; font-weight: bold; }
+        .log-skill { color: #4facfe; font-weight: bold; }
+    </style>
+</head>
+<body>
 
-    def take_damage(self, amount, is_crit=False):
-        crit_text = " (CHÍ MẠNG!)" if is_crit else ""
-        self.hp -= amount
-        print(f"-> {self.name} nhận {amount:.1f} sát thương{crit_text}. HP còn lại: {max(0, self.hp):.1f}")
+    <h2>🥊 GĂNG TAY BÃO TÁP - THẬP ẢNH CUỒNG PHONG</h2>
 
+    <div class="stats-box">
+        <div class="character">
+            <h3>Chiến Binh Gió</h3>
+            <p>HP: <span id="hero-hp">1000</span>/1000</p>
+            <p>Mana: <span id="hero-mana">150</span>/150</p>
+            <p>Tấn công: <span id="hero-atk">380</span> (Đã cộng găng)</p>
+        </div>
+        <div class="character">
+            <h3>Quái Vật Goblin</h3>
+            <p>HP: <span id="monster-hp">800</span>/800</p>
+            <p>Trạng thái: <span id="monster-status" style="color: #4caf50;">Bình thường</span></p>
+        </div>
+    </div>
 
-class StormGauntlets:
-    def __init__(self):
-        self.name = "Găng Tay Bão Táp (Storm Gauntlets)"
-        self.rarity = "Huyền Thoại"
-        # Chỉ số cơ bản
-        self.bonus_attack = 180
-        self.attack_speed_bonus = 0.30  # +30%
-        self.crit_rate = 0.15           # +15%
-        
-        # Thông tin kỹ năng
-        self.skill_name = "Thập Ảnh Cuồng Phong"
-        self.cooldown = 12.0  # giây
-        self.mana_cost = 60
-        self.range = 12.0     # mét
-        self.current_cooldown = 0.0
+    <div class="controls">
+        <button id="btn-attack" onclick="normalAttack()">Đánh Thường</button>
+        <button id="btn-skill" onclick="castSkill()">Dùng Chiêu: Thập Ảnh Cuồng Phong (60 Mana)</button>
+    </div>
 
-    def equip(self, player):
-        """Trang bị găng tay cho nhân vật, cộng dồn chỉ số."""
-        player.physical_attack += self.bonus_attack
-        print(f"[{player.name}] đã trang bị **{self.name}**! Tấn công tăng thêm +{self.bonus_attack}.")
+    <div id="log">
+        [Hệ thống] Đã trang bị Găng Tay Bão Táp (+180 Tấn công). Trận chiến bắt đầu!<br>
+    </div>
 
-    def cast_ten_shadow_gale(self, user, target):
-        """Kích hoạt kỹ năng: 10 cú đấm lao tới."""
-        if self.current_cooldown > 0:
-            print(f"Kỹ năng '{self.skill_name}' đang hồi chiêu! Còn lại {self.current_cooldown:.1f} giây.")
-            return False
+    <script>
+        let hero = { name: "Chiến Binh Gió", hp: 1000, maxHp: 1000, mana: 150, maxMana: 150, atk: 380 };
+        let monster = { name: "Quái Vật Goblin", hp: 800, maxHp: 800, isStunned: false };
 
-        if user.mana < self.mana_cost:
-            print(f"Không đủ năng lượng! Cần {self.mana_cost} Mana.")
-            return False
+        function updateUI() {
+            document.getElementById("hero-hp").innerText = Math.max(0, hero.hp);
+            document.getElementById("hero-mana").innerText = Math.max(0, hero.mana);
+            document.getElementById("monster-hp").innerText = Math.max(0, monster.hp);
+            document.getElementById("monster-status").innerText = monster.isStunned ? "Choáng (Stun)" : "Bình thường";
+            document.getElementById("monster-status").style.color = monster.isStunned ? "#ff5252" : "#4caf50";
+        }
 
-        # Tiêu hao tài nguyên
-        user.mana -= self.mana_cost
-        self.current_cooldown = self.cooldown
+        function logMessage(msg, className = "") {
+            let logDiv = document.getElementById("log");
+            logDiv.innerHTML += `<span class="${className}">${msg}</span><br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
 
-        print(f"\n⚡ [{user.name}] gầm lên và tung chiêu **{self.skill_name}**!")
-        print(f"Giải phóng bão táp lao tới mục tiêu {target.name} trong phạm vi {self.range}m!\n")
-
-        total_damage_dealt = 0
-
-        # Thực hiện 9 cú đấm đầu tiên
-        for i in range(1, 10):
-            if target.hp <= 0:
-                print(f"Mục tiêu {target.name} đã bị hạ gục trước khi hoàn tất chuỗi đấm!")
-                break
+        function normalAttack() {
+            if (monster.hp <= 0) {
+                logMessage("Quái vật đã bị hạ gục! Hãy reset lại trang.", "log-crit");
+                return;
+            }
+            let dmg = hero.atk * 0.4;
+            monster.hp -= dmg;
+            logMessage(`[Đánh thường] ${hero.name} tấn công gây ${dmg.toFixed(1)} sát thương.`, "log-hit");
             
-            hit_damage = user.physical_attack * 0.15
-            total_damage_dealt += hit_damage
-            print(f"  • Cú đấm thứ {i}: Lao tới đánh trúng, gây gián đoạn và {hit_damage:.1f} sát thương vật lý.")
+            checkWin();
+            updateUI();
+        }
 
-        # Cú đấm thứ 10 (Đòn kết liễu)
-        if target.hp > 0:
-            print(f"  💥 Cú đấm thứ 10 (ĐÒN KẾT LIỄU): Năng lượng bão táp bùng nổ toàn lực!")
-            finisher_damage = user.physical_attack * 1.50
-            total_damage_dealt += finisher_damage
-            
-            # Áp dụng hiệu ứng khống chế và đẩy lùi
-            target.take_damage(finisher_damage, is_crit=True)
-            target.is_stunned = True
-            print(f"  🌪️ {target.name} bị đánh văng ra xa 5 mét và dính hiệu ứng **Choáng (Stun)** trong 1.5 giây!")
-        
-        print(f"\n✨ Tổng sát thương chuỗi kỹ năng: {total_damage_dealt:.1f}\n")
-        return True
+        function castSkill() {
+            if (monster.hp <= 0) {
+                logMessage("Quái vật đã bị hạ gục!", "log-crit");
+                return;
+            }
+            if (hero.mana < 60) {
+                logMessage("Không đủ Mana để dùng chiêu!", "log-crit");
+                return;
+            }
 
+            hero.mana -= 60;
+            logMessage(`⚡ [KỸ NĂNG] ${hero.name} tung chiêu Thập Ảnh Cuồng Phong!`, "log-skill");
 
-# ==================== MÔ PHỎNG KIỂM TRA (TEST GAME) ====================
-if __name__ == "__main__":
-    # Khởi tạo Người chơi và Kẻ địch mẫu
-    hero = Character(name="Chiến Binh Gió", hp=1000, mana=150, physical_attack=200)
-    monster = Character(name="Quái Vật Goblin", hp=800, mana=50, physical_attack=50)
+            let totalDmg = 0;
+            // 9 cú đấm đầu
+            for (let i = 1; i <= 9; i++) {
+                if (monster.hp <= 0) break;
+                let hitDmg = hero.atk * 0.15;
+                totalDmg += hitDmg;
+                logMessage(`  • Cú đấm thứ ${i}: Lao tới gây gián đoạn và ${hitDmg.toFixed(1)} sát thương.`, "log-hit");
+            }
 
-    # Nhận trang bị
-    gloves = StormGauntlets()
-    gloves.equip(hero)
+            // Cú đấm thứ 10
+            if (monster.hp > 0) {
+                let finisherDmg = hero.atk * 1.50;
+                totalDmg += finisherDmg;
+                monster.hp -= finisherDmg;
+                monster.isStunned = true;
+                logMessage(`  💥 Cú đấm thứ 10 (ĐÒN KẾT LIỄU): Bùng nổ gây ${finisherDmg.toFixed(1)} sát thương chí mạng!`, "log-crit");
+                logMessage(`  🌪️ ${monster.name} bị đánh văng ra xa 5 mét và dính hiệu ứng **Choáng** trong 1.5 giây!`, "log-skill");
+            }
 
-    # Sử dụng kỹ năng
-    gloves.cast_ten_shadow_gale(hero, monster)
+            logMessage(`✨ Tổng sát thương chuỗi kỹ năng: ${totalDmg.toFixed(1)}`, "log-skill");
+            checkWin();
+            updateUI();
+        }
+
+        function checkWin() {
+            if (monster.hp <= 0) {
+                logMessage(`🏆 Chúc mừng! ${monster.name} đã bị tiêu diệt hoàn toàn bởi Găng Tay Bão Táp!`, "log-crit");
+                document.getElementById("btn-attack").disabled = true;
+                document.getElementById("btn-skill").disabled = true;
+            }
+        }
+    </script>
+</body>
+</html>
