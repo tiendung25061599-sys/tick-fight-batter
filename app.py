@@ -145,8 +145,7 @@ game_code = """
     <div class="select-box">
       <span>Vũ Khí:</span>
       <select id="weaponSelect" onchange="updateSkillIcon()">
-        <option value="sword">⚔️ Kiếm Thần (Skill: Hút Gió & Tạo Lốc 10s)</option>
-        <option value="glove">🥊 Găng Tay Chiến Đấu (Skill: Đấm Liên Tục 10s)</option>
+        <option value="sword">⚔️ Kiếm Thần (Skill: Hồi Máu 10s)</option>
         <option value="axe">🪓 Rìu Chiến (Skill: Bay Nhảy Đập 10s)</option>
         <option value="dagger">🗡️ Dao Độc (Skill: Mưa Dao Găm 10s)</option>
         <option value="spear">🔱 Giáo Dài (Skill: Lướt Đâm Xuyên 10s)</option>
@@ -195,8 +194,8 @@ game_code = """
       <div class="btn-ctrl" id="btnJump">🦘<span class="key-hint">W</span></div>
     </div>
     <div class="btn-group">
-      <div class="btn-ctrl" id="btnAtk">⚔️<span class="key-hint">M1</span></div>
-      <div class="btn-ctrl" style="border-color:#ff4757" id="btnSkill">🌀<span class="key-hint" id="skillKeyHint">M2</span></div>
+      <div class="btn-ctrl" id="btnAtk">⚔️<span class="key-hint">J / M1</span></div>
+      <div class="btn-ctrl" style="border-color:#ff4757" id="btnSkill">🌀<span class="key-hint" id="skillKeyHint">K / M2</span></div>
     </div>
   </div>
 
@@ -217,8 +216,7 @@ game_code = """
   function updateSkillIcon() {
     let wp = document.getElementById("weaponSelect").value;
     let skillBtn = document.getElementById("btnSkill");
-    if(wp === 'sword') skillBtn.innerText = "🌪️";
-    else if(wp === 'glove') skillBtn.innerText = "🥊";
+    if(wp === 'sword') skillBtn.innerText = "💖";
     else if(wp === 'axe') skillBtn.innerText = "🪓";
     else if(wp === 'dagger') skillBtn.innerText = "🗡️";
     else if(wp === 'spear') skillBtn.innerText = "🔱";
@@ -397,18 +395,18 @@ game_code = """
       } else {
         enemyHp = 450 + (currentStage * 65);
         enemyScale = 1.0 + (currentStage * 0.03);
-        let wpList = ["sword", "glove", "axe", "dagger", "spear", "staff", "bow", "laser", "muscle"];
+        let wpList = ["sword", "axe", "dagger", "spear", "staff", "bow", "laser", "muscle"];
         enemyWeapon = wpList[currentStage % wpList.length];
       }
     }
 
-    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 450, maxHp: 450, atk: false, data: myData, facing: 1, walkTimer: 0, scale: 1.0, isSpecialAction: false, lastAtkTime: 0, lastSkillTime: 0, windEffectTimer: 0 };
+    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 450, maxHp: 450, atk: false, data: myData, facing: 1, walkTimer: 0, scale: 1.0, isSpecialAction: false, lastAtkTime: 0, lastSkillTime: 0 };
     
     pEnemy = { 
       x: enemyX, y: canvas.height - 25, vy: 0, isGrounded: true, 
       hp: enemyHp, maxHp: enemyHp, atk: false, 
       data: (gameMode === 'story') ? { color: enemyColor, weapon: enemyWeapon, hat: isBossStage ? "knight" : "none", cape: isBossStage ? "black" : "none" } : enemyData, 
-      facing: -1, walkTimer: 0, scale: enemyScale, isSpecialAction: false, lastAtkTime: 0, lastSkillTime: 0, windEffectTimer: 0
+      facing: -1, walkTimer: 0, scale: enemyScale, isSpecialAction: false, lastAtkTime: 0, lastSkillTime: 0
     };
     
     bullets = []; particles = [];
@@ -506,7 +504,7 @@ game_code = """
     if(!pSelf || !isRunning) return;
     
     let now = Date.now();
-    let cooldown = (pSelf.data.weapon === 'dagger' || pSelf.data.weapon === 'glove') ? 140 : 190; 
+    let cooldown = (pSelf.data.weapon === 'dagger') ? 140 : 190; 
     if (now - (pSelf.lastAtkTime || 0) < cooldown) return;
     pSelf.lastAtkTime = now;
 
@@ -515,7 +513,6 @@ game_code = """
     let dmg = 15;
 
     if(pSelf.data.weapon === 'sword') { reach = 60; dmg = 18; }
-    else if(pSelf.data.weapon === 'glove') { reach = 42; dmg = 13; }
     else if(pSelf.data.weapon === 'axe') { reach = 70; dmg = 28; }
     else if(pSelf.data.weapon === 'dagger') { reach = 38; dmg = 11; }
     else if(pSelf.data.weapon === 'spear') { reach = 80; dmg = 22; }
@@ -551,54 +548,12 @@ game_code = """
     let isStoryEnemy = (p === pEnemy && gameMode === 'story');
 
     if (wp === 'sword') {
-      // KIẾM THẦN: Hút Gió & Gây sát thương lốc xoáy (Không còn hồi máu)
+      // KIẾM THẦN: Hồi máu gốc
       p.isSpecialAction = true;
-      p.windEffectTimer = 40;
-      addParticles(p.x, p.y - 20, '#66fcf1', 30);
-
-      let pullTicks = 0;
-      let swordInterval = setInterval(() => {
-        pullTicks++;
-        // Hút đối thủ về phía người sử dụng
-        if (other.x < p.x) other.x = Math.min(p.x - 10, other.x + 12);
-        else other.x = Math.max(p.x + 10, other.x - 12);
-
-        let swordDmg = isStoryEnemy ? (12 + currentStage * 2) : 10;
-        if (Math.abs(p.x - other.x) < 120) {
-          other.hp = Math.max(0, other.hp - swordDmg);
-          addParticles(other.x, other.y - 20, '#66fcf1', 8);
-        }
-
-        if (pullTicks >= 6) {
-          clearInterval(swordInterval);
-          p.isSpecialAction = false;
-        }
-      }, 150);
-
-    } else if (wp === 'glove') {
-      // GĂNG TAY: Đấm liên tục
-      p.isSpecialAction = true;
-      addParticles(p.x, p.y - 20, '#fffa65', 20);
-
-      let punchCount = 0;
-      let punchInterval = setInterval(() => {
-        punchCount++;
-        p.atk = true;
-        setTimeout(() => p.atk = false, 60);
-
-        let punchDmg = isStoryEnemy ? (12 + currentStage * 2) : 10;
-        if (Math.abs(p.x - other.x) < 65 * p.scale) {
-          other.hp = Math.max(0, other.hp - punchDmg);
-          other.x += p.facing * 5; // Đẩy lùi nhẹ
-          other.x = Math.max(20, Math.min(canvas.width - 20, other.x));
-          addParticles(other.x, other.y - 20, '#fffa65', 10);
-        }
-
-        if (punchCount >= 8) {
-          clearInterval(punchInterval);
-          p.isSpecialAction = false;
-        }
-      }, 80);
+      addParticles(p.x, p.y - 20, '#2ed573', 30);
+      let healAmount = isStoryEnemy ? (50 + currentStage * 5) : 100;
+      p.hp = Math.min(p.maxHp, p.hp + healAmount);
+      setTimeout(() => p.isSpecialAction = false, 250);
 
     } else if (wp === 'axe') {
       p.isSpecialAction = true;
@@ -729,7 +684,6 @@ game_code = """
     else { pSelf.walkTimer = 0; }
     
     pSelf.x = Math.max(20, Math.min(canvas.width - 20, pSelf.x));
-    if (pSelf.windEffectTimer > 0) pSelf.windEffectTimer--;
 
     if(gameMode === 'story') {
       pEnemy.y += pEnemy.vy; pEnemy.vy += 0.58;
@@ -743,10 +697,9 @@ game_code = """
         pEnemy.x += (pSelf.x < pEnemy.x) ? -speed : speed;
         pEnemy.walkTimer += 0.3;
       }
-      if (pEnemy.windEffectTimer > 0) pEnemy.windEffectTimer--;
 
       let now = Date.now();
-      let enemyCooldown = (pEnemy.data.weapon === 'dagger' || pEnemy.data.weapon === 'glove') ? 100 : 150;
+      let enemyCooldown = (pEnemy.data.weapon === 'dagger') ? 100 : 150;
       let canEnemyAtk = (now - (pEnemy.lastAtkTime || 0) > enemyCooldown);
 
       let atkChance = 0.045 + (currentStage * 0.005);
@@ -938,9 +891,6 @@ game_code = """
       ctx.strokeStyle = "#66fcf1"; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(24, -24); ctx.stroke();
       ctx.fillStyle = "#f7b731"; ctx.fillRect(-2, 2, 6, 3);
-    } else if(wp === 'glove') {
-      ctx.fillStyle = "#fffa65"; ctx.beginPath(); ctx.arc(4, -4, 8, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = "#f7b731"; ctx.lineWidth = 2; ctx.stroke();
     } else if(wp === 'axe') {
       ctx.strokeStyle = "#ffa502"; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(18, -18); ctx.stroke();
@@ -984,6 +934,16 @@ game_code = """
     if(e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') { moveL = false; }
     if(e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') { moveR = false; }
   });
+
+  // Hỗ trợ đánh bằng Chuột trên PC
+  canvas.addEventListener('mousedown', (e) => {
+    if(!isRunning) return;
+    if(e.button === 0) { attack(); } // Chuột Trái (M1)
+    else if(e.button === 2) { useSkill(); } // Chuột Phải (M2)
+  });
+  
+  // Chặn menu chuột phải để xài skill mượt hơn
+  canvas.addEventListener('contextmenu', (e) => { e.preventDefault(); });
 
   function bindTouchButton(id, startFn, endFn) {
     let el = document.getElementById(id);
