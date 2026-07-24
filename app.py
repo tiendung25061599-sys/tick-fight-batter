@@ -145,7 +145,7 @@ game_code = """
     <div class="select-box">
       <span>Vũ Khí:</span>
       <select id="weaponSelect" onchange="updateSkillIcon()">
-        <option value="sword">⚔️ Kiếm Thần (Skill: Lốc Xoáy Kiếm 10s)</option>
+        <option value="sword">⚔️ Kiếm Thần (Skill: Lốc Xoáy Phi Thân 10s)</option>
         <option value="axe">🪓 Rìu Chiến (Skill: Bay Xoay Tròn Đập Rìu 10s)</option>
         <option value="dagger">🗡️ Dao Độc (Skill: Mưa Dao Găm 10s)</option>
         <option value="spear">🔱 Giáo Dài (Skill: Lướt Đâm Xuyên Gây Sát Thương 10s)</option>
@@ -153,7 +153,7 @@ game_code = """
         <option value="bow">🏹 Cung Thần (Skill: Bắn Mũi Tên Đôi 0.2s)</option>
         <option value="laser">⚡ Súng Laser (Skill: Tia Xuyên Phá 10s)</option>
         <option value="muscle">💪 Cánh Tay Cơ Bắp (Skill: Bay Xoay Tròn Đập Sóng 10s)</option>
-        <option value="glove">🥊 Găng Tay Đấm Bốc (Skill: Cú Đấm Sấm Sét 10s)</option>
+        <option value="glove">🥊 Găng Tay Đấm Bốc (Skill: Cú Đấm Sấm Sét Bay Tới 10s)</option>
       </select>
     </div>
     <div class="select-box">
@@ -547,6 +547,7 @@ game_code = """
     let startX = caster.x + dir * 20 * caster.scale;
     let startY = caster.y - 24 * caster.scale;
     let dmgBonus = (caster === pEnemy && gameMode === 'story') ? (10 + currentStage * 2) : 0;
+    let isStoryEnemy = (caster === pEnemy && gameMode === 'story');
 
     if (weapon === 'staff') {
       bullets.push({ x: startX, y: startY, vx: dir * 9.5, color: '#fffa65', radius: 9, dmg: 22 + dmgBonus, type: 'orb', shooter: caster });
@@ -555,6 +556,12 @@ game_code = """
       bullets.push({ x: startX, y: startY, vx: dir * 14, color: '#c7ecee', radius: 3.5, dmg: bowDmg, type: 'arrow', shooter: caster });
     } else if (weapon === 'laser') {
       bullets.push({ x: startX, y: startY, vx: dir * 20, color: '#66fcf1', radius: 2.5, dmg: 20 + dmgBonus, type: 'laser', shooter: caster });
+    } else if (weapon === 'sword') {
+      let tornadoDmg = isStoryEnemy ? (65 + currentStage * 7) : 50;
+      bullets.push({ x: startX, y: startY, vx: dir * 8, color: '#66fcf1', radius: 22, dmg: tornadoDmg, type: 'tornado', shooter: caster });
+    } else if (weapon === 'glove') {
+      let gloveDmg = isStoryEnemy ? (65 + currentStage * 7) : 50;
+      bullets.push({ x: startX, y: startY, vx: dir * 11, color: '#ff4757', radius: 14, dmg: gloveDmg, type: 'fist', shooter: caster });
     }
   }
 
@@ -567,32 +574,11 @@ game_code = """
       p.isSpecialAction = true;
       p.isSpinning = true;
       p.spinAngle = 0;
-      let dashDir = p.facing;
       addParticles(p.x, p.y - 20, '#66fcf1', 35);
-
-      let spinInterval = setInterval(() => {
-        if (!p.isSpecialAction) {
-          clearInterval(spinInterval);
-          p.isSpinning = false;
-          return;
-        }
-        p.spinAngle += 0.5;
-        p.x += dashDir * 8;
-        p.x = Math.max(20, Math.min(canvas.width - 20, p.x));
-        particles.push({ x: p.x + (Math.random()-0.5)*20, y: p.y - Math.random()*40, vx: (Math.random()-0.5)*4, vy: -Math.random()*4, life: 15, color: '#66fcf1' });
-      }, 20);
-
+      createBullet(p, other, 'sword');
       setTimeout(() => {
         p.isSpecialAction = false;
         p.isSpinning = false;
-        clearInterval(spinInterval);
-        let tornadoDmg = isStoryEnemy ? (65 + currentStage * 7) : 50;
-        if(Math.abs(p.x - other.x) < 90) {
-          other.hp = Math.max(0, other.hp - tornadoDmg);
-          other.x += dashDir * 50;
-          other.x = Math.max(20, Math.min(canvas.width - 20, other.x));
-          addParticles(other.x, other.y - 20, '#66fcf1', 30);
-        }
       }, 350);
 
     } else if (wp === 'axe' || wp === 'muscle') {
@@ -660,15 +646,7 @@ game_code = """
     } else if (wp === 'glove') {
       p.isSpecialAction = true;
       addParticles(p.x, p.y - 20, '#ff4757', 25);
-      let dashDist = p.facing * 110;
-      p.x = Math.max(20, Math.min(canvas.width - 20, p.x + dashDist));
-      let punchDmg = isStoryEnemy ? (65 + currentStage * 7) : 50;
-      if(Math.abs(p.x - other.x) < 85) {
-        other.hp = Math.max(0, other.hp - punchDmg);
-        other.x += p.facing * 50;
-        other.x = Math.max(20, Math.min(canvas.width - 20, other.x));
-        addParticles(other.x, other.y - 20, '#ff4757', 30);
-      }
+      createBullet(p, other, 'glove');
       setTimeout(() => p.isSpecialAction = false, 220);
 
     } else if (['staff', 'bow', 'laser'].includes(wp)) {
@@ -694,7 +672,7 @@ game_code = """
     executeWeaponSkill(pSelf);
 
     if(gameMode === 'online' && conn && conn.open) {
-      if(['staff', 'bow', 'laser'].includes(pSelf.data.weapon)) {
+      if(['staff', 'bow', 'laser', 'sword', 'glove'].includes(pSelf.data.weapon)) {
         conn.send({ type: 'SHOOT', weapon: pSelf.data.weapon });
       } else {
         conn.send({ type: 'SKILL' });
@@ -746,7 +724,7 @@ game_code = """
         pEnemy.lastAtkTime = now;
         pEnemy.atk = true; 
         setTimeout(() => pEnemy.atk = false, 140); 
-        if(['staff', 'bow', 'laser'].includes(pEnemy.data.weapon)) {
+        if(['staff', 'bow', 'laser', 'sword', 'glove'].includes(pEnemy.data.weapon)) {
           createBullet(pEnemy, pSelf, pEnemy.data.weapon); 
         } else if(Math.abs(pSelf.x - pEnemy.x) < 70 * pEnemy.scale) {
           let meleeDmg = 16 + (currentStage * 2.5);
@@ -821,13 +799,44 @@ game_code = """
     for(let i = bullets.length - 1; i >= 0; i--) {
       let b = bullets[i];
       b.x += b.vx;
-      ctx.fillStyle = b.color;
-      ctx.shadowColor = b.color; ctx.shadowBlur = 10;
-      ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2); ctx.fill();
-      ctx.shadowBlur = 0;
+      
+      ctx.save();
+      ctx.shadowColor = b.color; 
+      ctx.shadowBlur = 10;
+      
+      if (b.type === 'tornado') {
+        ctx.translate(b.x, b.y);
+        ctx.rotate(animFrame * 0.3);
+        ctx.strokeStyle = b.color;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(0, 0, b.radius, 0, Math.PI * 1.5);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(0, 0, b.radius * 0.5, 0, Math.PI);
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+      } else if (b.type === 'fist') {
+        ctx.translate(b.x, b.y);
+        ctx.fillStyle = '#ff4757';
+        ctx.beginPath();
+        ctx.arc(0, 0, b.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(-4, -4, 8, 8);
+      } else {
+        ctx.fillStyle = b.color;
+        ctx.beginPath(); 
+        ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2); 
+        ctx.fill();
+      }
+      ctx.restore();
 
       let target = (b.shooter === pSelf) ? pEnemy : pSelf;
-      if(Math.abs(b.x - target.x) < 25 * target.scale && Math.abs(b.y - target.y) < 35 * target.scale) {
+      if(Math.abs(b.x - target.x) < (b.radius + 15) * target.scale && Math.abs(b.y - target.y) < 35 * target.scale) {
         target.hp = Math.max(0, target.hp - b.dmg);
         addParticles(b.x, b.y, b.color, 8);
         bullets.splice(i, 1);
