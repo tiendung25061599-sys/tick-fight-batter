@@ -146,13 +146,13 @@ game_code = """
       <span>Vũ Khí:</span>
       <select id="weaponSelect" onchange="updateSkillIcon()">
         <option value="sword">⚔️ Kiếm Thần (Skill: Hồi Máu 10s)</option>
-        <option value="axe">🪓 Rìu Chiến (Skill: Bay Nhảy Đập 10s)</option>
+        <option value="axe">🪓 Rìu Chiến (Skill: Bay Lên Trời Đập Rìu 10s)</option>
         <option value="dagger">🗡️ Dao Độc (Skill: Mưa Dao Găm 10s)</option>
-        <option value="spear">🔱 Giáo Dài (Skill: Lướt Đâm Xuyên 10s)</option>
+        <option value="spear">🔱 Giáo Dài (Skill: Lướt Đâm Xuyên Gây Sát Thương 10s)</option>
         <option value="staff">🪄 Trượng Ma Thuật (Skill: Bắn Cầu Lửa 10s)</option>
         <option value="bow">🏹 Cung Thần (Skill: Bắn Mũi Tên Đôi 0.2s)</option>
         <option value="laser">⚡ Súng Laser (Skill: Tia Xuyên Phá 10s)</option>
-        <option value="muscle">💪 Cơ Bắp Thần Thánh (Skill: Bay Lên Quay Lửa & Đập Sóng Xung Kích 10s)</option>
+        <option value="muscle">💪 Cơ Bắp Thần Thánh (Skill: Bay Lên Quay Rực Lửa & Đập Sóng 10s)</option>
       </select>
     </div>
     <div class="select-box">
@@ -548,7 +548,6 @@ game_code = """
     let isStoryEnemy = (p === pEnemy && gameMode === 'story');
 
     if (wp === 'sword') {
-      // KIẾM THẦN: Hồi máu gốc
       p.isSpecialAction = true;
       addParticles(p.x, p.y - 20, '#2ed573', 30);
       let healAmount = isStoryEnemy ? (50 + currentStage * 5) : 100;
@@ -556,26 +555,27 @@ game_code = """
       setTimeout(() => p.isSpecialAction = false, 250);
 
     } else if (wp === 'axe') {
+      // RÌU CHIẾN: Bay lên trời rồi đập xuống cực mạnh
       p.isSpecialAction = true;
-      p.vy = -14; p.isGrounded = false;
-      addParticles(p.x, p.y - 20, '#ffa502', 22);
+      p.vy = -15; p.isGrounded = false;
+      addParticles(p.x, p.y - 20, '#ff4757', 25);
 
       setTimeout(() => {
-        p.vy = 18;
+        p.vy = 20;
         let checkSlam = setInterval(() => {
           let ground = canvas.height - 25;
           if(p.y >= ground) {
             p.y = ground; p.vy = 0; p.isSpecialAction = false;
             clearInterval(checkSlam);
-            addParticles(p.x, p.y, '#ff4757', 30);
-            let slamDmg = isStoryEnemy ? (75 + currentStage * 8) : 60;
-            if(Math.abs(p.x - other.x) < 110) {
+            addParticles(p.x, p.y, '#ff4757', 35);
+            let slamDmg = isStoryEnemy ? (80 + currentStage * 8) : 65;
+            if(Math.abs(p.x - other.x) < 120) {
               other.hp = Math.max(0, other.hp - slamDmg);
-              addParticles(other.x, other.y - 20, '#ff4757', 24);
+              addParticles(other.x, other.y - 20, '#ff4757', 25);
             }
           }
         }, 20);
-      }, 280);
+      }, 300);
 
     } else if (wp === 'dagger') {
       p.isSpecialAction = true;
@@ -589,18 +589,20 @@ game_code = """
       setTimeout(() => p.isSpecialAction = false, 250);
 
     } else if (wp === 'spear') {
+      // GIÁO DÀI: Lướt đâm xuyên qua đối thủ gây sát thương mạnh
       p.isSpecialAction = true;
-      addParticles(p.x, p.y - 20, '#f1c40f', 20);
-      let dashDist = p.facing * 150;
+      addParticles(p.x, p.y - 20, '#f1c40f', 22);
+      let dashDist = p.facing * 160;
       p.x = Math.max(20, Math.min(canvas.width - 20, p.x + dashDist));
-      let thrustDmg = isStoryEnemy ? (60 + currentStage * 6) : 50;
-      if(Math.abs(p.x - other.x) < 100) {
+      let thrustDmg = isStoryEnemy ? (70 + currentStage * 7) : 55;
+      if(Math.abs(p.x - other.x) < 110) {
         other.hp = Math.max(0, other.hp - thrustDmg);
-        addParticles(other.x, other.y - 20, '#f1c40f', 26);
+        addParticles(other.x, other.y - 20, '#f1c40f', 30);
       }
       setTimeout(() => p.isSpecialAction = false, 250);
 
     } else if (wp === 'muscle') {
+      // CƠ BẮP: Bay lên trời xoay vòng rực lửa rồi đập tạo sóng xung kích
       p.isSpecialAction = true;
       p.vy = -16; p.isGrounded = false;
       addParticles(p.x, p.y - 20, '#ff4757', 30);
@@ -888,68 +890,61 @@ game_code = """
 
     let wp = p.data.weapon;
     if(wp === 'sword') {
-      // Kiếm thần (Sword)
-      ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; // Lõi kiếm
+      ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(28, -28); ctx.stroke();
-      ctx.strokeStyle = "#66fcf1"; ctx.lineWidth = 6; ctx.globalAlpha = 0.5; // Hào quang
+      ctx.strokeStyle = "#66fcf1"; ctx.lineWidth = 6; ctx.globalAlpha = 0.5;
       ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(28, -28); ctx.stroke(); ctx.globalAlpha = 1.0;
-      ctx.fillStyle = "#f1c40f"; ctx.fillRect(-4, -1, 8, 3); // Thánh giá (Crossguard)
-      ctx.fillStyle = "#e67e22"; ctx.fillRect(-2, 2, 4, 8); // Tay cầm
+      ctx.fillStyle = "#f1c40f"; ctx.fillRect(-4, -1, 8, 3);
+      ctx.fillStyle = "#e67e22"; ctx.fillRect(-2, 2, 4, 8);
     } else if(wp === 'axe') {
-      // Rìu chiến (Axe)
-      ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 4; // Cán rìu (Tím than)
+      ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 4;
       ctx.beginPath(); ctx.moveTo(-5, 5); ctx.lineTo(22, -22); ctx.stroke();
       ctx.fillStyle = "#ff4757"; ctx.shadowColor = "#ff4757"; ctx.shadowBlur = 10;
-      // Lưỡi rìu lớn kép
       ctx.beginPath(); ctx.moveTo(15, -15); ctx.quadraticCurveTo(28, -25, 22, -30); ctx.quadraticCurveTo(15, -20, 15, -15); ctx.fill();
       ctx.beginPath(); ctx.moveTo(15, -15); ctx.quadraticCurveTo(25, -2, 30, -8); ctx.quadraticCurveTo(20, -15, 15, -15); ctx.fill();
       ctx.shadowBlur = 0;
     } else if(wp === 'dagger') {
-      // Dao độc (Dagger)
       ctx.strokeStyle = "#2ed573"; ctx.lineWidth = 3; ctx.shadowColor = "#2ed573"; ctx.shadowBlur = 8;
       ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(8, -5, 16, -16); ctx.stroke();
       ctx.fillStyle = "#2c3e50"; ctx.fillRect(-2, 0, 4, 6);
       ctx.shadowBlur = 0;
     } else if(wp === 'spear') {
-      // Giáo dài (Spear)
-      ctx.strokeStyle = "#bdc3c7"; ctx.lineWidth = 3; // Cán giáo
-      ctx.beginPath(); ctx.moveTo(-10, 10); ctx.lineTo(35, -35); ctx.stroke();
-      ctx.fillStyle = "#f1c40f"; ctx.shadowColor = "#f1c40f"; ctx.shadowBlur = 12; // Lưỡi giáo sáng
-      ctx.beginPath(); ctx.moveTo(35, -35); ctx.lineTo(32, -26); ctx.lineTo(48, -48); ctx.lineTo(26, -32); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = "#ff4757"; ctx.lineWidth = 2; // Dải lụa đỏ
-      ctx.beginPath(); ctx.moveTo(32, -32); ctx.quadraticCurveTo(40, -20, 35, -15); ctx.stroke();
+      // GIÁO DÀI: Đã chỉnh sửa nằm ngang chỉa thẳng ra trước mặt
+      ctx.rotate(-0.5);
+      ctx.strokeStyle = "#bdc3c7"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(45, 0); ctx.stroke();
+      ctx.fillStyle = "#f1c40f"; ctx.shadowColor = "#f1c40f"; ctx.shadowBlur = 12;
+      ctx.beginPath(); ctx.moveTo(45, 0); ctx.lineTo(35, -6); ctx.lineTo(58, 0); ctx.lineTo(35, 6); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = "#ff4757"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(25, 0); ctx.quadraticCurveTo(30, 10, 25, 15); ctx.stroke();
       ctx.shadowBlur = 0;
     } else if(wp === 'staff') {
-      // Trượng phép (Staff)
-      ctx.strokeStyle = "#8b4513"; ctx.lineWidth = 4; // Cán gỗ
+      ctx.strokeStyle = "#8b4513"; ctx.lineWidth = 4;
       ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(20, -20); ctx.stroke();
-      ctx.fillStyle = "#fffa65"; ctx.shadowColor = "#fffa65"; ctx.shadowBlur = 15; // Ngọc phép thuật
+      ctx.fillStyle = "#fffa65"; ctx.shadowColor = "#fffa65"; ctx.shadowBlur = 15;
       ctx.beginPath(); ctx.arc(22, -22, 7, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(20, -24, 2, 0, Math.PI*2); ctx.fill(); // Highlight
+      ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(20, -24, 2, 0, Math.PI*2); ctx.fill();
       ctx.shadowBlur = 0;
     } else if(wp === 'bow') {
-      // Cung thần (Bow)
       ctx.strokeStyle = "#e056fd"; ctx.lineWidth = 4; ctx.shadowColor = "#e056fd"; ctx.shadowBlur = 8;
-      ctx.beginPath(); ctx.arc(8, -12, 16, -Math.PI/2 - 0.2, Math.PI/2 + 0.2); ctx.stroke(); // Thân cung
+      ctx.beginPath(); ctx.arc(8, -12, 16, -Math.PI/2 - 0.2, Math.PI/2 + 0.2); ctx.stroke();
       ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 1; ctx.shadowBlur = 0;
-      ctx.beginPath(); ctx.moveTo(8, -28); ctx.lineTo(-2, -12); ctx.lineTo(8, 4); ctx.stroke(); // Dây cung
-      if(p.atk) { // Mũi tên ánh sáng khi bắn
+      ctx.beginPath(); ctx.moveTo(8, -28); ctx.lineTo(-2, -12); ctx.lineTo(8, 4); ctx.stroke();
+      if(p.atk) {
         ctx.strokeStyle = "#66fcf1"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-2, -12); ctx.lineTo(18, -12); ctx.stroke();
       }
     } else if(wp === 'laser') {
-      // Súng Laser (Laser)
-      ctx.fillStyle = "#2f3542"; ctx.fillRect(-2, -6, 20, 10); // Thân súng
-      ctx.fillStyle = "#747d8c"; ctx.fillRect(18, -4, 6, 6); // Nòng
-      ctx.fillStyle = "#ff4757"; ctx.fillRect(4, -8, 8, 4); // Ống ngắm
+      ctx.fillStyle = "#2f3542"; ctx.fillRect(-2, -6, 20, 10);
+      ctx.fillStyle = "#747d8c"; ctx.fillRect(18, -4, 6, 6);
+      ctx.fillStyle = "#ff4757"; ctx.fillRect(4, -8, 8, 4);
       ctx.fillStyle = "#66fcf1"; ctx.shadowColor = "#66fcf1"; ctx.shadowBlur = 10;
-      ctx.fillRect(8, -2, 6, 2); // Lõi năng lượng
-      if(p.atk) { ctx.fillRect(24, -2, 10, 2); } // Tia chớp laser khi bắn
+      ctx.fillRect(8, -2, 6, 2);
+      if(p.atk) { ctx.fillRect(24, -2, 10, 2); }
       ctx.shadowBlur = 0;
     } else if(wp === 'muscle') {
-      // Cơ bắp rực lửa (Muscle)
       ctx.fillStyle = "#ff4757"; ctx.shadowColor = "#ffa502"; ctx.shadowBlur = 15;
       ctx.beginPath(); ctx.arc(5, -5, 10, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = "#ffa502"; ctx.beginPath(); ctx.arc(2, -8, 5, 0, Math.PI*2); ctx.fill(); // Chi tiết gân/lửa
+      ctx.fillStyle = "#ffa502"; ctx.beginPath(); ctx.arc(2, -8, 5, 0, Math.PI*2); ctx.fill();
       ctx.shadowBlur = 0;
     }
 
@@ -957,7 +952,6 @@ game_code = """
     ctx.restore();
   }
 
-  // Điều khiển bàn phím & cảm ứng
   window.addEventListener('keydown', (e) => {
     if(!isRunning) return;
     if(e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') { moveL = true; moveR = false; }
@@ -972,14 +966,12 @@ game_code = """
     if(e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') { moveR = false; }
   });
 
-  // Hỗ trợ đánh bằng Chuột trên PC
   canvas.addEventListener('mousedown', (e) => {
     if(!isRunning) return;
-    if(e.button === 0) { attack(); } // Chuột Trái (M1)
-    else if(e.button === 2) { useSkill(); } // Chuột Phải (M2)
+    if(e.button === 0) { attack(); }
+    else if(e.button === 2) { useSkill(); }
   });
   
-  // Chặn menu chuột phải để xài skill mượt hơn
   canvas.addEventListener('contextmenu', (e) => { e.preventDefault(); });
 
   function bindTouchButton(id, startFn, endFn) {
