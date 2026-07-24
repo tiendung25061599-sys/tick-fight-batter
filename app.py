@@ -9,7 +9,7 @@ if "initialized" not in st.session_state:
     st.session_state.hero_max_hp = 1000
     st.session_state.hero_mana = 150
     st.session_state.hero_max_mana = 150
-    st.session_state.hero_atk = 380  (200 gốc + 180 từ Găng Tay Bão Táp)
+    st.session_state.hero_atk = 380  # (200 gốc + 180 từ Găng Tay Bão Táp)
     
     st.session_state.monster_hp = 800
     st.session_state.monster_max_hp = 800
@@ -26,13 +26,13 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.markdown("### 🛡️ Chiến Binh Gió")
-    st.write(f"**HP:** {max(0, st.session_state.hero_hp)} / {st.session_state.hero_max_hp}")
-    st.write(f"**Mana:** {st.session_state.hero_mana} / {st.session_state.hero_max_mana}")
+    st.write(f"**HP:** {max(0, float(st.session_state.hero_hp)):.0f} / {st.session_state.hero_max_hp}")
+    st.write(f"**Mana:** {max(0, float(st.session_state.hero_mana)):.0f} / {st.session_state.hero_max_mana}")
     st.write(f"**Tấn công:** {st.session_state.hero_atk} (Đã cộng găng)")
 
 with col2:
     st.markdown("### 👹 Quái Vật Goblin")
-    st.write(f"**HP:** {max(0, st.session_state.monster_hp)} / {st.session_state.monster_max_hp}")
+    st.write(f"**HP:** {max(0, float(st.session_state.monster_hp)):.0f} / {st.session_state.monster_max_hp}")
     status_text = "Choáng (Stun)" if st.session_state.monster_stunned else "Bình thường"
     st.write(f"**Trạng thái:** {status_text}")
 
