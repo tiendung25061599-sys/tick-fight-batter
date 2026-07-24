@@ -153,7 +153,7 @@ game_code = """
         <option value="bow">🏹 Cung Thần (Skill: Bắn Mũi Tên Đôi 0.2s)</option>
         <option value="laser">⚡ Súng Laser (Skill: Tia Xuyên Phá 10s)</option>
         <option value="muscle">💪 Cánh Tay Cơ Bắp (Skill: Bay Xoay Tròn Đập Sóng 10s)</option>
-        <option value="glove">🥊 Găng Tay Đấm Bốc (Skill: Cú Đấm Sấm Sét Bay Tới 10s)</option>
+        <option value="glove">🥊 Găng Tay Đấm Bốc (Skill: Nắm Đấm Sấm Sét Bay Tới 10s)</option>
       </select>
     </div>
     <div class="select-box">
@@ -561,7 +561,7 @@ game_code = """
       bullets.push({ x: startX, y: startY, vx: dir * 8, color: '#66fcf1', radius: 22, dmg: tornadoDmg, type: 'tornado', shooter: caster });
     } else if (weapon === 'glove') {
       let gloveDmg = isStoryEnemy ? (65 + currentStage * 7) : 50;
-      bullets.push({ x: startX, y: startY, vx: dir * 11, color: '#ff4757', radius: 14, dmg: gloveDmg, type: 'fist', shooter: caster });
+      bullets.push({ x: startX, y: startY, vx: dir * 12, color: '#ff4757', radius: 15, dmg: gloveDmg, type: 'fist', shooter: caster });
     }
   }
 
@@ -645,7 +645,7 @@ game_code = """
 
     } else if (wp === 'glove') {
       p.isSpecialAction = true;
-      addParticles(p.x, p.y - 20, '#ff4757', 25);
+      addParticles(p.x, p.y - 20, '#ff4757', 30);
       createBullet(p, other, 'glove');
       setTimeout(() => p.isSpecialAction = false, 220);
 
@@ -826,7 +826,7 @@ game_code = """
         ctx.strokeStyle = '#ffffff';
         ctx.stroke();
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(-4, -4, 8, 8);
+        ctx.fillRect(-5, -5, 10, 10);
       } else {
         ctx.fillStyle = b.color;
         ctx.beginPath(); 
