@@ -1,173 +1,6 @@
-import streamlit as st
-import streamlit.components.v1 as components
-
-st.set_page_config(page_title="Stickman Game", layout="centered")
-
-game_code = """
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Stickman Battle</title>
-<style>
-  body { 
-    margin: 0; 
-    background: #0b0f19; 
-    color: white; 
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    justify-content: center; 
-    height: 100vh; 
-    overflow: hidden; 
-  }
-  #gameCanvas { 
-    background: #1f2833; 
-    border: 2px solid #66fcf1; 
-    border-radius: 8px; 
-    box-shadow: 0 0 20px rgba(102, 252, 241, 0.3); 
-  }
-  .controls { 
-    display: flex; 
-    gap: 10px; 
-    margin-top: 15px; 
-  }
-  .btn { 
-    background: #45a29e; 
-    border: none; 
-    color: white; 
-    padding: 10px 20px; 
-    font-size: 16px; 
-    border-radius: 5px; 
-    cursor: pointer; 
-    user-select: none; 
-    transition: 0.1s;
-  }
-  .btn:active, .btn.active { 
-    background: #66fcf1; 
-    color: #0b0f19; 
-    transform: scale(0.95); 
-  }
-</style>
-</head>
-<body>
-
-<canvas id="gameCanvas" width="800" height="450"></canvas>
-
-<div class="controls">
-  <button class="btn" id="btnLeft">◀ Trái</button>
-  <button class="btn" id="btnRight">Phải ▶</button>
-  <button class="btn" id="btnJump">Nhảy (W)</button>
-  <button class="btn" id="btnAtk">Đánh (J)</button>
-  <button class="btn" id="btnSkill">Skill (K)</button>
-</div>
-
-<script>
-  const canvas = document.getElementById("gameCanvas");
-  const ctx = canvas.getContext("2d");
-
-  let gameMode = 'story';
-  let currentStage = 1;
-  let isBossStage = false;
-  let isRunning = true;
-  let animFrame = 0;
-
-  let moveL = false, moveR = false;
-
-  let pSelf = {
-    x: 150, y: 350, vx: 0, vy: 0, hp: 100, maxHp: 100,
-    facing: 1, scale: 1, walkTimer: 0, atk: false, isSpinning: false, spinAngle: 0,
-    data: { color: '#66fcf1', hat: 'knight', cape: 'red', weapon: 'sword' }
-  };
-
-  let pEnemy = {
-    x: 650, y: 350, vx: 0, vy: 0, hp: 100, maxHp: 100,
-    facing: -1, scale: 1, walkTimer: 0, atk: false, isSpinning: false, spinAngle: 0,
-    data: { color: '#ff4757', hat: 'wizard', cape: 'black', weapon: 'axe' }
-  };
-
-  let bullets = [];
-  let particles = [];
-
-  function jump() {
-    if (pSelf.y >= 350) {
-      pSelf.vy = -12;
-    }
-  }
-
-  function attack() {
-    pSelf.atk = true;
-    setTimeout(() => pSelf.atk = false, 200);
-    bullets.push({
-      x: pSelf.x + (20 * pSelf.facing),
-      y: pSelf.y - 25,
-      vx: 10 * pSelf.facing,
-      vy: 0,
-      radius: 6,
-      color: pSelf.data.color,
-      dmg: 15,
-      shooter: pSelf,
-      type: 'normal'
-    });
-  }
-
-  function useSkill() {
-    pSelf.isSpinning = true;
-    setTimeout(() => pSelf.isSpinning = false, 500);
-  }
-
-  function addParticles(x, y, color, count) {
-    for(let i=0; i<count; i++) {
-      particles.push({
-        x: x, y: y,
-        vx: (Math.random() - 0.5) * 6,
-        vy: (Math.random() - 0.5) * 6,
-        life: 20,
-        color: color
-      });
-    }
-  }
-
-  function triggerEndGame(win) {
-    isRunning = false;
-    alert(win ? "Bạn đã thắng màn này!" : "Bạn đã thua!");
-    pSelf.hp = 100;
-    pEnemy.hp = 100;
-    isRunning = true;
-    requestAnimationFrame(loop);
-  }
-
-  function loop() {
-    animFrame++;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    if (moveL) { pSelf.x -= 4; pSelf.facing = -1; pSelf.walkTimer += 0.2; }
-    else if (moveR) { pSelf.x += 4; pSelf.facing = 1; pSelf.walkTimer += 0.2; }
-    else { pSelf.walkTimer = 0; }
-
-    pSelf.y += pSelf.vy;
-    pSelf.vy += 0.6;
-    if (pSelf.y > 350) { pSelf.y = 350; pSelf.vy = 0; }
-
-    if (Math.random() < 0.02) {
-      pEnemy.x += (pSelf.x > pEnemy.x ? 1 : -1) * 3;
-      pEnemy.facing = pSelf.x > pEnemy.x ? 1 : -1;
-      pEnemy.walkTimer += 0.2;
-    } else {
-      pEnemy.walkTimer = 0;
-    }
-
-    let w = 200;
-    ctx.fillStyle = "rgba(31, 40, 51, 0.8)"; 
-    ctx.fillRect(12, 12, w, 16);
-    ctx.fillStyle = pSelf.data.color; 
-    ctx.shadowColor = pSelf.data.color; ctx.shadowBlur = 8;
-    ctx.fillRect(12, 12, w * (Math.max(0, pSelf.hp) / pSelf.maxHp), 16);
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = "#66fcf1"; ctx.lineWidth = 2; ctx.strokeRect(12, 12, w, 16);
+le = "#66fcf1"; ctx.lineWidth = 2; ctx.strokeRect(12, 12, w, 16);
     ctx.fillStyle = "white"; ctx.font = "bold 13px 'Segoe UI'";
-    ctx.fillText(gameMode === 'story' ? `BẠN (MÀN ${currentStage})` : "BẠN", 15, 42);
+    ctx.fillText(`BẠN (MÀN ${currentStage})` if gameMode === 'story' else "BẠN", 15, 42);
 
     ctx.fillStyle = "rgba(31, 40, 51, 0.8)"; ctx.fillRect(canvas.width - w - 12, 12, w, 16); 
     ctx.fillStyle = pEnemy.data.color; 
@@ -233,7 +66,6 @@ game_code = """
     ctx.scale(p.facing * p.scale, p.scale);
     
     if (p.isSpinning) {
-      p.spinAngle = (p.spinAngle || 0) + 0.3;
       ctx.translate(0, -25);
       ctx.rotate(p.spinAngle);
       ctx.translate(0, 25);
@@ -276,13 +108,6 @@ game_code = """
 
     ctx.beginPath(); ctx.moveTo(0, -28); ctx.lineTo(12, -22 + armAnim); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(0, -28); ctx.lineTo(-12, -22 - armAnim); ctx.stroke();
-
-    // GĂNG TAY TRẮNG
-    ctx.fillStyle = "#ffffff";
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.arc(12, -22 + armAnim, 4.5, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.arc(-12, -22 - armAnim, 4.5, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-    ctx.lineWidth = 4;
 
     let wpX = 14, wpY = -22 + armAnim;
     ctx.save();
@@ -377,12 +202,9 @@ game_code = """
   touchBind('btnJump', jump, () => {});
   touchBind('btnAtk', attack, () => {});
   touchBind('btnSkill', useSkill, () => {});
-
-  // KHỞI CHẠY GAME
-  requestAnimationFrame(loop);
 </script>
 </body>
 </html>
 """
 
-components.html(game_code, height=540, scrolling=False)
+components.html(game_code, height=900, scrolling=False)
