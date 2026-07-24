@@ -27,35 +27,27 @@ game_code = """
     }
     .top-btn:active { background: #ff4757; color: #fff; transform: scale(0.95); }
 
-    .screen { position: absolute; top:0; left:0; width: 100%; height: 100%; background: radial-gradient(circle at center, #1f2833 0%, #050508 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; gap: 14px; }
+    .screen { position: absolute; top:0; left:0; width: 100%; height: 100%; background: radial-gradient(circle at center, #1f2833 0%, #050508 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; gap: 12px; }
     
     .title-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 5px;
+      display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 5px;
     }
     
     h1 { font-size: 32px; color: #66fcf1; text-align: center; text-shadow: 0 0 20px rgba(102, 252, 241, 0.6); letter-spacing: 3px; font-weight: 900; }
     
     .author-name {
-      font-size: 15px;
-      color: #70a1ff;
-      font-weight: 600;
-      letter-spacing: 2px;
-      text-shadow: 0 0 10px rgba(112, 161, 255, 0.5);
-      text-transform: uppercase;
+      font-size: 15px; color: #70a1ff; font-weight: 600; letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(112, 161, 255, 0.5); text-transform: uppercase;
     }
     
-    .btn { padding: 14px 30px; font-size: 16px; font-weight: bold; background: rgba(31, 40, 51, 0.9); border: 2px solid #66fcf1; border-radius: 12px; color: #66fcf1; cursor: pointer; text-align: center; z-index: 110; min-width: 260px; box-shadow: 0 0 15px rgba(102, 252, 241, 0.25); backdrop-filter: blur(5px); transition: all 0.2s; }
+    .btn { padding: 12px 26px; font-size: 15px; font-weight: bold; background: rgba(31, 40, 51, 0.9); border: 2px solid #66fcf1; border-radius: 12px; color: #66fcf1; cursor: pointer; text-align: center; z-index: 110; min-width: 260px; box-shadow: 0 0 15px rgba(102, 252, 241, 0.25); backdrop-filter: blur(5px); transition: all 0.2s; }
     .btn:active { background: #66fcf1; color: #000; transform: scale(0.95); box-shadow: 0 0 25px #66fcf1; }
     
-    input, select { padding: 12px 16px; font-size: 15px; border-radius: 10px; border: 2px solid #45a29e; background: rgba(11, 12, 16, 0.9); color: white; text-align: center; width: 260px; outline: none; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+    input, select { padding: 10px 14px; font-size: 14px; border-radius: 10px; border: 2px solid #45a29e; background: rgba(11, 12, 16, 0.9); color: white; text-align: center; width: 260px; outline: none; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
     input:focus, select:focus { border-color: #66fcf1; box-shadow: 0 0 10px rgba(102, 252, 241, 0.3); }
     
-    .select-box { display: flex; gap: 12px; align-items: center; background: rgba(31, 40, 51, 0.7); padding: 10px 16px; border-radius: 12px; width: 85%; max-width: 380px; justify-content: space-between; border: 1px solid rgba(69, 162, 158, 0.5); backdrop-filter: blur(5px); }
-    #statusText { color: #f7b731; font-weight: bold; font-size: 15px; text-align: center; text-shadow: 0 0 10px rgba(247, 183, 49, 0.4); }
+    .select-box { display: flex; gap: 12px; align-items: center; background: rgba(31, 40, 51, 0.7); padding: 8px 16px; border-radius: 12px; width: 85%; max-width: 380px; justify-content: space-between; border: 1px solid rgba(69, 162, 158, 0.5); backdrop-filter: blur(5px); }
+    #statusText { color: #f7b731; font-weight: bold; font-size: 14px; text-align: center; text-shadow: 0 0 10px rgba(247, 183, 49, 0.4); }
     
     #gameCanvas { background: radial-gradient(circle at center, #111318 0%, #030305 100%); border: 2px solid #45a29e; border-radius: 16px; width: 96vw; height: 75vh; display: none; position: relative; z-index: 1; box-shadow: 0 0 30px rgba(69, 162, 158, 0.4); }
     
@@ -80,6 +72,20 @@ game_code = """
       position: absolute; top: 3px; right: 5px; font-size: 10px; color: #f7b731; 
       font-weight: bold; background: rgba(0,0,0,0.7); padding: 2px 4px; border-radius: 4px; 
     }
+
+    /* Roll Modal Styles */
+    #rollModal {
+      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(3, 3, 5, 0.92); backdrop-filter: blur(10px); display: none; flex-direction: column;
+      align-items: center; justify-content: center; z-index: 300; gap: 20px;
+    }
+    .roll-box {
+      width: 320px; height: 180px; background: rgba(31, 40, 51, 0.9); border: 3px solid #f7b731;
+      border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      box-shadow: 0 0 30px rgba(247, 183, 49, 0.5); gap: 10px; position: relative; overflow: hidden;
+    }
+    .roll-result-title { font-size: 22px; font-weight: 900; color: #f7b731; text-shadow: 0 0 10px rgba(247,183,49,0.8); }
+    .roll-result-desc { font-size: 16px; font-weight: bold; color: #fff; text-align: center; padding: 0 15px; }
   </style>
 </head>
 <body>
@@ -94,7 +100,7 @@ game_code = """
       <h1>STICK MAN BATTER FIGHT</h1>
       <div class="author-name">Make by Tiến Dũng</div>
     </div>
-    <div class="btn" id="btnStory">📖 STORY MODE (VƯỢT ẢI)</div>
+    <div class="btn" id="btnStory">📖 STORY MODE (VƯỢT ẢI 10 MÀN)</div>
     <div class="btn" style="border-color:#ff4757; color:#ff4757;" id="btnMulti">🌐 MULTIPLAYER (ONLINE)</div>
     <div class="btn" style="border-color:#f7b731; color:#f7b731;" id="btnSettings">⚙️ SETTINGS (CÀI ĐẶT)</div>
   </div>
@@ -134,10 +140,21 @@ game_code = """
     <div class="btn" style="border-color:#ff4757; color:#ff4757;" onclick="showScreen('lobbyMenu')">⬅ QUAY LẠI</div>
   </div>
 
-  <!-- CẤU HÌNH TRANG BỊ -->
+  <!-- CẤU HÌNH TRANG BỊ & ROLL NGUYÊN TỐ -->
   <div id="customScreen" class="screen" style="display:none;">
     <h1 id="customTitle">TRANG BỊ CHIẾN ĐẤU</h1>
     <div id="statusText">Sẵn sàng xuất chiến!</div>
+    
+    <div class="select-box" style="border-color: #f7b731; background: rgba(247, 183, 49, 0.1);">
+      <span style="color: #f7b731; font-weight: bold;">Hiệu Ứng Nguyên Tố:</span>
+      <span id="currentElementDisplay" style="color: #66fcf1; font-weight: bold;">Chưa có</span>
+    </div>
+
+    <div class="select-box" style="border-color: #f7b731; background: rgba(247, 183, 49, 0.1); cursor: pointer;" id="btnOpenRoll">
+      <span style="color: #f7b731; font-weight: bold;">🎲 Roll Nguyên Tố:</span>
+      <span id="rollTicketsDisplay" style="color: #f7b731; font-weight: bold;">(Lượt: 0)</span>
+    </div>
+
     <div class="select-box">
       <span>Màu Skin:</span>
       <input type="color" id="skinColor" value="#66fcf1">
@@ -145,15 +162,15 @@ game_code = """
     <div class="select-box">
       <span>Vũ Khí:</span>
       <select id="weaponSelect" onchange="updateSkillIcon()">
-        <option value="sword">⚔️ Kiếm Thần (Skill: Lốc Xoáy Phi Thân 10s)</option>
-        <option value="axe">🪓 Rìu Chiến (Skill: Bay Xoay Tròn Đập Rìu 10s)</option>
-        <option value="dagger">🗡️ Dao Độc (Skill: Mưa Dao Găm 10s)</option>
-        <option value="spear">🔱 Giáo Dài (Skill: Lướt Đâm Xuyên Gây Sát Thương 10s)</option>
-        <option value="staff">🪄 Trượng Ma Thuật (Skill: Bắn Cầu Lửa 10s)</option>
-        <option value="bow">🏹 Cung Thần (Skill: Bắn Mũi Tên Đôi 0.2s)</option>
-        <option value="laser">⚡ Súng Laser (Skill: Tia Xuyên Phá 10s)</option>
-        <option value="muscle">💪 Cánh Tay Cơ Bắp (Skill: Bay Xoay Tròn Đập Sóng 10s)</option>
-        <option value="glove">🥊 Găng Tay Đấm Bốc (Skill: Nắm Đấm Sấm Sét Bay Tới 10s)</option>
+        <option value="sword">⚔️ Kiếm Thần (Skill: Lốc Xoáy Phi Thân)</option>
+        <option value="axe">🪓 Rìu Chiến (Skill: Bay Xoay Tròn Đập Rìu)</option>
+        <option value="dagger">🗡️ Dao Độc (Skill: Mưa Dao Găm)</option>
+        <option value="spear">🔱 Giáo Dài (Skill: Lướt Đâm Xuyên Gây Sát Thương)</option>
+        <option value="staff">🪄 Trượng Ma Thuật (Skill: Bắn Cầu Lửa)</option>
+        <option value="bow">🏹 Cung Thần (Skill: Bắn Mũi Tên Đôi)</option>
+        <option value="laser">⚡ Súng Laser (Skill: Tia Xuyên Phá)</option>
+        <option value="muscle">💪 Cánh Tay Cơ Bắp (Skill: Bay Xoay Tròn Đập Sóng)</option>
+        <option value="glove">🥊 Găng Tay Đấm Bốc (Skill: Nắm Đấm Sấm Sét Bay Tới)</option>
       </select>
     </div>
     <div class="select-box">
@@ -174,6 +191,17 @@ game_code = """
     </div>
     <div class="btn" id="btnStartGame" style="background: linear-gradient(135deg, #2ed573 0%, #10ac84 100%); border-color:#fff; color:#fff; text-shadow: 0 0 10px rgba(0,0,0,0.5);">BẮT ĐẦU VÀO TRẬN ➔</div>
     <div class="btn" style="border-color:#ff4757; color:#ff4757;" onclick="showScreen('mainMenu')">⬅ QUAY LẠI</div>
+  </div>
+
+  <!-- ROLL MODAL OVERLAY -->
+  <div id="rollModal">
+    <h1 style="color: #f7b731; text-shadow: 0 0 20px rgba(247,183,49,0.8);">VÒNG QUAY NGUYÊN TỐ</h1>
+    <div class="roll-box" id="rollBoxContainer">
+      <div class="roll-result-title" id="rollTitle">SẴN SÀNG</div>
+      <div class="roll-result-desc" id="rollDesc">Nhấn nút bên dưới để Roll ngẫu nhiên Độc, Lửa hoặc Băng!</div>
+    </div>
+    <div class="btn" id="btnDoRoll" style="border-color:#f7b731; color:#f7b731; background: rgba(31,40,51,0.9);">🎲 QUAY NGAY (1 Lượt)</div>
+    <div class="btn" style="border-color:#ff4757; color:#ff4757;" id="btnCloseRoll">✔ XÁC NHẬN & QUAY LẠI</div>
   </div>
 
   <!-- GAME CANVAS -->
@@ -208,9 +236,11 @@ game_code = """
   let isHost = false, gameMode = 'story';
   let roomCode = "";
   let currentStage = 1;
+  let rollTickets = 0;
+  let currentElement = 'none'; // 'none', 'poison', 'fire', 'ice'
 
-  let myData = { color: "#66fcf1", weapon: "sword", hat: "knight", cape: "red" };
-  let enemyData = { color: "#ff4757", weapon: "staff", hat: "wizard", cape: "black" };
+  let myData = { color: "#66fcf1", weapon: "sword", hat: "knight", cape: "red", element: "none" };
+  let enemyData = { color: "#ff4757", weapon: "staff", hat: "wizard", cape: "black", element: "none" };
 
   let myVoteRematch = false, enemyVoteRematch = false;
 
@@ -226,6 +256,19 @@ game_code = """
     else if(wp === 'laser') skillBtn.innerText = "⚡";
     else if(wp === 'muscle') skillBtn.innerText = "💪";
     else if(wp === 'glove') skillBtn.innerText = "🥊";
+  }
+
+  function updateRollUI() {
+    document.getElementById("rollTicketsDisplay").innerText = "(Lượt: " + rollTickets + ")";
+    let elText = "Chưa có";
+    let elColor = "#66fcf1";
+    if(currentElement === 'poison') { elText = "🟢 ĐỘC (+25% Sát Thương)"; elColor = "#2ed573"; }
+    else if(currentElement === 'fire') { elText = "🔥 LỬA (+50% Sát Thương)"; elColor = "#ff4757"; }
+    else if(currentElement === 'ice') { elText = "❄️ BĂNG (Làm Chậm Kẻ Địch)"; elColor = "#70a1ff"; }
+    
+    let disp = document.getElementById("currentElementDisplay");
+    disp.innerText = elText;
+    disp.style.color = elColor;
   }
 
   function toggleFullscreen() {
@@ -271,8 +314,9 @@ game_code = """
     document.getElementById('customTitle').innerText = "STORY MODE - MÀN " + currentStage;
     showScreen('customScreen'); 
     updateSkillIcon();
+    updateRollUI();
   });
-  addClickEvent('btnMulti', () => { gameMode = 'online'; showScreen('lobbyMenu'); updateSkillIcon(); });
+  addClickEvent('btnMulti', () => { gameMode = 'online'; showScreen('lobbyMenu'); updateSkillIcon(); updateRollUI(); });
   addClickEvent('btnSettings', () => showScreen('settingsScreen'));
   addClickEvent('btnBackToMenu', () => showScreen('mainMenu'));
   addClickEvent('btnBackFromLobby', () => showScreen('mainMenu'));
@@ -282,6 +326,42 @@ game_code = """
   addClickEvent('btnJoinTarget', joinTargetRoom);
   addClickEvent('btnStartGame', confirmCustom);
   addClickEvent('rematchBtn', requestRematch);
+
+  addClickEvent('btnOpenRoll', () => {
+    document.getElementById('rollModal').style.display = 'flex';
+  });
+  addClickEvent('btnCloseRoll', () => {
+    document.getElementById('rollModal').style.display = 'none';
+  });
+  addClickEvent('btnDoRoll', () => {
+    if(rollTickets <= 0) {
+      alert("Bạn đã hết lượt Roll! Hãy hoàn thành các màn trong Story Mode để tích lũy thêm (Cứ mỗi 10 màn được thưởng lớn hoặc qua màn nhận lượt roll)!");
+      return;
+    }
+    rollTickets--;
+    updateRollUI();
+
+    let elements = ['poison', 'fire', 'ice'];
+    let chosen = elements[Math.floor(Math.random() * elements.length)];
+    currentElement = chosen;
+
+    let tElem = document.getElementById('rollTitle');
+    let dElem = document.getElementById('rollDesc');
+    if(chosen === 'poison') {
+      tElem.innerText = "🟢 NHẬN ĐƯỢC: ĐỘC";
+      tElem.style.color = "#2ed573";
+      dElem.innerText = "Tăng 25% Sát Thương! Vũ khí phủ độc xanh lá cực mạnh!";
+    } else if(chosen === 'fire') {
+      tElem.innerText = "🔥 NHẬN ĐƯỢC: LỬA";
+      tElem.style.color = "#ff4757";
+      dElem.innerText = "Tăng 50% Sát Thương! Vũ khí bùng cháy sức mạnh hủy diệt!";
+    } else if(chosen === 'ice') {
+      tElem.innerText = "❄️ NHẬN ĐƯỢC: BĂNG";
+      tElem.style.color = "#70a1ff";
+      dElem.innerText = "Làm chậm tốc độ đối thủ khi tấn công!";
+    }
+    updateRollUI();
+  });
 
   function initHostRoom() {
     let codeInput = document.getElementById("customRoomCode").value.trim();
@@ -354,6 +434,7 @@ game_code = """
     myData.weapon = document.getElementById("weaponSelect").value;
     myData.hat = document.getElementById("hatSelect").value;
     myData.cape = document.getElementById("capeSelect").value;
+    myData.element = currentElement;
     
     if(gameMode === 'online' && conn && conn.open) {
       conn.send({ type: 'INIT_PLAYER', data: myData });
@@ -384,31 +465,37 @@ game_code = """
     isBossStage = (gameMode === 'story' && currentStage % 10 === 0);
 
     let enemyHp = 500;
-    let enemyScale = 1.0;
+    let enemyScale = 1.35; // Nhân vật to hơn
     let enemyColor = "#ff4757";
     let enemyWeapon = "sword";
 
     if(gameMode === 'story') {
       if(isBossStage) {
         enemyHp = 1800 + (currentStage * 120);
-        enemyScale = 2.0;
+        enemyScale = 1.8;
         enemyColor = "#ff0055";
         enemyWeapon = "axe";
       } else {
         enemyHp = 450 + (currentStage * 65);
-        enemyScale = 1.0 + (currentStage * 0.03);
+        enemyScale = 1.35;
         let wpList = ["sword", "axe", "dagger", "spear", "staff", "bow", "laser", "muscle", "glove"];
         enemyWeapon = wpList[currentStage % wpList.length];
       }
     }
 
-    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 450, maxHp: 450, atk: false, data: myData, facing: 1, walkTimer: 0, scale: 1.0, isSpecialAction: false, isSpinning: false, spinAngle: 0, lastAtkTime: 0, lastSkillTime: 0 };
+    pSelf = { 
+      x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, 
+      hp: 500, maxHp: 500, atk: false, data: myData, facing: 1, 
+      walkTimer: 0, scale: 1.35, isSpecialAction: false, isSpinning: false, 
+      spinAngle: 0, lastAtkTime: 0, lastSkillTime: 0, slowTimer: 0 
+    };
     
     pEnemy = { 
       x: enemyX, y: canvas.height - 25, vy: 0, isGrounded: true, 
       hp: enemyHp, maxHp: enemyHp, atk: false, 
-      data: (gameMode === 'story') ? { color: enemyColor, weapon: enemyWeapon, hat: isBossStage ? "knight" : "none", cape: isBossStage ? "black" : "none" } : enemyData, 
-      facing: -1, walkTimer: 0, scale: enemyScale, isSpecialAction: false, isSpinning: false, spinAngle: 0, lastAtkTime: 0, lastSkillTime: 0
+      data: (gameMode === 'story') ? { color: enemyColor, weapon: enemyWeapon, hat: isBossStage ? "knight" : "none", cape: isBossStage ? "black" : "none", element: "none" } : enemyData, 
+      facing: -1, walkTimer: 0, scale: enemyScale, isSpecialAction: false, isSpinning: false, 
+      spinAngle: 0, lastAtkTime: 0, lastSkillTime: 0, slowTimer: 0
     };
     
     bullets = []; particles = [];
@@ -455,6 +542,10 @@ game_code = """
         winTxt.innerText = isBossStage ? "🏆 DIỆT BOSS HOÀN HẢO!" : "🎉 HOÀN THÀNH MÀN " + currentStage;
         winTxt.style.color = "#2ed573";
         currentStage++;
+        // Thưởng lượt roll nguyên tố (Cứ qua màn tăng lượt roll, 10 màn tặng nhiều hơn)
+        let earned = (currentStage % 10 === 0) ? 3 : 1;
+        rollTickets += earned;
+        updateRollUI();
       } else {
         winTxt.innerText = "💀 BẠN ĐÃ HY SINH!";
         winTxt.style.color = "#ff4757";
@@ -511,33 +602,47 @@ game_code = """
     pSelf.lastAtkTime = now;
 
     pSelf.atk = true; 
-    let reach = 45;
-    let dmg = 15;
+    let reach = 50;
+    let baseDmg = 16;
 
-    if(pSelf.data.weapon === 'sword') { reach = 60; dmg = 18; }
-    else if(pSelf.data.weapon === 'axe') { 
-      reach = 75; 
-      dmg = 32; 
-      for(let i=0; i<4; i++) {
-        particles.push({ 
-          x: pSelf.x + pSelf.facing * (25 + i * 12), 
-          y: pSelf.y - 25 + (Math.random() - 0.5) * 15, 
-          vx: pSelf.facing * (3 + Math.random() * 3), 
-          vy: (Math.random() - 0.5) * 3, 
-          life: 14, 
-          color: '#ff4757' 
-        });
-      }
+    if(pSelf.data.weapon === 'sword') { reach = 65; baseDmg = 20; }
+    else if(pSelf.data.weapon === 'axe') { reach = 80; baseDmg = 35; }
+    else if(pSelf.data.weapon === 'dagger') { reach = 42; baseDmg = 12; }
+    else if(pSelf.data.weapon === 'spear') { reach = 85; baseDmg = 24; }
+    else if(pSelf.data.weapon === 'muscle') { reach = 80; baseDmg = 35; }
+    else if(pSelf.data.weapon === 'glove') { reach = 45; baseDmg = 18; }
+
+    // Tính toán sát thương theo nguyên tố
+    let finalDmg = baseDmg;
+    let particleColor = pSelf.data.color;
+    if(pSelf.data.element === 'poison') {
+      finalDmg *= 1.25; // Tăng 25% damge độc
+      particleColor = '#2ed573';
+    } else if(pSelf.data.element === 'fire') {
+      finalDmg *= 1.50; // Tăng 50% damge lửa
+      particleColor = '#ff4757';
+    } else if(pSelf.data.element === 'ice') {
+      particleColor = '#70a1ff';
     }
-    else if(pSelf.data.weapon === 'dagger') { reach = 38; dmg = 11; }
-    else if(pSelf.data.weapon === 'spear') { reach = 80; dmg = 22; }
-    else if(pSelf.data.weapon === 'muscle') { reach = 75; dmg = 32; }
-    else if(pSelf.data.weapon === 'glove') { reach = 42; dmg = 16; }
+
+    for(let i=0; i<4; i++) {
+      particles.push({ 
+        x: pSelf.x + pSelf.facing * (25 + i * 12), 
+        y: pSelf.y - 25 + (Math.random() - 0.5) * 15, 
+        vx: pSelf.facing * (3 + Math.random() * 3), 
+        vy: (Math.random() - 0.5) * 3, 
+        life: 14, 
+        color: particleColor 
+      });
+    }
 
     let other = pEnemy;
     if(Math.abs(pSelf.x - other.x) < reach * pSelf.scale) {
-      other.hp = Math.max(0, other.hp - dmg);
-      addParticles(other.x, other.y - 20 * other.scale, pSelf.data.color, 12);
+      other.hp = Math.max(0, other.hp - finalDmg);
+      if(pSelf.data.element === 'ice') {
+        other.slowTimer = 90; // Băng làm chậm đối thủ
+      }
+      addParticles(other.x, other.y - 20 * other.scale, particleColor, 12);
     }
     setTimeout(() => pSelf.atk = false, 140);
   }
@@ -549,19 +654,25 @@ game_code = """
     let dmgBonus = (caster === pEnemy && gameMode === 'story') ? (10 + currentStage * 2) : 0;
     let isStoryEnemy = (caster === pEnemy && gameMode === 'story');
 
+    let multiplier = 1.0;
+    let bulletColor = '#fffa65';
+    if(caster.data.element === 'poison') { multiplier = 1.25; bulletColor = '#2ed573'; }
+    else if(caster.data.element === 'fire') { multiplier = 1.50; bulletColor = '#ff4757'; }
+    else if(caster.data.element === 'ice') { bulletColor = '#70a1ff'; }
+
     if (weapon === 'staff') {
-      bullets.push({ x: startX, y: startY, vx: dir * 9.5, color: '#fffa65', radius: 9, dmg: 22 + dmgBonus, type: 'orb', shooter: caster });
+      bullets.push({ x: startX, y: startY, vx: dir * 9.5, color: bulletColor, radius: 9, dmg: (22 + dmgBonus) * multiplier, type: 'orb', shooter: caster });
     } else if (weapon === 'bow') {
-      let bowDmg = (caster === pEnemy && gameMode === 'story') ? Math.max(2, 2 + Math.floor(currentStage / 2)) : 2;
-      bullets.push({ x: startX, y: startY, vx: dir * 14, color: '#c7ecee', radius: 3.5, dmg: bowDmg, type: 'arrow', shooter: caster });
+      let bowDmg = (caster === pEnemy && gameMode === 'story') ? Math.max(2, 2 + Math.floor(currentStage / 2)) : 3;
+      bullets.push({ x: startX, y: startY, vx: dir * 14, color: bulletColor, radius: 3.5, dmg: bowDmg * multiplier, type: 'arrow', shooter: caster });
     } else if (weapon === 'laser') {
-      bullets.push({ x: startX, y: startY, vx: dir * 20, color: '#66fcf1', radius: 2.5, dmg: 20 + dmgBonus, type: 'laser', shooter: caster });
+      bullets.push({ x: startX, y: startY, vx: dir * 20, color: bulletColor, radius: 2.5, dmg: (20 + dmgBonus) * multiplier, type: 'laser', shooter: caster });
     } else if (weapon === 'sword') {
-      let tornadoDmg = isStoryEnemy ? (65 + currentStage * 7) : 50;
-      bullets.push({ x: startX, y: startY, vx: dir * 8, color: '#66fcf1', radius: 22, dmg: tornadoDmg, type: 'tornado', shooter: caster });
+      let tornadoDmg = (isStoryEnemy ? (65 + currentStage * 7) : 50) * multiplier;
+      bullets.push({ x: startX, y: startY, vx: dir * 8, color: bulletColor, radius: 22, dmg: tornadoDmg, type: 'tornado', shooter: caster });
     } else if (weapon === 'glove') {
-      let gloveDmg = isStoryEnemy ? (65 + currentStage * 7) : 50;
-      bullets.push({ x: startX, y: startY, vx: dir * 12, color: '#ff4757', radius: 15, dmg: gloveDmg, type: 'fist', shooter: caster });
+      let gloveDmg = (isStoryEnemy ? (65 + currentStage * 7) : 50) * multiplier;
+      bullets.push({ x: startX, y: startY, vx: dir * 12, color: bulletColor, radius: 15, dmg: gloveDmg, type: 'fist', shooter: caster });
     }
   }
 
@@ -694,8 +805,11 @@ game_code = """
     pSelf.y += pSelf.vy; pSelf.vy += 0.58;
     if (pSelf.y >= ground) { pSelf.y = ground; pSelf.vy = 0; pSelf.isGrounded = true; }
 
-    if (moveL) { pSelf.x -= 4.5; pSelf.facing = -1; pSelf.walkTimer += 0.25; }
-    else if (moveR) { pSelf.x += 4.5; pSelf.facing = 1; pSelf.walkTimer += 0.25; }
+    let moveSpeed = 4.8;
+    if(pSelf.slowTimer > 0) { moveSpeed *= 0.6; pSelf.slowTimer--; }
+
+    if (moveL) { pSelf.x -= moveSpeed; pSelf.facing = -1; pSelf.walkTimer += 0.25; }
+    else if (moveR) { pSelf.x += moveSpeed; pSelf.facing = 1; pSelf.walkTimer += 0.25; }
     else { pSelf.walkTimer = 0; }
     
     pSelf.x = Math.max(20, Math.min(canvas.width - 20, pSelf.x));
@@ -705,10 +819,11 @@ game_code = """
       if (pEnemy.y >= ground) { pEnemy.y = ground; pEnemy.vy = 0; pEnemy.isGrounded = true; }
       
       pEnemy.facing = pSelf.x < pEnemy.x ? -1 : 1;
-      let speed = 2.3 + (currentStage * 0.18);
-      if(isBossStage) speed = 3.2;
+      let speed = 2.4 + (currentStage * 0.18);
+      if(pEnemy.slowTimer > 0) { speed *= 0.5; pEnemy.slowTimer--; }
+      if(isBossStage) speed = 3.4;
 
-      if (!pEnemy.isSpecialAction && Math.abs(pSelf.x - pEnemy.x) > 40 * pEnemy.scale) {
+      if (!pEnemy.isSpecialAction && Math.abs(pSelf.x - pEnemy.x) > 45 * pEnemy.scale) {
         pEnemy.x += (pSelf.x < pEnemy.x) ? -speed : speed;
         pEnemy.walkTimer += 0.3;
       }
@@ -726,7 +841,7 @@ game_code = """
         setTimeout(() => pEnemy.atk = false, 140); 
         if(['staff', 'bow', 'laser', 'sword', 'glove'].includes(pEnemy.data.weapon)) {
           createBullet(pEnemy, pSelf, pEnemy.data.weapon); 
-        } else if(Math.abs(pSelf.x - pEnemy.x) < 70 * pEnemy.scale) {
+        } else if(Math.abs(pSelf.x - pEnemy.x) < 75 * pEnemy.scale) {
           let meleeDmg = 16 + (currentStage * 2.5);
           pSelf.hp = Math.max(0, pSelf.hp - meleeDmg);
           addParticles(pSelf.x, pSelf.y - 20, '#ff4757', 10);
@@ -818,7 +933,7 @@ game_code = """
         ctx.stroke();
       } else if (b.type === 'fist') {
         ctx.translate(b.x, b.y);
-        ctx.fillStyle = '#ff4757';
+        ctx.fillStyle = b.color;
         ctx.beginPath();
         ctx.arc(0, 0, b.radius, 0, Math.PI * 2);
         ctx.fill();
@@ -838,6 +953,9 @@ game_code = """
       let target = (b.shooter === pSelf) ? pEnemy : pSelf;
       if(Math.abs(b.x - target.x) < (b.radius + 15) * target.scale && Math.abs(b.y - target.y) < 35 * target.scale) {
         target.hp = Math.max(0, target.hp - b.dmg);
+        if(b.shooter.data && b.shooter.data.element === 'ice') {
+          target.slowTimer = 90;
+        }
         addParticles(b.x, b.y, b.color, 8);
         bullets.splice(i, 1);
         continue;
@@ -853,7 +971,7 @@ game_code = """
       pt.x += pt.vx; pt.y += pt.vy; pt.life--;
       ctx.fillStyle = pt.color;
       ctx.globalAlpha = pt.life / 22;
-      ctx.fillRect(pt.x, pt.y, 3.5, 3.5);
+      ctx.fillRect(pt.x, pt.y, 4, 4);
       ctx.globalAlpha = 1.0;
       if(pt.life <= 0) particles.splice(i, 1);
     }
@@ -882,65 +1000,66 @@ game_code = """
     let wp = p.data.weapon;
     let hat = p.data.hat;
     let cape = p.data.cape;
+    let el = p.data.element;
 
     ctx.strokeStyle = skin;
-    ctx.lineWidth = 3.5;
+    ctx.lineWidth = 4;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.shadowColor = skin;
-    ctx.shadowBlur = 6;
+    ctx.shadowBlur = 8;
 
     if(cape !== 'none') {
       ctx.fillStyle = (cape === 'red') ? '#ff4757' : '#2f3640';
       ctx.beginPath();
       ctx.moveTo(0, -32);
-      ctx.lineTo(-12, -5);
+      ctx.lineTo(-14, -5);
       ctx.lineTo(-4, -5);
       ctx.closePath();
       ctx.fill();
     }
 
     ctx.beginPath();
-    ctx.arc(0, -38, 9, 0, Math.PI*2);
+    ctx.arc(0, -38, 10, 0, Math.PI*2);
     ctx.stroke();
 
     if(hat === 'knight') {
       ctx.fillStyle = '#718093';
-      ctx.fillRect(-7, -51, 14, 5);
-      ctx.fillRect(-4, -56, 8, 5);
+      ctx.fillRect(-8, -52, 16, 5);
+      ctx.fillRect(-4, -58, 8, 6);
     } else if(hat === 'wizard') {
       ctx.fillStyle = '#9b59b6';
       ctx.beginPath();
-      ctx.moveTo(0, -60);
-      ctx.lineTo(-9, -46);
-      ctx.lineTo(9, -46);
+      ctx.moveTo(0, -62);
+      ctx.lineTo(-10, -46);
+      ctx.lineTo(10, -46);
       ctx.closePath();
       ctx.fill();
     }
 
     ctx.beginPath();
-    ctx.moveTo(0, -29);
+    ctx.moveTo(0, -28);
     ctx.lineTo(0, -8);
     ctx.stroke();
 
-    let legOffset = Math.sin(p.walkTimer) * 10;
+    let legOffset = Math.sin(p.walkTimer) * 11;
     if(p.isGrounded && Math.abs(p.walkTimer) > 0) {
       ctx.beginPath();
       ctx.moveTo(0, -8);
-      ctx.lineTo(-9 + legOffset, 0);
+      ctx.lineTo(-10 + legOffset, 0);
       ctx.stroke();
       ctx.beginPath();
       ctx.moveTo(0, -8);
-      ctx.lineTo(9 - legOffset, 0);
+      ctx.lineTo(10 - legOffset, 0);
       ctx.stroke();
     } else {
       ctx.beginPath();
       ctx.moveTo(0, -8);
-      ctx.lineTo(-6, 0);
+      ctx.lineTo(-7, 0);
       ctx.stroke();
       ctx.beginPath();
       ctx.moveTo(0, -8);
-      ctx.lineTo(6, 0);
+      ctx.lineTo(7, 0);
       ctx.stroke();
     }
 
@@ -955,73 +1074,105 @@ game_code = """
 
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.lineTo(16, 4);
+    ctx.lineTo(18, 4);
     ctx.stroke();
 
-    ctx.lineWidth = 3;
+    // Model vũ khí cực kỳ chi tiết & đẹp mắt kèm hiệu ứng nguyên tố
+    ctx.lineWidth = 3.5;
+    let weaponGlow = '#66fcf1';
+    if(el === 'poison') weaponGlow = '#2ed573';
+    else if(el === 'fire') weaponGlow = '#ff4757';
+    else if(el === 'ice') weaponGlow = '#70a1ff';
+
+    ctx.shadowColor = weaponGlow;
+    ctx.shadowBlur = 12;
+
     if(wp === 'sword') {
-      ctx.strokeStyle = '#dcdde1';
+      ctx.strokeStyle = '#ffffff';
       ctx.beginPath();
-      ctx.moveTo(16, 4);
-      ctx.lineTo(36, 4);
+      ctx.moveTo(18, 4);
+      ctx.lineTo(44, 4);
       ctx.stroke();
-      ctx.fillStyle = '#66fcf1';
-      ctx.fillRect(14, 1, 3, 6);
+      ctx.fillStyle = weaponGlow;
+      ctx.fillRect(15, 0, 4, 8);
+      ctx.beginPath();
+      ctx.arc(44, 4, 3, 0, Math.PI*2);
+      ctx.fill();
     } else if(wp === 'axe') {
-      ctx.strokeStyle = '#718093';
+      ctx.strokeStyle = '#a4b0be';
       ctx.beginPath();
-      ctx.moveTo(16, 4);
-      ctx.lineTo(28, 4);
+      ctx.moveTo(18, 4);
+      ctx.lineTo(32, 4);
       ctx.stroke();
-      ctx.fillStyle = '#ff4757';
+      ctx.fillStyle = weaponGlow;
       ctx.beginPath();
-      ctx.arc(28, 4, 7, -Math.PI/2, Math.PI/2);
+      ctx.moveTo(32, -4);
+      ctx.lineTo(42, 4);
+      ctx.lineTo(32, 12);
+      ctx.closePath();
       ctx.fill();
     } else if(wp === 'dagger') {
-      ctx.strokeStyle = '#2ed573';
+      ctx.strokeStyle = weaponGlow;
       ctx.beginPath();
-      ctx.moveTo(16, 4);
-      ctx.lineTo(24, 4);
+      ctx.moveTo(18, 4);
+      ctx.lineTo(30, 4);
       ctx.stroke();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(28, 2, 4, 4);
     } else if(wp === 'spear') {
       ctx.strokeStyle = '#f1c40f';
       ctx.beginPath();
-      ctx.moveTo(16, 4);
-      ctx.lineTo(42, 4);
+      ctx.moveTo(18, 4);
+      ctx.lineTo(48, 4);
       ctx.stroke();
+      ctx.fillStyle = weaponGlow;
+      ctx.beginPath();
+      ctx.moveTo(48, -1);
+      ctx.lineTo(56, 4);
+      ctx.lineTo(48, 9);
+      ctx.closePath();
+      ctx.fill();
     } else if(wp === 'staff') {
       ctx.strokeStyle = '#e67e22';
       ctx.beginPath();
-      ctx.moveTo(16, 4);
-      ctx.lineTo(32, 4);
+      ctx.moveTo(18, 4);
+      ctx.lineTo(38, 4);
       ctx.stroke();
-      ctx.fillStyle = '#fffa65';
+      ctx.fillStyle = weaponGlow;
       ctx.beginPath();
-      ctx.arc(32, 4, 5, 0, Math.PI*2);
+      ctx.arc(38, 4, 6, 0, Math.PI*2);
       ctx.fill();
     } else if(wp === 'bow') {
       ctx.strokeStyle = '#e1b12c';
       ctx.beginPath();
-      ctx.arc(20, 4, 10, -Math.PI/2, Math.PI/2);
+      ctx.arc(24, 4, 12, -Math.PI/2, Math.PI/2);
+      ctx.stroke();
+      ctx.strokeStyle = weaponGlow;
+      ctx.beginPath();
+      ctx.moveTo(24, -8);
+      ctx.lineTo(18, 4);
+      ctx.lineTo(24, 16);
       ctx.stroke();
     } else if(wp === 'laser') {
-      ctx.strokeStyle = '#66fcf1';
+      ctx.strokeStyle = weaponGlow;
       ctx.beginPath();
-      ctx.moveTo(16, 4);
-      ctx.lineTo(30, 4);
+      ctx.moveTo(18, 4);
+      ctx.lineTo(36, 4);
       ctx.stroke();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(32, 1, 6, 6);
     } else if(wp === 'muscle') {
-      ctx.fillStyle = skin;
+      ctx.fillStyle = weaponGlow;
       ctx.beginPath();
-      ctx.arc(18, 4, 6, 0, Math.PI*2);
+      ctx.arc(22, 4, 8, 0, Math.PI*2);
       ctx.fill();
     } else if(wp === 'glove') {
-      ctx.fillStyle = '#ff4757';
+      ctx.fillStyle = weaponGlow;
       ctx.beginPath();
-      ctx.arc(20, 4, 6, 0, Math.PI*2);
+      ctx.arc(24, 4, 8, 0, Math.PI*2);
       ctx.fill();
-      ctx.strokeStyle = '#c0392b';
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
       ctx.stroke();
     }
 
