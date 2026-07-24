@@ -888,32 +888,69 @@ game_code = """
 
     let wp = p.data.weapon;
     if(wp === 'sword') {
-      ctx.strokeStyle = "#66fcf1"; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(24, -24); ctx.stroke();
-      ctx.fillStyle = "#f7b731"; ctx.fillRect(-2, 2, 6, 3);
+      // Kiếm thần (Sword)
+      ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; // Lõi kiếm
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(28, -28); ctx.stroke();
+      ctx.strokeStyle = "#66fcf1"; ctx.lineWidth = 6; ctx.globalAlpha = 0.5; // Hào quang
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(28, -28); ctx.stroke(); ctx.globalAlpha = 1.0;
+      ctx.fillStyle = "#f1c40f"; ctx.fillRect(-4, -1, 8, 3); // Thánh giá (Crossguard)
+      ctx.fillStyle = "#e67e22"; ctx.fillRect(-2, 2, 4, 8); // Tay cầm
     } else if(wp === 'axe') {
-      ctx.strokeStyle = "#ffa502"; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(18, -18); ctx.stroke();
-      ctx.fillStyle = "#ff4757"; ctx.beginPath(); ctx.arc(18, -18, 9, 0, Math.PI * 2); ctx.fill();
+      // Rìu chiến (Axe)
+      ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 4; // Cán rìu (Tím than)
+      ctx.beginPath(); ctx.moveTo(-5, 5); ctx.lineTo(22, -22); ctx.stroke();
+      ctx.fillStyle = "#ff4757"; ctx.shadowColor = "#ff4757"; ctx.shadowBlur = 10;
+      // Lưỡi rìu lớn kép
+      ctx.beginPath(); ctx.moveTo(15, -15); ctx.quadraticCurveTo(28, -25, 22, -30); ctx.quadraticCurveTo(15, -20, 15, -15); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(15, -15); ctx.quadraticCurveTo(25, -2, 30, -8); ctx.quadraticCurveTo(20, -15, 15, -15); ctx.fill();
+      ctx.shadowBlur = 0;
     } else if(wp === 'dagger') {
-      ctx.strokeStyle = "#2ed573"; ctx.lineWidth = 2.5;
-      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(14, -14); ctx.stroke();
+      // Dao độc (Dagger)
+      ctx.strokeStyle = "#2ed573"; ctx.lineWidth = 3; ctx.shadowColor = "#2ed573"; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(8, -5, 16, -16); ctx.stroke();
+      ctx.fillStyle = "#2c3e50"; ctx.fillRect(-2, 0, 4, 6);
+      ctx.shadowBlur = 0;
     } else if(wp === 'spear') {
-      ctx.strokeStyle = "#f1c40f"; ctx.lineWidth = 2.5;
-      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(35, -35); ctx.stroke();
-      ctx.fillStyle = "#ff4757"; ctx.beginPath(); ctx.moveTo(35, -35); ctx.lineTo(30, -28); ctx.lineTo(42, -28); ctx.closePath(); ctx.fill();
+      // Giáo dài (Spear)
+      ctx.strokeStyle = "#bdc3c7"; ctx.lineWidth = 3; // Cán giáo
+      ctx.beginPath(); ctx.moveTo(-10, 10); ctx.lineTo(35, -35); ctx.stroke();
+      ctx.fillStyle = "#f1c40f"; ctx.shadowColor = "#f1c40f"; ctx.shadowBlur = 12; // Lưỡi giáo sáng
+      ctx.beginPath(); ctx.moveTo(35, -35); ctx.lineTo(32, -26); ctx.lineTo(48, -48); ctx.lineTo(26, -32); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = "#ff4757"; ctx.lineWidth = 2; // Dải lụa đỏ
+      ctx.beginPath(); ctx.moveTo(32, -32); ctx.quadraticCurveTo(40, -20, 35, -15); ctx.stroke();
+      ctx.shadowBlur = 0;
     } else if(wp === 'staff') {
-      ctx.strokeStyle = "#a5b1c2"; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(25, -25); ctx.stroke();
-      ctx.fillStyle = "#fffa65"; ctx.beginPath(); ctx.arc(25, -25, 6, 0, Math.PI * 2); ctx.fill();
+      // Trượng phép (Staff)
+      ctx.strokeStyle = "#8b4513"; ctx.lineWidth = 4; // Cán gỗ
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(20, -20); ctx.stroke();
+      ctx.fillStyle = "#fffa65"; ctx.shadowColor = "#fffa65"; ctx.shadowBlur = 15; // Ngọc phép thuật
+      ctx.beginPath(); ctx.arc(22, -22, 7, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(20, -24, 2, 0, Math.PI*2); ctx.fill(); // Highlight
+      ctx.shadowBlur = 0;
     } else if(wp === 'bow') {
-      ctx.strokeStyle = "#e056fd"; ctx.lineWidth = 2.5;
-      ctx.beginPath(); ctx.arc(5, -12, 14, -Math.PI/2, Math.PI/2); ctx.stroke();
+      // Cung thần (Bow)
+      ctx.strokeStyle = "#e056fd"; ctx.lineWidth = 4; ctx.shadowColor = "#e056fd"; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(8, -12, 16, -Math.PI/2 - 0.2, Math.PI/2 + 0.2); ctx.stroke(); // Thân cung
+      ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 1; ctx.shadowBlur = 0;
+      ctx.beginPath(); ctx.moveTo(8, -28); ctx.lineTo(-2, -12); ctx.lineTo(8, 4); ctx.stroke(); // Dây cung
+      if(p.atk) { // Mũi tên ánh sáng khi bắn
+        ctx.strokeStyle = "#66fcf1"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-2, -12); ctx.lineTo(18, -12); ctx.stroke();
+      }
     } else if(wp === 'laser') {
-      ctx.fillStyle = "#4b6584"; ctx.fillRect(0, -6, 18, 8);
-      ctx.fillStyle = "#66fcf1"; ctx.fillRect(16, -5, 8, 6);
+      // Súng Laser (Laser)
+      ctx.fillStyle = "#2f3542"; ctx.fillRect(-2, -6, 20, 10); // Thân súng
+      ctx.fillStyle = "#747d8c"; ctx.fillRect(18, -4, 6, 6); // Nòng
+      ctx.fillStyle = "#ff4757"; ctx.fillRect(4, -8, 8, 4); // Ống ngắm
+      ctx.fillStyle = "#66fcf1"; ctx.shadowColor = "#66fcf1"; ctx.shadowBlur = 10;
+      ctx.fillRect(8, -2, 6, 2); // Lõi năng lượng
+      if(p.atk) { ctx.fillRect(24, -2, 10, 2); } // Tia chớp laser khi bắn
+      ctx.shadowBlur = 0;
     } else if(wp === 'muscle') {
-      ctx.fillStyle = "#ff4757"; ctx.beginPath(); ctx.arc(0, -5, 7, 0, Math.PI*2); ctx.fill();
+      // Cơ bắp rực lửa (Muscle)
+      ctx.fillStyle = "#ff4757"; ctx.shadowColor = "#ffa502"; ctx.shadowBlur = 15;
+      ctx.beginPath(); ctx.arc(5, -5, 10, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = "#ffa502"; ctx.beginPath(); ctx.arc(2, -8, 5, 0, Math.PI*2); ctx.fill(); // Chi tiết gân/lửa
+      ctx.shadowBlur = 0;
     }
 
     ctx.restore();
