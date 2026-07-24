@@ -513,7 +513,21 @@ game_code = """
     let dmg = 15;
 
     if(pSelf.data.weapon === 'sword') { reach = 60; dmg = 18; }
-    else if(pSelf.data.weapon === 'axe') { reach = 70; dmg = 28; }
+    else if(pSelf.data.weapon === 'axe') { 
+      reach = 75; 
+      dmg = 32; 
+      // Hiệu ứng chém quét góc rộng bằng rìu chiến
+      for(let i=0; i<4; i++) {
+        particles.push({ 
+          x: pSelf.x + pSelf.facing * (25 + i * 12), 
+          y: pSelf.y - 25 + (Math.random() - 0.5) * 15, 
+          vx: pSelf.facing * (3 + Math.random() * 3), 
+          vy: (Math.random() - 0.5) * 3, 
+          life: 14, 
+          color: '#ff4757' 
+        });
+      }
+    }
     else if(pSelf.data.weapon === 'dagger') { reach = 38; dmg = 11; }
     else if(pSelf.data.weapon === 'spear') { reach = 80; dmg = 22; }
     else if(pSelf.data.weapon === 'muscle') { reach = 75; dmg = 32; }
@@ -523,7 +537,7 @@ game_code = """
       other.hp = Math.max(0, other.hp - dmg);
       addParticles(other.x, other.y - 20 * other.scale, pSelf.data.color, 12);
     }
-    setTimeout(() => pSelf.atk = false, 120);
+    setTimeout(() => pSelf.atk = false, 140);
   }
 
   function createBullet(caster, target, weapon) {
@@ -690,7 +704,7 @@ game_code = """
       if (Math.random() < atkChance && canEnemyAtk) { 
         pEnemy.lastAtkTime = now;
         pEnemy.atk = true; 
-        setTimeout(() => pEnemy.atk = false, 100); 
+        setTimeout(() => pEnemy.atk = false, 140); 
         if(['staff', 'bow', 'laser'].includes(pEnemy.data.weapon)) {
           createBullet(pEnemy, pSelf, pEnemy.data.weapon); 
         } else if(Math.abs(pSelf.x - pEnemy.x) < 70 * pEnemy.scale) {
@@ -858,7 +872,6 @@ game_code = """
     let wp = p.data.weapon;
 
     if (wp === 'muscle') {
-      // Cánh tay biến thành cơ bắp hoàn toàn và chỉa thẳng ra trước khi tấn công
       ctx.save();
       ctx.translate(0, -bodyHeight - 10);
       let armAngle = p.atk ? 0 : (Math.sin(p.walkTimer) * 0.4);
@@ -885,17 +898,19 @@ game_code = """
 
     } else {
       ctx.strokeStyle = col; ctx.fillStyle = col;
-      let armAngle = p.atk ? 0.8 : (Math.sin(p.walkTimer) * 0.6);
+      // Animation vung tay mạnh mẽ hơn cho rìu chiến và các vũ khí cận chiến
+      let baseArmAngle = p.atk ? 1.3 : (Math.sin(p.walkTimer) * 0.6);
       ctx.beginPath();
       ctx.moveTo(0, -bodyHeight - 10);
-      let handX = 18 + (p.atk ? 15 : 0);
-      let handY = -bodyHeight - 5 + (armAngle * 10);
+      let handX = 18 + (p.atk ? 18 : 0);
+      let handY = -bodyHeight - 5 + (baseArmAngle * 10);
       ctx.lineTo(handX, handY);
       ctx.stroke();
 
       ctx.save();
       ctx.translate(handX, handY);
-      if (p.atk) ctx.rotate(0.5);
+      // Hiệu ứng xoay vung chém mượt mà, uy lực khi `p.atk` active
+      if (p.atk) ctx.rotate(0.9);
 
       if(wp === 'sword') {
         ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
@@ -905,11 +920,37 @@ game_code = """
         ctx.fillStyle = "#f1c40f"; ctx.fillRect(-4, -1, 8, 3);
         ctx.fillStyle = "#e67e22"; ctx.fillRect(-2, 2, 4, 8);
       } else if(wp === 'axe') {
-        ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 4;
-        ctx.beginPath(); ctx.moveTo(-5, 5); ctx.lineTo(22, -22); ctx.stroke();
-        ctx.fillStyle = "#ff4757"; ctx.shadowColor = "#ff4757"; ctx.shadowBlur = 10;
-        ctx.beginPath(); ctx.moveTo(15, -15); ctx.quadraticCurveTo(28, -25, 22, -30); ctx.quadraticCurveTo(15, -20, 15, -15); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(15, -15); ctx.quadraticCurveTo(25, -2, 30, -8); ctx.quadraticCurveTo(20, -15, 15, -15); ctx.fill();
+        // MÔ HÌNH RÌU CHIẾN NÂNG CẤP HOÀNH TRÁNG (DOUBLE-BIT BATTLE AXE)
+        // Cán rìu bọc thép
+        ctx.strokeStyle = "#4b6584"; ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.moveTo(-2, 4); ctx.lineTo(28, -28); ctx.stroke();
+        
+        // Quấn tay cầm
+        ctx.strokeStyle = "#f1c40f"; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(4, -2); ctx.lineTo(12, -10); ctx.stroke();
+
+        // Lưỡi rìu kép cực ngầu với hiệu ứng phát sáng rực lửa
+        ctx.fillStyle = "#ff4757"; ctx.shadowColor = "#ff4757"; ctx.shadowBlur = 18;
+        ctx.beginPath();
+        // Cánh rìu trên
+        ctx.moveTo(22, -24);
+        ctx.quadraticCurveTo(42, -36, 36, -46);
+        ctx.quadraticCurveTo(22, -34, 20, -26);
+        ctx.fill();
+        
+        // Cánh rìu dưới
+        ctx.beginPath();
+        ctx.moveTo(22, -24);
+        ctx.quadraticCurveTo(42, -12, 36, -2);
+        ctx.quadraticCurveTo(22, -14, 20, -22);
+        ctx.fill();
+
+        // Lõi năng lượng phát sáng tâm lưỡi rìu
+        ctx.fillStyle = "#ffa502";
+        ctx.shadowColor = "#ffa502"; ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.arc(26, -24, 5, 0, Math.PI * 2);
+        ctx.fill();
         ctx.shadowBlur = 0;
       } else if(wp === 'dagger') {
         ctx.strokeStyle = "#2ed573"; ctx.lineWidth = 3; ctx.shadowColor = "#2ed573"; ctx.shadowBlur = 8;
