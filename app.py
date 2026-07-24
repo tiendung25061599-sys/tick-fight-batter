@@ -1,383 +1,1070 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Stickman Battle Game", layout="centered")
+st.set_page_config(page_title="Stick Man Batter Fight", layout="wide")
 
 game_code = """
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Stickman Battle</title>
-<style>
-  body { 
-    margin: 0; 
-    background: #0b0f19; 
-    color: white; 
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    justify-content: center; 
-    height: 100vh; 
-    overflow: hidden; 
-  }
-  #gameCanvas { 
-    background: #1f2833; 
-    border: 2px solid #66fcf1; 
-    border-radius: 8px; 
-    box-shadow: 0 0 20px rgba(102, 252, 241, 0.3); 
-  }
-  .controls { 
-    display: flex; 
-    gap: 10px; 
-    margin-top: 15px; 
-  }
-  .btn { 
-    background: #45a29e; 
-    border: none; 
-    color: white; 
-    padding: 10px 20px; 
-    font-size: 16px; 
-    border-radius: 5px; 
-    cursor: pointer; 
-    user-select: none; 
-    transition: 0.1s;
-  }
-  .btn:active, .btn.active { 
-    background: #66fcf1; 
-    color: #0b0f19; 
-    transform: scale(0.95); 
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+    body { width: 100vw; height: 100vh; background: #050508; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+    
+    .top-bar {
+      position: absolute; top: 15px; right: 20px; 
+      display: flex; gap: 10px; z-index: 999;
+    }
+    .top-btn { 
+      padding: 8px 16px; background: rgba(31, 40, 51, 0.8); border: 2px solid #ff4757; 
+      color: #ff4757; border-radius: 10px; cursor: pointer; 
+      font-weight: bold; font-size: 13px; backdrop-filter: blur(5px);
+      box-shadow: 0 0 15px rgba(255, 71, 87, 0.4);
+      transition: all 0.2s; outline: none; display: none;
+    }
+    .top-btn:active { background: #ff4757; color: #fff; transform: scale(0.95); }
+
+    .screen { position: absolute; top:0; left:0; width: 100%; height: 100%; background: radial-gradient(circle at center, #1f2833 0%, #050508 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; gap: 14px; }
+    
+    .title-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 5px;
+    }
+    
+    h1 { font-size: 32px; color: #66fcf1; text-align: center; text-shadow: 0 0 20px rgba(102, 252, 241, 0.6); letter-spacing: 3px; font-weight: 900; }
+    
+    .author-name {
+      font-size: 15px;
+      color: #70a1ff;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(112, 161, 255, 0.5);
+      text-transform: uppercase;
+    }
+    
+    .btn { padding: 14px 30px; font-size: 16px; font-weight: bold; background: rgba(31, 40, 51, 0.9); border: 2px solid #66fcf1; border-radius: 12px; color: #66fcf1; cursor: pointer; text-align: center; z-index: 110; min-width: 260px; box-shadow: 0 0 15px rgba(102, 252, 241, 0.25); backdrop-filter: blur(5px); transition: all 0.2s; }
+    .btn:active { background: #66fcf1; color: #000; transform: scale(0.95); box-shadow: 0 0 25px #66fcf1; }
+    
+    input, select { padding: 12px 16px; font-size: 15px; border-radius: 10px; border: 2px solid #45a29e; background: rgba(11, 12, 16, 0.9); color: white; text-align: center; width: 260px; outline: none; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+    input:focus, select:focus { border-color: #66fcf1; box-shadow: 0 0 10px rgba(102, 252, 241, 0.3); }
+    
+    .select-box { display: flex; gap: 12px; align-items: center; background: rgba(31, 40, 51, 0.7); padding: 10px 16px; border-radius: 12px; width: 85%; max-width: 380px; justify-content: space-between; border: 1px solid rgba(69, 162, 158, 0.5); backdrop-filter: blur(5px); }
+    #statusText { color: #f7b731; font-weight: bold; font-size: 15px; text-align: center; text-shadow: 0 0 10px rgba(247, 183, 49, 0.4); }
+    
+    #gameCanvas { background: radial-gradient(circle at center, #111318 0%, #030305 100%); border: 2px solid #45a29e; border-radius: 16px; width: 96vw; height: 75vh; display: none; position: relative; z-index: 1; box-shadow: 0 0 30px rgba(69, 162, 158, 0.4); }
+    
+    #endGameOverlay {
+      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(3, 3, 5, 0.9); backdrop-filter: blur(8px); display: none; flex-direction: column;
+      align-items: center; justify-content: center; z-index: 200; gap: 18px;
+    }
+    #winnerText { font-size: 38px; font-weight: 900; color: #f7b731; text-shadow: 0 0 25px rgba(247, 183, 49, 0.8); letter-spacing: 2px; }
+    #voteStatusText { color: #66fcf1; font-size: 15px; font-weight: bold; min-height: 22px; text-shadow: 0 0 10px rgba(102, 252, 241, 0.4); }
+
+    .controls { position: absolute; bottom: 15px; width: 100vw; display: none; justify-content: space-between; padding: 0 25px; z-index: 50; }
+    .btn-group { display: flex; gap: 12px; }
+    .btn-ctrl { 
+      position: relative; width: 68px; height: 68px; border-radius: 16px; 
+      font-weight: bold; display: flex; align-items: center; justify-content: center; 
+      background: rgba(31, 40, 51, 0.85); border: 2px solid #66fcf1; color: #fff; cursor: pointer; 
+      font-size: 24px; box-shadow: 0 0 15px rgba(102, 252, 241, 0.3); backdrop-filter: blur(5px);
+    }
+    .btn-ctrl:active, .btn-ctrl.active { background: #66fcf1; color: #000; box-shadow: 0 0 25px #66fcf1; transform: scale(0.95); }
+    .key-hint { 
+      position: absolute; top: 3px; right: 5px; font-size: 10px; color: #f7b731; 
+      font-weight: bold; background: rgba(0,0,0,0.7); padding: 2px 4px; border-radius: 4px; 
+    }
+  </style>
 </head>
 <body>
 
-<canvas id="gameCanvas" width="800" height="450"></canvas>
+  <div class="top-bar">
+    <button class="top-btn" id="topRightBackBtn" onclick="quitGame()">🏠 THOÁT TRẬN</button>
+  </div>
 
-<div class="controls">
-  <button class="btn" id="btnLeft">◀ Trái</button>
-  <button class="btn" id="btnRight">Phải ▶</button>
-  <button class="btn" id="btnJump">Nhảy (W)</button>
-  <button class="btn" id="btnAtk">Đánh (J)</button>
-  <button class="btn" id="btnSkill">Skill (K)</button>
-</div>
+  <!-- MAIN MENU -->
+  <div id="mainMenu" class="screen">
+    <div class="title-container">
+      <h1>STICK MAN BATTER FIGHT</h1>
+      <div class="author-name">Make by Tiến Dũng</div>
+    </div>
+    <div class="btn" id="btnStory">📖 STORY MODE (VƯỢT ẢI)</div>
+    <div class="btn" style="border-color:#ff4757; color:#ff4757;" id="btnMulti">🌐 MULTIPLAYER (ONLINE)</div>
+    <div class="btn" style="border-color:#f7b731; color:#f7b731;" id="btnSettings">⚙️ SETTINGS (CÀI ĐẶT)</div>
+  </div>
+
+  <!-- SETTINGS SCREEN -->
+  <div id="settingsScreen" class="screen" style="display:none;">
+    <h1>CÀI ĐẶT TRÒ CHƠI</h1>
+    <div class="select-box" style="justify-content: center;">
+      <button class="btn" id="btnFullscreenToggle" onclick="toggleFullscreen()" style="min-width: 280px; border-color:#66fcf1; color:#66fcf1;">📺 BẬT FULLSCREEN</button>
+    </div>
+    <div class="btn" style="border-color:#ff4757; color:#ff4757; margin-top: 15px;" id="btnBackToMenu">⬅ QUAY LẠI MENU</div>
+  </div>
+
+  <!-- LOBBY MENU -->
+  <div id="lobbyMenu" class="screen" style="display:none;">
+    <h1>CHẾ ĐỘ MULTIPLAYER</h1>
+    <div class="btn" style="border-color:#2ed573; color:#2ed573;" id="btnCreateLobby">🎲 TẠO LOBBY MỚI</div>
+    <div class="btn" style="border-color:#ffa502; color:#ffa502;" id="btnJoinLobby">🔑 THAM GIA LOBBY</div>
+    <div class="btn" style="border-color:#ff4757; color:#ff4757; margin-top: 15px;" id="btnBackFromLobby">⬅ QUAY LẠI</div>
+  </div>
+
+  <!-- TẠO PHÒNG -->
+  <div id="createRoomScreen" class="screen" style="display:none;">
+    <h1>TẠO PHÒNG MỚI</h1>
+    <input type="text" id="customRoomCode" placeholder="Nhập Mã Phòng (VD: ROOM123)">
+    <div id="createStatusText" style="color:#f7b731; font-size:13px;"></div>
+    <div class="btn" style="border-color:#2ed573; color:#2ed573;" id="btnInitHost">🚀 KHỞI TẠO LOBBY</div>
+    <div class="btn" style="border-color:#ff4757; color:#ff4757;" onclick="showScreen('lobbyMenu')">⬅ QUAY LẠI</div>
+  </div>
+
+  <!-- THAM GIA PHÒNG -->
+  <div id="joinRoomScreen" class="screen" style="display:none;">
+    <h1>THAM GIA PHÒNG</h1>
+    <input type="text" id="joinRoomCodeInput" placeholder="Nhập Mã Phòng Người Khác...">
+    <div id="joinStatusText" style="color:#f7b731; font-size:13px;"></div>
+    <div class="btn" style="border-color:#2ed573; color:#2ed573;" id="btnJoinTarget">🔑 VÀO PHÒNG</div>
+    <div class="btn" style="border-color:#ff4757; color:#ff4757;" onclick="showScreen('lobbyMenu')">⬅ QUAY LẠI</div>
+  </div>
+
+  <!-- CẤU HÌNH TRANG BỊ -->
+  <div id="customScreen" class="screen" style="display:none;">
+    <h1 id="customTitle">TRANG BỊ CHIẾN ĐẤU</h1>
+    <div id="statusText">Sẵn sàng xuất chiến!</div>
+    <div class="select-box">
+      <span>Màu Skin:</span>
+      <input type="color" id="skinColor" value="#66fcf1">
+    </div>
+    <div class="select-box">
+      <span>Vũ Khí:</span>
+      <select id="weaponSelect" onchange="updateSkillIcon()">
+        <option value="sword">⚔️ Kiếm Thần (Skill: Lốc Xoáy Kiếm 10s)</option>
+        <option value="axe">🪓 Rìu Chiến (Skill: Bay Xoay Tròn Đập Rìu 10s)</option>
+        <option value="dagger">🗡️ Dao Độc (Skill: Mưa Dao Găm 10s)</option>
+        <option value="spear">🔱 Giáo Dài (Skill: Lướt Đâm Xuyên Gây Sát Thương 10s)</option>
+        <option value="staff">🪄 Trượng Ma Thuật (Skill: Bắn Cầu Lửa 10s)</option>
+        <option value="bow">🏹 Cung Thần (Skill: Bắn Mũi Tên Đôi 0.2s)</option>
+        <option value="laser">⚡ Súng Laser (Skill: Tia Xuyên Phá 10s)</option>
+        <option value="muscle">💪 Cánh Tay Cơ Bắp (Skill: Bay Xoay Tròn Đập Sóng 10s)</option>
+        <option value="glove">🥊 Găng Tay Đấm Bốc (Skill: Cú Đấm Sấm Sét 10s)</option>
+      </select>
+    </div>
+    <div class="select-box">
+      <span>Mũ / Nón:</span>
+      <select id="hatSelect">
+        <option value="none">Không Đội Mũ</option>
+        <option value="knight">🪖 Mũ Chiến Binh Siêu Cấp</option>
+        <option value="wizard">🧙 Mũ Phù Thủy Ma Quái</option>
+      </select>
+    </div>
+    <div class="select-box">
+      <span>Áo Choàng:</span>
+      <select id="capeSelect">
+        <option value="none">Không Áo Choàng</option>
+        <option value="red">🔴 Áo Choàng Dạ Quang Đỏ</option>
+        <option value="black">⚫ Áo Choàng Đen Huyền Bí</option>
+      </select>
+    </div>
+    <div class="btn" id="btnStartGame" style="background: linear-gradient(135deg, #2ed573 0%, #10ac84 100%); border-color:#fff; color:#fff; text-shadow: 0 0 10px rgba(0,0,0,0.5);">BẮT ĐẦU VÀO TRẬN ➔</div>
+    <div class="btn" style="border-color:#ff4757; color:#ff4757;" onclick="showScreen('mainMenu')">⬅ QUAY LẠI</div>
+  </div>
+
+  <!-- GAME CANVAS -->
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- OVERLAY KẾT THÚC -->
+  <div id="endGameOverlay">
+    <div id="winnerText">BẠN THẮNG!</div>
+    <div id="voteStatusText"></div>
+    <div class="btn" id="rematchBtn" style="border-color:#2ed573; color:#2ed573;">🔄 CHƠI TIẾP</div>
+    <div class="btn" style="border-color:#ff4757; color:#ff4757;" onclick="quitGame()">🏠 MÀN HÌNH CHÍNH</div>
+  </div>
+  
+  <!-- CONTROLS -->
+  <div class="controls" id="gameControls">
+    <div class="btn-group">
+      <div class="btn-ctrl" id="btnLeft">◀<span class="key-hint">A</span></div>
+      <div class="btn-ctrl" id="btnRight">▶<span class="key-hint">D</span></div>
+      <div class="btn-ctrl" id="btnJump">🦘<span class="key-hint">W</span></div>
+    </div>
+    <div class="btn-group">
+      <div class="btn-ctrl" id="btnAtk">⚔️<span class="key-hint">J / M1</span></div>
+      <div class="btn-ctrl" style="border-color:#ff4757" id="btnSkill">🌀<span class="key-hint" id="skillKeyHint">K / M2</span></div>
+    </div>
+  </div>
 
 <script>
   const canvas = document.getElementById("gameCanvas");
   const ctx = canvas.getContext("2d");
-
-  let gameMode = 'story';
+  
+  let peer = null, conn = null;
+  let isHost = false, gameMode = 'story';
+  let roomCode = "";
   let currentStage = 1;
-  let isBossStage = false;
-  let isRunning = true;
-  let animFrame = 0;
 
-  let moveL = false, moveR = false;
+  let myData = { color: "#66fcf1", weapon: "sword", hat: "knight", cape: "red" };
+  let enemyData = { color: "#ff4757", weapon: "staff", hat: "wizard", cape: "black" };
 
-  let pSelf = {
-    x: 150, y: 350, vx: 0, vy: 0, hp: 100, maxHp: 100,
-    facing: 1, scale: 1, walkTimer: 0, atk: false, isSpinning: false, spinAngle: 0,
-    data: { color: '#66fcf1', hat: 'knight', cape: 'red', weapon: 'sword' }
-  };
+  let myVoteRematch = false, enemyVoteRematch = false;
 
-  let pEnemy = {
-    x: 650, y: 350, vx: 0, vy: 0, hp: 100, maxHp: 100,
-    facing: -1, scale: 1, walkTimer: 0, atk: false, isSpinning: false, spinAngle: 0,
-    data: { color: '#ff4757', hat: 'wizard', cape: 'black', weapon: 'axe' }
-  };
+  function updateSkillIcon() {
+    let wp = document.getElementById("weaponSelect").value;
+    let skillBtn = document.getElementById("btnSkill");
+    if(wp === 'sword') skillBtn.innerText = "🌪️";
+    else if(wp === 'axe') skillBtn.innerText = "🪓";
+    else if(wp === 'dagger') skillBtn.innerText = "🗡️";
+    else if(wp === 'spear') skillBtn.innerText = "🔱";
+    else if(wp === 'staff') skillBtn.innerText = "🔥";
+    else if(wp === 'bow') skillBtn.innerText = "🏹";
+    else if(wp === 'laser') skillBtn.innerText = "⚡";
+    else if(wp === 'muscle') skillBtn.innerText = "💪";
+    else if(wp === 'glove') skillBtn.innerText = "🥊";
+  }
 
-  let bullets = [];
-  let particles = [];
-
-  function jump() {
-    if (pSelf.y >= 350) {
-      pSelf.vy = -12;
+  function toggleFullscreen() {
+    let elem = document.documentElement;
+    let btnFS = document.getElementById('btnFullscreenToggle');
+    if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+      if (elem.requestFullscreen) { elem.requestFullscreen(); }
+      else if (elem.msRequestFullscreen) { elem.msRequestFullscreen(); }
+      else if (elem.mozRequestFullScreen) { elem.mozRequestFullScreen(); }
+      else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT); }
+      if(btnFS) btnFS.innerText = "📉 THOÁT FULLSCREEN";
+    } else {
+      if (document.exitFullscreen) { document.exitFullscreen(); }
+      else if (document.msExitFullscreen) { document.msExitFullscreen(); }
+      else if (document.mozCancelFullScreen) { document.mozCancelFullScreen(); }
+      else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+      if(btnFS) btnFS.innerText = "📺 BẬT FULLSCREEN";
     }
   }
 
-  function attack() {
-    pSelf.atk = true;
-    setTimeout(() => pSelf.atk = false, 200);
-    bullets.push({
-      x: pSelf.x + (20 * pSelf.facing),
-      y: pSelf.y - 25,
-      vx: 10 * pSelf.facing,
-      vy: 0,
-      radius: 6,
-      color: pSelf.data.color,
-      dmg: 15,
-      shooter: pSelf,
-      type: 'normal'
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+    document.getElementById(id).style.display = 'flex';
+    
+    const topBtn = document.getElementById('topRightBackBtn');
+    if (id === 'mainMenu' || id === 'settingsScreen' || id === 'lobbyMenu' || id === 'createRoomScreen' || id === 'joinRoomScreen' || id === 'customScreen') {
+      topBtn.style.display = 'none';
+    } else {
+      topBtn.style.display = 'block';
+    }
+  }
+
+  function addClickEvent(id, fn) {
+    let el = document.getElementById(id);
+    if(!el) return;
+    el.addEventListener('click', (e) => { e.preventDefault(); fn(); });
+    el.addEventListener('touchend', (e) => { e.preventDefault(); fn(); });
+  }
+
+  addClickEvent('btnStory', () => { 
+    gameMode = 'story'; 
+    currentStage = 1;
+    document.getElementById('customTitle').innerText = "STORY MODE - MÀN " + currentStage;
+    showScreen('customScreen'); 
+    updateSkillIcon();
+  });
+  addClickEvent('btnMulti', () => { gameMode = 'online'; showScreen('lobbyMenu'); updateSkillIcon(); });
+  addClickEvent('btnSettings', () => showScreen('settingsScreen'));
+  addClickEvent('btnBackToMenu', () => showScreen('mainMenu'));
+  addClickEvent('btnBackFromLobby', () => showScreen('mainMenu'));
+  addClickEvent('btnCreateLobby', () => showScreen('createRoomScreen'));
+  addClickEvent('btnJoinLobby', () => showScreen('joinRoomScreen'));
+  addClickEvent('btnInitHost', initHostRoom);
+  addClickEvent('btnJoinTarget', joinTargetRoom);
+  addClickEvent('btnStartGame', confirmCustom);
+  addClickEvent('rematchBtn', requestRematch);
+
+  function initHostRoom() {
+    let codeInput = document.getElementById("customRoomCode").value.trim();
+    if(!codeInput) { alert("Vui lòng nhập Mã Phòng!"); return; }
+    roomCode = codeInput;
+    
+    document.getElementById("createStatusText").innerText = "Đang khởi tạo...";
+    if(peer) { try { peer.destroy(); } catch(e){} }
+    
+    peer = new Peer(roomCode);
+
+    peer.on('open', (id) => {
+      isHost = true;
+      document.getElementById("statusText").innerText = "Mã phòng: " + roomCode + " (Chờ đối thủ...)";
+      showScreen('customScreen');
+    });
+
+    peer.on('connection', (c) => {
+      conn = c;
+      setupConnection();
+    });
+
+    peer.on('error', (err) => {
+      alert("Mã phòng trùng hoặc bị lỗi, thử mã khác nhé!");
+      document.getElementById("createStatusText").innerText = "";
     });
   }
 
-  function useSkill() {
-    pSelf.isSpinning = true;
-    setTimeout(() => pSelf.isSpinning = false, 500);
+  function joinTargetRoom() {
+    let codeInput = document.getElementById("joinRoomCodeInput").value.trim();
+    if(!codeInput) { alert("Vui lòng nhập Mã Phòng!"); return; }
+    roomCode = codeInput;
+
+    document.getElementById("joinStatusText").innerText = "Đang kết nối...";
+    if(peer) { try { peer.destroy(); } catch(e){} }
+    
+    peer = new Peer();
+
+    peer.on('open', () => {
+      conn = peer.connect(roomCode);
+      isHost = false;
+      setupConnection();
+    });
+
+    peer.on('error', (err) => {
+      alert("Không tìm thấy phòng!");
+      document.getElementById("joinStatusText").innerText = "";
+    });
   }
 
-  function addParticles(x, y, color, count) {
-    for(let i=0; i<count; i++) {
-      particles.push({
-        x: x, y: y,
-        vx: (Math.random() - 0.5) * 6,
-        vy: (Math.random() - 0.5) * 6,
-        life: 20,
-        color: color
-      });
+  function setupConnection() {
+    conn.on('open', () => {
+      document.getElementById("statusText").innerText = "Đã kết nối thành công!";
+      showScreen('customScreen');
+      conn.send({ type: 'INIT_PLAYER', data: myData });
+    });
+    
+    conn.on('data', (data) => handleNetworkData(data));
+    
+    conn.on('close', () => {
+      if (isRunning) {
+        alert("Đối thủ đã thoát trận đấu!");
+        quitGame();
+      }
+    });
+  }
+
+  function confirmCustom() {
+    myData.color = document.getElementById("skinColor").value;
+    myData.weapon = document.getElementById("weaponSelect").value;
+    myData.hat = document.getElementById("hatSelect").value;
+    myData.cape = document.getElementById("capeSelect").value;
+    
+    if(gameMode === 'online' && conn && conn.open) {
+      conn.send({ type: 'INIT_PLAYER', data: myData });
     }
+    startGame();
   }
 
-  function triggerEndGame(win) {
-    isRunning = false;
-    alert(win ? "Bạn đã thắng màn này!" : "Bạn đã thua!");
-    pSelf.hp = 100;
-    pEnemy.hp = 100;
+  let isRunning = false;
+  let pSelf, pEnemy, bullets = [], particles = [];
+  let moveL = false, moveR = false;
+  let animFrame = 0;
+  let isBossStage = false;
+
+  function startGame() {
+    document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+    document.getElementById("endGameOverlay").style.display = 'none';
+    
+    canvas.style.display = 'block';
+    document.getElementById("topRightBackBtn").style.display = 'block';
+    document.getElementById("gameControls").style.display = 'flex';
+
+    canvas.width = window.innerWidth * 0.95;
+    canvas.height = window.innerHeight * 0.75;
+
+    let startX = isHost || gameMode === 'story' ? 80 : canvas.width - 80;
+    let enemyX = isHost || gameMode === 'story' ? canvas.width - 80 : 80;
+
+    isBossStage = (gameMode === 'story' && currentStage % 10 === 0);
+
+    let enemyHp = 500;
+    let enemyScale = 1.0;
+    let enemyColor = "#ff4757";
+    let enemyWeapon = "sword";
+
+    if(gameMode === 'story') {
+      if(isBossStage) {
+        enemyHp = 1800 + (currentStage * 120);
+        enemyScale = 2.0;
+        enemyColor = "#ff0055";
+        enemyWeapon = "axe";
+      } else {
+        enemyHp = 450 + (currentStage * 65);
+        enemyScale = 1.0 + (currentStage * 0.03);
+        let wpList = ["sword", "axe", "dagger", "spear", "staff", "bow", "laser", "muscle", "glove"];
+        enemyWeapon = wpList[currentStage % wpList.length];
+      }
+    }
+
+    pSelf = { x: startX, y: canvas.height - 25, vy: 0, isGrounded: true, hp: 450, maxHp: 450, atk: false, data: myData, facing: 1, walkTimer: 0, scale: 1.0, isSpecialAction: false, isSpinning: false, spinAngle: 0, lastAtkTime: 0, lastSkillTime: 0 };
+    
+    pEnemy = { 
+      x: enemyX, y: canvas.height - 25, vy: 0, isGrounded: true, 
+      hp: enemyHp, maxHp: enemyHp, atk: false, 
+      data: (gameMode === 'story') ? { color: enemyColor, weapon: enemyWeapon, hat: isBossStage ? "knight" : "none", cape: isBossStage ? "black" : "none" } : enemyData, 
+      facing: -1, walkTimer: 0, scale: enemyScale, isSpecialAction: false, isSpinning: false, spinAngle: 0, lastAtkTime: 0, lastSkillTime: 0
+    };
+    
+    bullets = []; particles = [];
+    myVoteRematch = false; enemyVoteRematch = false;
+    document.getElementById("rematchBtn").style.opacity = "1";
+    document.getElementById("rematchBtn").innerText = gameMode === 'story' ? "⏭️ MÀN TIẾP THEO" : "🔄 CHƠI TIẾP";
+    document.getElementById("voteStatusText").innerText = "";
+
     isRunning = true;
     requestAnimationFrame(loop);
   }
 
-  function loop() {
-    animFrame++;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  function handleNetworkData(data) {
+    if(!data) return;
+    
+    if(data.type === 'INIT_PLAYER') {
+      if(data.data) pEnemy.data = data.data;
+    } else if(data.type === 'SYNC_POS') {
+      if(typeof data.hp === 'number' && data.hp > 0) {
+        pEnemy.hp = data.hp;
+      }
+      pEnemy.x = data.x; 
+      pEnemy.y = data.y; 
+      pEnemy.atk = data.atk; 
+      pEnemy.facing = data.facing;
+      pEnemy.walkTimer = data.walkTimer;
+    } else if(data.type === 'SKILL') {
+      executeWeaponSkill(pEnemy);
+    } else if(data.type === 'SHOOT') {
+      createBullet(pEnemy, pSelf, data.weapon);
+    } else if(data.type === 'VOTE_REMATCH') {
+      enemyVoteRematch = true;
+      checkBothVoted();
+    }
+  }
 
-    if (moveL) { pSelf.x -= 4; pSelf.facing = -1; pSelf.walkTimer += 0.2; }
-    else if (moveR) { pSelf.x += 4; pSelf.facing = 1; pSelf.walkTimer += 0.2; }
-    else { pSelf.walkTimer = 0; }
+  function triggerEndGame(won) {
+    isRunning = false;
+    let overlay = document.getElementById("endGameOverlay");
+    let winTxt = document.getElementById("winnerText");
 
-    pSelf.y += pSelf.vy;
-    pSelf.vy += 0.6;
-    if (pSelf.y > 350) { pSelf.y = 350; pSelf.vy = 0; }
-
-    if (Math.random() < 0.02) {
-      pEnemy.x += (pSelf.x > pEnemy.x ? 1 : -1) * 3;
-      pEnemy.facing = pSelf.x > pEnemy.x ? 1 : -1;
-      pEnemy.walkTimer += 0.2;
+    if(gameMode === 'story') {
+      if(won) {
+        winTxt.innerText = isBossStage ? "🏆 DIỆT BOSS HOÀN HẢO!" : "🎉 HOÀN THÀNH MÀN " + currentStage;
+        winTxt.style.color = "#2ed573";
+        currentStage++;
+      } else {
+        winTxt.innerText = "💀 BẠN ĐÃ HY SINH!";
+        winTxt.style.color = "#ff4757";
+      }
     } else {
-      pEnemy.walkTimer = 0;
+      winTxt.innerText = won ? "🏆 CHIẾN THẮNG VẺ VANG!" : "💀 THẤT BẠI!";
+      winTxt.style.color = won ? "#2ed573" : "#ff4757";
     }
 
-    let w = 200;
-    ctx.strokeStyle = "#66fcf1"; ctx.lineWidth = 2; ctx.strokeRect(12, 12, w, 16);
-    ctx.fillStyle = "white"; ctx.font = "bold 13px 'Segoe UI'";
-    ctx.fillText(gameMode === 'story' ? `BẠN (MÀN ${currentStage})` : "BẠN", 15, 42);
+    overlay.style.display = 'flex';
+  }
 
-    ctx.fillStyle = "rgba(31, 40, 51, 0.8)"; ctx.fillRect(canvas.width - w - 12, 12, w, 16); 
-    ctx.fillStyle = pEnemy.data.color; 
-    ctx.shadowColor = pEnemy.data.color; ctx.shadowBlur = 8;
-    ctx.fillRect(canvas.width - 12 - w * (Math.max(0, pEnemy.hp) / pEnemy.maxHp), 12, w * (Math.max(0, pEnemy.hp) / pEnemy.maxHp), 16);
+  function requestRematch() {
+    if(gameMode === 'story') {
+      startGame();
+    } else {
+      myVoteRematch = true;
+      document.getElementById("rematchBtn").style.opacity = "0.5";
+      document.getElementById("rematchBtn").innerText = "⏳ ĐÃ BÌNH CHỌN (ĐỢI ĐỐI THỦ)";
+      if(conn && conn.open) conn.send({ type: 'VOTE_REMATCH' });
+      checkBothVoted();
+    }
+  }
+
+  function checkBothVoted() {
+    if(gameMode === 'online') {
+      if(myVoteRematch && enemyVoteRematch) {
+        startGame();
+      } else if(enemyVoteRematch && !myVoteRematch) {
+        document.getElementById("voteStatusText").innerText = "Đối thủ đã bấm Chơi tiếp!";
+      }
+    }
+  }
+
+  function quitGame() {
+    isRunning = false;
+    if(conn) { try{ conn.close(); } catch(e){} conn = null; }
+    if(peer) { try{ peer.destroy(); } catch(e){} peer = null; }
+    
+    canvas.style.display = 'none';
+    document.getElementById("gameControls").style.display = 'none';
+    document.getElementById("endGameOverlay").style.display = 'none';
+    showScreen('mainMenu');
+  }
+
+  function jump() { if (pSelf && pSelf.isGrounded && isRunning) { pSelf.vy = -13; pSelf.isGrounded = false; } }
+
+  function attack() {
+    if(!pSelf || !isRunning) return;
+    
+    let now = Date.now();
+    let cooldown = (pSelf.data.weapon === 'dagger') ? 140 : 190; 
+    if (now - (pSelf.lastAtkTime || 0) < cooldown) return;
+    pSelf.lastAtkTime = now;
+
+    pSelf.atk = true; 
+    let reach = 45;
+    let dmg = 15;
+
+    if(pSelf.data.weapon === 'sword') { reach = 60; dmg = 18; }
+    else if(pSelf.data.weapon === 'axe') { 
+      reach = 75; 
+      dmg = 32; 
+      for(let i=0; i<4; i++) {
+        particles.push({ 
+          x: pSelf.x + pSelf.facing * (25 + i * 12), 
+          y: pSelf.y - 25 + (Math.random() - 0.5) * 15, 
+          vx: pSelf.facing * (3 + Math.random() * 3), 
+          vy: (Math.random() - 0.5) * 3, 
+          life: 14, 
+          color: '#ff4757' 
+        });
+      }
+    }
+    else if(pSelf.data.weapon === 'dagger') { reach = 38; dmg = 11; }
+    else if(pSelf.data.weapon === 'spear') { reach = 80; dmg = 22; }
+    else if(pSelf.data.weapon === 'muscle') { reach = 75; dmg = 32; }
+    else if(pSelf.data.weapon === 'glove') { reach = 42; dmg = 16; }
+
+    let other = pEnemy;
+    if(Math.abs(pSelf.x - other.x) < reach * pSelf.scale) {
+      other.hp = Math.max(0, other.hp - dmg);
+      addParticles(other.x, other.y - 20 * other.scale, pSelf.data.color, 12);
+    }
+    setTimeout(() => pSelf.atk = false, 140);
+  }
+
+  function createBullet(caster, target, weapon) {
+    let dir = caster.facing;
+    let startX = caster.x + dir * 20 * caster.scale;
+    let startY = caster.y - 24 * caster.scale;
+    let dmgBonus = (caster === pEnemy && gameMode === 'story') ? (10 + currentStage * 2) : 0;
+
+    if (weapon === 'staff') {
+      bullets.push({ x: startX, y: startY, vx: dir * 9.5, color: '#fffa65', radius: 9, dmg: 22 + dmgBonus, type: 'orb', shooter: caster });
+    } else if (weapon === 'bow') {
+      let bowDmg = (caster === pEnemy && gameMode === 'story') ? Math.max(2, 2 + Math.floor(currentStage / 2)) : 2;
+      bullets.push({ x: startX, y: startY, vx: dir * 14, color: '#c7ecee', radius: 3.5, dmg: bowDmg, type: 'arrow', shooter: caster });
+    } else if (weapon === 'laser') {
+      bullets.push({ x: startX, y: startY, vx: dir * 20, color: '#66fcf1', radius: 2.5, dmg: 20 + dmgBonus, type: 'laser', shooter: caster });
+    }
+  }
+
+  function executeWeaponSkill(p) {
+    let other = (p === pSelf) ? pEnemy : pSelf;
+    let wp = p.data.weapon;
+    let isStoryEnemy = (p === pEnemy && gameMode === 'story');
+
+    if (wp === 'sword') {
+      p.isSpecialAction = true;
+      p.isSpinning = true;
+      p.spinAngle = 0;
+      let dashDir = p.facing;
+      addParticles(p.x, p.y - 20, '#66fcf1', 35);
+
+      let spinInterval = setInterval(() => {
+        if (!p.isSpecialAction) {
+          clearInterval(spinInterval);
+          p.isSpinning = false;
+          return;
+        }
+        p.spinAngle += 0.5;
+        p.x += dashDir * 8;
+        p.x = Math.max(20, Math.min(canvas.width - 20, p.x));
+        particles.push({ x: p.x + (Math.random()-0.5)*20, y: p.y - Math.random()*40, vx: (Math.random()-0.5)*4, vy: -Math.random()*4, life: 15, color: '#66fcf1' });
+      }, 20);
+
+      setTimeout(() => {
+        p.isSpecialAction = false;
+        p.isSpinning = false;
+        clearInterval(spinInterval);
+        let tornadoDmg = isStoryEnemy ? (65 + currentStage * 7) : 50;
+        if(Math.abs(p.x - other.x) < 90) {
+          other.hp = Math.max(0, other.hp - tornadoDmg);
+          other.x += dashDir * 50;
+          other.x = Math.max(20, Math.min(canvas.width - 20, other.x));
+          addParticles(other.x, other.y - 20, '#66fcf1', 30);
+        }
+      }, 350);
+
+    } else if (wp === 'axe' || wp === 'muscle') {
+      p.isSpecialAction = true;
+      p.isSpinning = true;
+      p.spinAngle = 0;
+      p.vy = -18; p.isGrounded = false;
+      let effectColor = (wp === 'axe') ? '#ff4757' : '#ffa502';
+      addParticles(p.x, p.y - 20, effectColor, 30);
+
+      let spinInterval = setInterval(() => {
+        if (!p.isSpecialAction) {
+          clearInterval(spinInterval);
+          p.isSpinning = false;
+          return;
+        }
+        p.spinAngle += 0.35;
+      }, 20);
+
+      setTimeout(() => {
+        p.vy = 24;
+        let checkSlam = setInterval(() => {
+          let ground = canvas.height - 25;
+          if(p.y >= ground) {
+            p.y = ground; p.vy = 0; 
+            p.isSpecialAction = false; 
+            p.isSpinning = false;
+            clearInterval(checkSlam);
+            clearInterval(spinInterval);
+            addParticles(p.x, p.y, effectColor, 40);
+            let slamDmg = isStoryEnemy ? (90 + currentStage * 9) : 75;
+            if(Math.abs(p.x - other.x) < 140) {
+              other.hp = Math.max(0, other.hp - slamDmg);
+              other.x += (other.x > p.x) ? 70 : -70;
+              other.x = Math.max(20, Math.min(canvas.width - 20, other.x));
+              addParticles(other.x, other.y - 20, effectColor, 30);
+            }
+          }
+        }, 20);
+      }, 300);
+
+    } else if (wp === 'dagger') {
+      p.isSpecialAction = true;
+      addParticles(p.x, p.y - 20, '#2ed573', 15);
+      let daggerDmg = isStoryEnemy ? (12 + currentStage * 2) : 10;
+      for(let i=0; i<3; i++) {
+        setTimeout(() => {
+          bullets.push({ x: p.x + p.facing*20, y: p.y - 25, vx: p.facing * (16 + i*2), color: '#2ed573', radius: 4, dmg: daggerDmg, type: 'arrow', shooter: p });
+        }, i * 70);
+      }
+      setTimeout(() => p.isSpecialAction = false, 250);
+
+    } else if (wp === 'spear') {
+      p.isSpecialAction = true;
+      addParticles(p.x, p.y - 20, '#f1c40f', 22);
+      let dashDist = p.facing * 160;
+      p.x = Math.max(20, Math.min(canvas.width - 20, p.x + dashDist));
+      let thrustDmg = isStoryEnemy ? (70 + currentStage * 7) : 55;
+      if(Math.abs(p.x - other.x) < 110) {
+        other.hp = Math.max(0, other.hp - thrustDmg);
+        addParticles(other.x, other.y - 20, '#f1c40f', 30);
+      }
+      setTimeout(() => p.isSpecialAction = false, 250);
+
+    } else if (wp === 'glove') {
+      p.isSpecialAction = true;
+      addParticles(p.x, p.y - 20, '#ff4757', 25);
+      let dashDist = p.facing * 110;
+      p.x = Math.max(20, Math.min(canvas.width - 20, p.x + dashDist));
+      let punchDmg = isStoryEnemy ? (65 + currentStage * 7) : 50;
+      if(Math.abs(p.x - other.x) < 85) {
+        other.hp = Math.max(0, other.hp - punchDmg);
+        other.x += p.facing * 50;
+        other.x = Math.max(20, Math.min(canvas.width - 20, other.x));
+        addParticles(other.x, other.y - 20, '#ff4757', 30);
+      }
+      setTimeout(() => p.isSpecialAction = false, 220);
+
+    } else if (['staff', 'bow', 'laser'].includes(wp)) {
+      createBullet(p, other, wp);
+      if(wp === 'bow') {
+        setTimeout(() => createBullet(p, other, wp), 80);
+      }
+    }
+  }
+
+  function useSkill() {
+    if(!pSelf || !isRunning) return;
+    
+    let now = Date.now();
+    let skillCooldown = 10000;
+    if (pSelf.data.weapon === 'bow') {
+      skillCooldown = 200;
+    }
+
+    if (now - (pSelf.lastSkillTime || 0) < skillCooldown) return;
+    pSelf.lastSkillTime = now;
+
+    executeWeaponSkill(pSelf);
+
+    if(gameMode === 'online' && conn && conn.open) {
+      if(['staff', 'bow', 'laser'].includes(pSelf.data.weapon)) {
+        conn.send({ type: 'SHOOT', weapon: pSelf.data.weapon });
+      } else {
+        conn.send({ type: 'SKILL' });
+      }
+    }
+  }
+
+  function addParticles(x, y, color, count) {
+    for(let i=0; i<count; i++) {
+      particles.push({ x: x, y: y, vx: (Math.random()-0.5)*9, vy: (Math.random()-0.5)*9, life: 22, color: color });
+    }
+  }
+
+  function loop() {
+    if (!isRunning) return;
+    animFrame++;
+    let ground = canvas.height - 25;
+
+    pSelf.y += pSelf.vy; pSelf.vy += 0.58;
+    if (pSelf.y >= ground) { pSelf.y = ground; pSelf.vy = 0; pSelf.isGrounded = true; }
+
+    if (moveL) { pSelf.x -= 4.5; pSelf.facing = -1; pSelf.walkTimer += 0.25; }
+    else if (moveR) { pSelf.x += 4.5; pSelf.facing = 1; pSelf.walkTimer += 0.25; }
+    else { pSelf.walkTimer = 0; }
+    
+    pSelf.x = Math.max(20, Math.min(canvas.width - 20, pSelf.x));
+
+    if(gameMode === 'story') {
+      pEnemy.y += pEnemy.vy; pEnemy.vy += 0.58;
+      if (pEnemy.y >= ground) { pEnemy.y = ground; pEnemy.vy = 0; pEnemy.isGrounded = true; }
+      
+      pEnemy.facing = pSelf.x < pEnemy.x ? -1 : 1;
+      let speed = 2.3 + (currentStage * 0.18);
+      if(isBossStage) speed = 3.2;
+
+      if (!pEnemy.isSpecialAction && Math.abs(pSelf.x - pEnemy.x) > 40 * pEnemy.scale) {
+        pEnemy.x += (pSelf.x < pEnemy.x) ? -speed : speed;
+        pEnemy.walkTimer += 0.3;
+      }
+
+      let now = Date.now();
+      let enemyCooldown = (pEnemy.data.weapon === 'dagger') ? 100 : 150;
+      let canEnemyAtk = (now - (pEnemy.lastAtkTime || 0) > enemyCooldown);
+
+      let atkChance = 0.045 + (currentStage * 0.005);
+      if (Math.random() < 0.015 && pEnemy.isGrounded) pEnemy.vy = -13;
+      
+      if (Math.random() < atkChance && canEnemyAtk) { 
+        pEnemy.lastAtkTime = now;
+        pEnemy.atk = true; 
+        setTimeout(() => pEnemy.atk = false, 140); 
+        if(['staff', 'bow', 'laser'].includes(pEnemy.data.weapon)) {
+          createBullet(pEnemy, pSelf, pEnemy.data.weapon); 
+        } else if(Math.abs(pSelf.x - pEnemy.x) < 70 * pEnemy.scale) {
+          let meleeDmg = 16 + (currentStage * 2.5);
+          pSelf.hp = Math.max(0, pSelf.hp - meleeDmg);
+          addParticles(pSelf.x, pSelf.y - 20, '#ff4757', 10);
+        }
+      }
+
+      let enemySkillCooldown = (pEnemy.data.weapon === 'bow') ? 200 : 10000;
+      if (now - (pEnemy.lastSkillTime || 0) > enemySkillCooldown) {
+        pEnemy.lastSkillTime = now;
+        executeWeaponSkill(pEnemy);
+      }
+    }
+
+    if(gameMode === 'online' && conn && conn.open) {
+      conn.send({ 
+        type: 'SYNC_POS', 
+        x: pSelf.x, 
+        y: pSelf.y, 
+        hp: pSelf.hp, 
+        atk: pSelf.atk, 
+        facing: pSelf.facing,
+        walkTimer: pSelf.walkTimer
+      });
+    }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.strokeStyle = "rgba(102, 252, 241, 0.07)";
+    ctx.lineWidth = 1;
+    for(let i=0; i<canvas.width; i+=40) {
+      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+    }
+
+    ctx.fillStyle = "#1f2833"; ctx.fillRect(0, ground + 20, canvas.width, 12);
+    ctx.fillStyle = "#66fcf1"; 
+    ctx.shadowColor = "#66fcf1"; ctx.shadowBlur = 10;
+    ctx.fillRect(0, ground + 18, canvas.width, 3);
     ctx.shadowBlur = 0;
-    ctx.strokeStyle = "#ff4757"; ctx.strokeRect(canvas.width - w - 12, 12, w, 16);
-    ctx.fillStyle = "white"; ctx.textAlign = "right";
-    ctx.fillText(isBossStage ? "BOSS" : (gameMode === 'story' ? "QUÁI VẬT" : "ĐỐI THỦ"), canvas.width - 15, 42);
-    ctx.textAlign = "left";
 
-    for(let i=bullets.length-1; i>=0; i--) {
+    let w = canvas.width * 0.35;
+    ctx.fillStyle = "rgba(31, 40, 51, 0.8)"; ctx.fillRect(12, 12, w, 16); 
+    ctx.fillStyle = pSelf.data.color; 
+    ctx.shadowColor = pSelf.data.color; ctx.shadowBlur = 8;
+    ctx.fillRect(12, 12, w * (Math.max(0, pSelf.hp) / pSelf.maxHp), 16);
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#45a29e'; ctx.lineWidth = 2; ctx.strokeRect(12, 12, w, 16);
+
+    ctx.fillStyle = "rgba(31, 40, 51, 0.8)"; ctx.fillRect(canvas.width - w - 12, 12, w, 16);
+    ctx.fillStyle = pEnemy.data.color;
+    ctx.shadowColor = pEnemy.data.color; ctx.shadowBlur = 8;
+    let enemyHpW = w * (Math.max(0, pEnemy.hp) / pEnemy.maxHp);
+    ctx.fillRect(canvas.width - 12 - enemyHpW, 12, enemyHpW, 16);
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#45a29e'; ctx.lineWidth = 2; ctx.strokeRect(canvas.width - w - 12, 12, w, 16);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 11px sans-serif';
+    ctx.fillText("BẠN (" + Math.max(0, Math.floor(pSelf.hp)) + "/" + pSelf.maxHp + ")", 20, 24);
+    let enemyTitle = (gameMode === 'story') ? (isBossStage ? "BOSS MÀN " + currentStage : "KẺ ĐỊCH MÀN " + currentStage) : "ĐỐI THỦ";
+    ctx.fillText(enemyTitle + " (" + Math.max(0, Math.floor(pEnemy.hp)) + "/" + pEnemy.maxHp + ")", canvas.width - w - 4, 24);
+
+    if(gameMode === 'story') {
+      ctx.fillStyle = '#66fcf1';
+      ctx.font = 'bold 14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText("MÀN " + currentStage + (isBossStage ? " - ⚔️ BOSS BATTLE" : ""), canvas.width / 2, 25);
+      ctx.textAlign = 'left';
+    }
+
+    for(let i = bullets.length - 1; i >= 0; i--) {
       let b = bullets[i];
       b.x += b.vx;
       ctx.fillStyle = b.color;
-      ctx.shadowColor = b.color;
-      ctx.shadowBlur = 10;
-      ctx.beginPath();
-      
-      if (b.type === 'arrow') {
-        ctx.fillRect(b.x, b.y - b.radius, b.radius*4, b.radius*1.5);
-      } else if (b.type === 'laser') {
-        ctx.fillRect(b.x, b.y - b.radius, b.radius*12, b.radius*2);
-      } else {
-        ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2);
-      }
-      ctx.fill();
+      ctx.shadowColor = b.color; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2); ctx.fill();
       ctx.shadowBlur = 0;
 
       let target = (b.shooter === pSelf) ? pEnemy : pSelf;
-      if (Math.abs(b.x - target.x) < 20*target.scale && Math.abs(b.y - target.y) < 40*target.scale) {
+      if(Math.abs(b.x - target.x) < 25 * target.scale && Math.abs(b.y - target.y) < 35 * target.scale) {
         target.hp = Math.max(0, target.hp - b.dmg);
-        addParticles(target.x, target.y - 20*target.scale, b.color, 12);
+        addParticles(b.x, b.y, b.color, 8);
         bullets.splice(i, 1);
         continue;
       }
-      if (b.x < -100 || b.x > canvas.width + 100) bullets.splice(i, 1);
+
+      if(b.x < 0 || b.x > canvas.width) {
+        bullets.splice(i, 1);
+      }
     }
 
-    for(let i=particles.length-1; i>=0; i--) {
+    for(let i = particles.length - 1; i >= 0; i--) {
       let pt = particles[i];
       pt.x += pt.vx; pt.y += pt.vy; pt.life--;
       ctx.fillStyle = pt.color;
       ctx.globalAlpha = pt.life / 22;
-      ctx.fillRect(pt.x, pt.y, 4, 4);
+      ctx.fillRect(pt.x, pt.y, 3.5, 3.5);
+      ctx.globalAlpha = 1.0;
       if(pt.life <= 0) particles.splice(i, 1);
     }
-    ctx.globalAlpha = 1;
 
     drawStickman(pSelf);
     drawStickman(pEnemy);
 
-    if (pSelf.hp <= 0 || pEnemy.hp <= 0) {
-      setTimeout(() => triggerEndGame(pEnemy.hp <= 0), 200);
-    } else {
-      requestAnimationFrame(loop);
+    if(pSelf.hp <= 0) {
+      triggerEndGame(false);
+      return;
     }
+    if(pEnemy.hp <= 0) {
+      triggerEndGame(true);
+      return;
+    }
+
+    requestAnimationFrame(loop);
   }
 
   function drawStickman(p) {
     ctx.save();
     ctx.translate(p.x, p.y);
     ctx.scale(p.facing * p.scale, p.scale);
-    
-    if (p.isSpinning) {
-      p.spinAngle = (p.spinAngle || 0) + 0.3;
-      ctx.translate(0, -25);
-      ctx.rotate(p.spinAngle);
-      ctx.translate(0, 25);
-    }
 
-    ctx.strokeStyle = p.data.color;
-    ctx.lineWidth = 4;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.shadowColor = p.data.color;
+    let skin = p.data.color;
+    let wp = p.data.weapon;
+    let hat = p.data.hat;
+    let cape = p.data.cape;
+
+    ctx.strokeStyle = skin;
+    ctx.lineWidth = 3.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.shadowColor = skin;
     ctx.shadowBlur = 6;
 
-    let legAnim = Math.sin(p.walkTimer) * 12;
-    let armAnim = p.atk ? -30 : Math.cos(p.walkTimer) * 10;
-
-    if (p.data.cape !== 'none') {
-      ctx.fillStyle = p.data.cape === 'red' ? '#ff4757' : '#2f3542';
+    if(cape !== 'none') {
+      ctx.fillStyle = (cape === 'red') ? '#ff4757' : '#2f3640';
       ctx.beginPath();
-      ctx.moveTo(-6, -38);
-      ctx.lineTo(-18 - Math.sin(animFrame*0.1)*5, -5);
-      ctx.lineTo(-6, -10);
+      ctx.moveTo(0, -32);
+      ctx.lineTo(-12, -5);
+      ctx.lineTo(-4, -5);
+      ctx.closePath();
       ctx.fill();
     }
 
-    ctx.beginPath(); ctx.arc(0, -42, 9, 0, Math.PI*2); ctx.stroke();
-    ctx.fillStyle = "#050508"; ctx.fill();
+    ctx.beginPath();
+    ctx.arc(0, -38, 9, 0, Math.PI*2);
+    ctx.stroke();
 
-    if (p.data.hat === 'knight') {
-      ctx.fillStyle = '#a4b0be'; ctx.fillRect(-11, -54, 22, 12);
-      ctx.fillStyle = '#ff4757'; ctx.fillRect(-2, -62, 4, 10);
-    } else if (p.data.hat === 'wizard') {
-      ctx.fillStyle = '#3742fa';
-      ctx.beginPath(); ctx.moveTo(-12, -48); ctx.lineTo(12, -48); ctx.lineTo(0, -68); ctx.fill();
+    if(hat === 'knight') {
+      ctx.fillStyle = '#718093';
+      ctx.fillRect(-7, -51, 14, 5);
+      ctx.fillRect(-4, -56, 8, 5);
+    } else if(hat === 'wizard') {
+      ctx.fillStyle = '#9b59b6';
+      ctx.beginPath();
+      ctx.moveTo(0, -60);
+      ctx.lineTo(-9, -46);
+      ctx.lineTo(9, -46);
+      ctx.closePath();
+      ctx.fill();
     }
 
-    ctx.beginPath(); ctx.moveTo(0, -33); ctx.lineTo(0, -15); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, -29);
+    ctx.lineTo(0, -8);
+    ctx.stroke();
 
-    ctx.beginPath(); ctx.moveTo(0, -15); ctx.lineTo(-8 + legAnim, 0); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(0, -15); ctx.lineTo(8 - legAnim, 0); ctx.stroke();
+    let legOffset = Math.sin(p.walkTimer) * 10;
+    if(p.isGrounded && Math.abs(p.walkTimer) > 0) {
+      ctx.beginPath();
+      ctx.moveTo(0, -8);
+      ctx.lineTo(-9 + legOffset, 0);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, -8);
+      ctx.lineTo(9 - legOffset, 0);
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(0, -8);
+      ctx.lineTo(-6, 0);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, -8);
+      ctx.lineTo(6, 0);
+      ctx.stroke();
+    }
 
-    ctx.beginPath(); ctx.moveTo(0, -28); ctx.lineTo(12, -22 + armAnim); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(0, -28); ctx.lineTo(-12, -22 - armAnim); ctx.stroke();
+    if(p.isSpinning) {
+      ctx.rotate(p.spinAngle * Math.PI * 2);
+    }
 
-    // GĂNG TAY TRẮNG CHỈNH CHU
-    ctx.fillStyle = "#ffffff";
-    ctx.strokeStyle = p.data.color;
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(12, -22 + armAnim, 4.5, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.arc(-12, -22 - armAnim, 4.5, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-    ctx.lineWidth = 4;
-
-    let wpX = 14, wpY = -22 + armAnim;
+    let armAngle = p.atk ? -Math.PI / 4 : 0;
     ctx.save();
-    ctx.translate(wpX, wpY);
-    if(p.atk) {
-      if(p.data.weapon === 'sword') ctx.rotate(Math.PI/3);
-      else if(p.data.weapon === 'axe') ctx.rotate(Math.PI/2);
-      else if(p.data.weapon === 'dagger') ctx.translate(10, 0);
-      else if(p.data.weapon === 'spear') ctx.translate(18, 0);
-      else if(p.data.weapon === 'muscle') ctx.scale(1.5, 1.5);
-    }
+    ctx.translate(0, -24);
+    ctx.rotate(armAngle);
 
-    if (p.data.weapon === 'sword') {
-      ctx.strokeStyle = '#f1f2f6'; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.moveTo(0, 5); ctx.lineTo(25, -25); ctx.stroke();
-      ctx.strokeStyle = '#f7b731'; ctx.beginPath(); ctx.moveTo(-4, 0); ctx.lineTo(8, -6); ctx.stroke();
-    } else if (p.data.weapon === 'axe') {
-      ctx.strokeStyle = '#a4b0be'; ctx.lineWidth = 4;
-      ctx.beginPath(); ctx.moveTo(-5, 10); ctx.lineTo(18, -22); ctx.stroke();
-      ctx.fillStyle = '#ff6b81';
-      ctx.beginPath(); ctx.arc(15, -18, 12, -Math.PI/2, Math.PI/2); ctx.fill();
-    } else if (p.data.weapon === 'dagger') {
-      ctx.strokeStyle = '#7bed9f'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(14, -8); ctx.stroke();
-    } else if (p.data.weapon === 'spear') {
-      ctx.strokeStyle = '#f1c40f'; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.moveTo(-15, 10); ctx.lineTo(35, -15); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(16, 4);
+    ctx.stroke();
+
+    ctx.lineWidth = 3;
+    if(wp === 'sword') {
+      ctx.strokeStyle = '#dcdde1';
+      ctx.beginPath();
+      ctx.moveTo(16, 4);
+      ctx.lineTo(36, 4);
+      ctx.stroke();
+      ctx.fillStyle = '#66fcf1';
+      ctx.fillRect(14, 1, 3, 6);
+    } else if(wp === 'axe') {
+      ctx.strokeStyle = '#718093';
+      ctx.beginPath();
+      ctx.moveTo(16, 4);
+      ctx.lineTo(28, 4);
+      ctx.stroke();
       ctx.fillStyle = '#ff4757';
-      ctx.beginPath(); ctx.moveTo(35, -15); ctx.lineTo(45, -15); ctx.lineTo(35, -8); ctx.fill();
-    } else if (p.data.weapon === 'staff') {
-      ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 4;
-      ctx.beginPath(); ctx.moveTo(-5, 15); ctx.lineTo(10, -25); ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(28, 4, 7, -Math.PI/2, Math.PI/2);
+      ctx.fill();
+    } else if(wp === 'dagger') {
+      ctx.strokeStyle = '#2ed573';
+      ctx.beginPath();
+      ctx.moveTo(16, 4);
+      ctx.lineTo(24, 4);
+      ctx.stroke();
+    } else if(wp === 'spear') {
+      ctx.strokeStyle = '#f1c40f';
+      ctx.beginPath();
+      ctx.moveTo(16, 4);
+      ctx.lineTo(42, 4);
+      ctx.stroke();
+    } else if(wp === 'staff') {
+      ctx.strokeStyle = '#e67e22';
+      ctx.beginPath();
+      ctx.moveTo(16, 4);
+      ctx.lineTo(32, 4);
+      ctx.stroke();
       ctx.fillStyle = '#fffa65';
-      ctx.beginPath(); ctx.arc(10, -28, 6 + Math.sin(animFrame*0.2)*2, 0, Math.PI*2); ctx.fill();
-    } else if (p.data.weapon === 'bow') {
-      ctx.strokeStyle = '#d1ccc0'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(8, -5, 15, -Math.PI/2, Math.PI/2); ctx.stroke();
-      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(8, -20); ctx.lineTo(8, 10); ctx.stroke();
-    } else if (p.data.weapon === 'laser') {
-      ctx.fillStyle = '#2f3542'; ctx.fillRect(0, -8, 20, 8);
-      ctx.fillStyle = '#66fcf1'; ctx.fillRect(20, -6, 5, 4);
-    } else if (p.data.weapon === 'muscle') {
-      ctx.fillStyle = '#ffa502'; ctx.beginPath(); ctx.arc(8, -8, 12, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = p.data.color; ctx.beginPath(); ctx.arc(14, -8, 8, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath();
+      ctx.arc(32, 4, 5, 0, Math.PI*2);
+      ctx.fill();
+    } else if(wp === 'bow') {
+      ctx.strokeStyle = '#e1b12c';
+      ctx.beginPath();
+      ctx.arc(20, 4, 10, -Math.PI/2, Math.PI/2);
+      ctx.stroke();
+    } else if(wp === 'laser') {
+      ctx.strokeStyle = '#66fcf1';
+      ctx.beginPath();
+      ctx.moveTo(16, 4);
+      ctx.lineTo(30, 4);
+      ctx.stroke();
+    } else if(wp === 'muscle') {
+      ctx.fillStyle = skin;
+      ctx.beginPath();
+      ctx.arc(18, 4, 6, 0, Math.PI*2);
+      ctx.fill();
+    } else if(wp === 'glove') {
+      ctx.fillStyle = '#ff4757';
+      ctx.beginPath();
+      ctx.arc(20, 4, 6, 0, Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle = '#c0392b';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
     }
 
     ctx.restore();
     ctx.restore();
   }
 
-  // EVENTS BÀN PHÍM
-  window.addEventListener("keydown", (e) => {
-    if(e.key.toLowerCase() === 'a') { moveL = true; document.getElementById('btnLeft').classList.add('active'); }
-    if(e.key.toLowerCase() === 'd') { moveR = true; document.getElementById('btnRight').classList.add('active'); }
-    if(e.key.toLowerCase() === 'w') { jump(); document.getElementById('btnJump').classList.add('active'); }
-    if(e.key.toLowerCase() === 'j') { attack(); document.getElementById('btnAtk').classList.add('active'); }
-    if(e.key.toLowerCase() === 'k') { useSkill(); document.getElementById('btnSkill').classList.add('active'); }
+  window.addEventListener('keydown', (e) => {
+    if(!isRunning) return;
+    if(e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') { moveL = true; }
+    if(e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') { moveR = true; }
+    if(e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp' || e.key === ' ') { jump(); }
+    if(e.key === 'j' || e.key === 'J') { attack(); }
+    if(e.key === 'k' || e.key === 'K') { useSkill(); }
   });
 
-  window.addEventListener("keyup", (e) => {
-    if(e.key.toLowerCase() === 'a') { moveL = false; document.getElementById('btnLeft').classList.remove('active'); }
-    if(e.key.toLowerCase() === 'd') { moveR = false; document.getElementById('btnRight').classList.remove('active'); }
-    if(e.key.toLowerCase() === 'w') document.getElementById('btnJump').classList.remove('active');
-    if(e.key.toLowerCase() === 'j') document.getElementById('btnAtk').classList.remove('active');
-    if(e.key.toLowerCase() === 'k') document.getElementById('btnSkill').classList.remove('active');
+  window.addEventListener('keyup', (e) => {
+    if(e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') { moveL = false; }
+    if(e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') { moveR = false; }
   });
 
-  // EVENTS CHUỘT
-  window.addEventListener("mousedown", (e) => {
-    if(isRunning) {
-      if(e.button === 0) { attack(); document.getElementById('btnAtk').classList.add('active'); }
-      if(e.button === 2) { useSkill(); document.getElementById('btnSkill').classList.add('active'); }
-    }
-  });
-  window.addEventListener("mouseup", (e) => {
-    if(e.button === 0) document.getElementById('btnAtk').classList.remove('active');
-    if(e.button === 2) document.getElementById('btnSkill').classList.remove('active');
-  });
-  window.addEventListener("contextmenu", e => e.preventDefault());
-
-  // EVENTS CẢM ỨNG
-  function touchBind(id, onDown, onUp) {
+  function bindTouchButton(id, startFn, endFn) {
     let el = document.getElementById(id);
     if(!el) return;
-    el.addEventListener('touchstart', (e) => { e.preventDefault(); onDown(); el.classList.add('active'); });
-    el.addEventListener('touchend', (e) => { e.preventDefault(); onUp(); el.classList.remove('active'); });
+    el.addEventListener('mousedown', (e) => { e.preventDefault(); if(startFn) startFn(); el.classList.add('active'); });
+    el.addEventListener('mouseup', (e) => { e.preventDefault(); if(endFn) endFn(); el.classList.remove('active'); });
+    el.addEventListener('mouseleave', (e) => { e.preventDefault(); if(endFn) endFn(); el.classList.remove('active'); });
+    el.addEventListener('touchstart', (e) => { e.preventDefault(); if(startFn) startFn(); el.classList.add('active'); });
+    el.addEventListener('touchend', (e) => { e.preventDefault(); if(endFn) endFn(); el.classList.remove('active'); });
   }
 
-  touchBind('btnLeft', () => moveL = true, () => moveL = false);
-  touchBind('btnRight', () => moveR = true, () => moveR = false);
-  touchBind('btnJump', jump, () => {});
-  touchBind('btnAtk', attack, () => {});
-  touchBind('btnSkill', useSkill, () => {});
+  bindTouchButton('btnLeft', () => { moveL = true; }, () => { moveL = false; });
+  bindTouchButton('btnRight', () => { moveR = true; }, () => { moveR = false; });
+  bindTouchButton('btnJump', () => { jump(); }, null);
+  bindTouchButton('btnAtk', () => { attack(); }, null);
+  bindTouchButton('btnSkill', () => { useSkill(); }, null);
 
-  // KHỞI CHẠY GAME
-  requestAnimationFrame(loop);
+  canvas.addEventListener('mousedown', (e) => {
+    if(e.button === 0) attack();
+    else if(e.button === 2) useSkill();
+  });
+  canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  window.addEventListener('resize', () => {
+    if(isRunning) {
+      canvas.width = window.innerWidth * 0.95;
+      canvas.height = window.innerHeight * 0.75;
+    }
+  });
 </script>
 </body>
 </html>
 """
 
-components.html(game_code, height=540, scrolling=False)
+st.components.v1.html(game_code, height=750, scrolling=False)
