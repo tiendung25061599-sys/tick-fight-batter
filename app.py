@@ -152,7 +152,7 @@ game_code = """
         <option value="staff">🪄 Trượng Ma Thuật (Skill: Bắn Cầu Lửa 10s)</option>
         <option value="bow">🏹 Cung Thần (Skill: Bắn Mũi Tên Đôi 0.2s)</option>
         <option value="laser">⚡ Súng Laser (Skill: Tia Xuyên Phá 10s)</option>
-        <option value="muscle">💪 Cơ Bắp Thần Thánh (Skill: Bay Lên Quay Rực Lửa & Đập Sóng 10s)</option>
+        <option value="muscle">💪 Cơ Bắp Thần Thánh (Skill: Bay Lên Trời Đập Sóng 10s)</option>
       </select>
     </div>
     <div class="select-box">
@@ -554,24 +554,27 @@ game_code = """
       p.hp = Math.min(p.maxHp, p.hp + healAmount);
       setTimeout(() => p.isSpecialAction = false, 250);
 
-    } else if (wp === 'axe') {
-      // RÌU CHIẾN: Bay lên trời rồi đập xuống cực mạnh
+    } else if (wp === 'axe' || wp === 'muscle') {
+      // RÌU CHIẾN & CƠ BẮP: Bay lên trời rồi đập xuống cực mạnh (Model giữ nguyên bình thường)
       p.isSpecialAction = true;
-      p.vy = -15; p.isGrounded = false;
-      addParticles(p.x, p.y - 20, '#ff4757', 25);
+      p.vy = -16; p.isGrounded = false;
+      let effectColor = (wp === 'axe') ? '#ff4757' : '#ffa502';
+      addParticles(p.x, p.y - 20, effectColor, 30);
 
       setTimeout(() => {
-        p.vy = 20;
+        p.vy = 22;
         let checkSlam = setInterval(() => {
           let ground = canvas.height - 25;
           if(p.y >= ground) {
             p.y = ground; p.vy = 0; p.isSpecialAction = false;
             clearInterval(checkSlam);
-            addParticles(p.x, p.y, '#ff4757', 35);
-            let slamDmg = isStoryEnemy ? (80 + currentStage * 8) : 65;
-            if(Math.abs(p.x - other.x) < 120) {
+            addParticles(p.x, p.y, effectColor, 40);
+            let slamDmg = isStoryEnemy ? (90 + currentStage * 9) : 75;
+            if(Math.abs(p.x - other.x) < 140) {
               other.hp = Math.max(0, other.hp - slamDmg);
-              addParticles(other.x, other.y - 20, '#ff4757', 25);
+              other.x += (other.x > p.x) ? 70 : -70;
+              other.x = Math.max(20, Math.min(canvas.width - 20, other.x));
+              addParticles(other.x, other.y - 20, effectColor, 30);
             }
           }
         }, 20);
@@ -600,41 +603,6 @@ game_code = """
         addParticles(other.x, other.y - 20, '#f1c40f', 30);
       }
       setTimeout(() => p.isSpecialAction = false, 250);
-
-    } else if (wp === 'muscle') {
-      // CƠ BẮP: Bay lên trời xoay vòng rực lửa rồi đập tạo sóng xung kích
-      p.isSpecialAction = true;
-      p.vy = -16; p.isGrounded = false;
-      addParticles(p.x, p.y - 20, '#ff4757', 30);
-
-      let flameSpinTimer = 0;
-      let spinInterval = setInterval(() => {
-        flameSpinTimer++;
-        addParticles(p.x + (Math.random()-0.5)*40, p.y - 30 + (Math.random()-0.5)*40, '#ff4757', 5);
-        addParticles(p.x + (Math.random()-0.5)*40, p.y - 30 + (Math.random()-0.5)*40, '#ffa502', 5);
-        if(Math.abs(p.x - other.x) < 70) {
-          other.hp = Math.max(0, other.hp - 4);
-        }
-        if(flameSpinTimer >= 15) {
-          clearInterval(spinInterval);
-          p.vy = 22;
-          let checkMuscleSlam = setInterval(() => {
-            let ground = canvas.height - 25;
-            if(p.y >= ground) {
-              p.y = ground; p.vy = 0; p.isSpecialAction = false;
-              clearInterval(checkMuscleSlam);
-              addParticles(p.x, p.y, '#ff4757', 45);
-              let muscleSlamDmg = isStoryEnemy ? (90 + currentStage * 10) : 75;
-              if(Math.abs(p.x - other.x) < 140) {
-                other.hp = Math.max(0, other.hp - muscleSlamDmg);
-                other.x += (other.x > p.x) ? 90 : -90;
-                other.x = Math.max(20, Math.min(canvas.width - 20, other.x));
-                addParticles(other.x, other.y - 20, '#ff4757', 30);
-              }
-            }
-          }, 20);
-        }
-      }, 50);
 
     } else if (['staff', 'bow', 'laser'].includes(wp)) {
       createBullet(p, other, wp);
@@ -883,7 +851,7 @@ game_code = """
     ctx.lineTo(handX, handY);
     ctx.stroke();
 
-    // Vẽ vũ khí chi tiết
+    // Vẽ vũ khí chi tiết chuẩn
     ctx.save();
     ctx.translate(handX, handY);
     if (p.atk) ctx.rotate(0.5);
@@ -909,7 +877,6 @@ game_code = """
       ctx.fillStyle = "#2c3e50"; ctx.fillRect(-2, 0, 4, 6);
       ctx.shadowBlur = 0;
     } else if(wp === 'spear') {
-      // GIÁO DÀI: Đã chỉnh sửa nằm ngang chỉa thẳng ra trước mặt
       ctx.rotate(-0.5);
       ctx.strokeStyle = "#bdc3c7"; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(45, 0); ctx.stroke();
