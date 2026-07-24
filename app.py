@@ -855,94 +855,104 @@ game_code = """
       ctx.beginPath(); ctx.moveTo(-14, -bodyHeight - headRadius * 2); ctx.lineTo(14, -bodyHeight - headRadius * 2); ctx.lineTo(0, -bodyHeight - headRadius * 2 - 28); ctx.closePath(); ctx.fill();
     }
 
-    ctx.strokeStyle = col; ctx.fillStyle = col;
-    let armAngle = p.atk ? 0.8 : (Math.sin(p.walkTimer) * 0.6);
-    ctx.beginPath();
-    ctx.moveTo(0, -bodyHeight - 10);
-    let handX = 18 + (p.atk ? 15 : 0);
-    let handY = -bodyHeight - 5 + (armAngle * 10);
-    ctx.lineTo(handX, handY);
-    ctx.stroke();
-
-    ctx.save();
-    ctx.translate(handX, handY);
-    if (p.atk) ctx.rotate(0.5);
-
     let wp = p.data.weapon;
-    if(wp === 'sword') {
-      ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(28, -28); ctx.stroke();
-      ctx.strokeStyle = "#66fcf1"; ctx.lineWidth = 6; ctx.globalAlpha = 0.5;
-      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(28, -28); ctx.stroke(); ctx.globalAlpha = 1.0;
-      ctx.fillStyle = "#f1c40f"; ctx.fillRect(-4, -1, 8, 3);
-      ctx.fillStyle = "#e67e22"; ctx.fillRect(-2, 2, 4, 8);
-    } else if(wp === 'axe') {
-      ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 4;
-      ctx.beginPath(); ctx.moveTo(-5, 5); ctx.lineTo(22, -22); ctx.stroke();
-      ctx.fillStyle = "#ff4757"; ctx.shadowColor = "#ff4757"; ctx.shadowBlur = 10;
-      ctx.beginPath(); ctx.moveTo(15, -15); ctx.quadraticCurveTo(28, -25, 22, -30); ctx.quadraticCurveTo(15, -20, 15, -15); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(15, -15); ctx.quadraticCurveTo(25, -2, 30, -8); ctx.quadraticCurveTo(20, -15, 15, -15); ctx.fill();
-      ctx.shadowBlur = 0;
-    } else if(wp === 'dagger') {
-      ctx.strokeStyle = "#2ed573"; ctx.lineWidth = 3; ctx.shadowColor = "#2ed573"; ctx.shadowBlur = 8;
-      ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(8, -5, 16, -16); ctx.stroke();
-      ctx.fillStyle = "#2c3e50"; ctx.fillRect(-2, 0, 4, 6);
-      ctx.shadowBlur = 0;
-    } else if(wp === 'spear') {
-      ctx.rotate(-0.5);
-      ctx.strokeStyle = "#bdc3c7"; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(45, 0); ctx.stroke();
-      ctx.fillStyle = "#f1c40f"; ctx.shadowColor = "#f1c40f"; ctx.shadowBlur = 12;
-      ctx.beginPath(); ctx.moveTo(45, 0); ctx.lineTo(35, -6); ctx.lineTo(58, 0); ctx.lineTo(35, 6); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = "#ff4757"; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(25, 0); ctx.quadraticCurveTo(30, 10, 25, 15); ctx.stroke();
-      ctx.shadowBlur = 0;
-    } else if(wp === 'staff') {
-      ctx.strokeStyle = "#8b4513"; ctx.lineWidth = 4;
-      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(20, -20); ctx.stroke();
-      ctx.fillStyle = "#fffa65"; ctx.shadowColor = "#fffa65"; ctx.shadowBlur = 15;
-      ctx.beginPath(); ctx.arc(22, -22, 7, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(20, -24, 2, 0, Math.PI*2); ctx.fill();
-      ctx.shadowBlur = 0;
-    } else if(wp === 'bow') {
-      ctx.strokeStyle = "#e056fd"; ctx.lineWidth = 4; ctx.shadowColor = "#e056fd"; ctx.shadowBlur = 8;
-      ctx.beginPath(); ctx.arc(8, -12, 16, -Math.PI/2 - 0.2, Math.PI/2 + 0.2); ctx.stroke();
-      ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 1; ctx.shadowBlur = 0;
-      ctx.beginPath(); ctx.moveTo(8, -28); ctx.lineTo(-2, -12); ctx.lineTo(8, 4); ctx.stroke();
-      if(p.atk) {
-        ctx.strokeStyle = "#66fcf1"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-2, -12); ctx.lineTo(18, -12); ctx.stroke();
-      }
-    } else if(wp === 'laser') {
-      ctx.fillStyle = "#2f3542"; ctx.fillRect(-2, -6, 20, 10);
-      ctx.fillStyle = "#747d8c"; ctx.fillRect(18, -4, 6, 6);
-      ctx.fillStyle = "#ff4757"; ctx.fillRect(4, -8, 8, 4);
-      ctx.fillStyle = "#66fcf1"; ctx.shadowColor = "#66fcf1"; ctx.shadowBlur = 10;
-      ctx.fillRect(8, -2, 6, 2);
-      if(p.atk) { ctx.fillRect(24, -2, 10, 2); }
-      ctx.shadowBlur = 0;
-    } else if(wp === 'muscle') {
-      // Mô hình Cánh Tay Cơ Bắp (Muscular Arm Model)
+
+    if (wp === 'muscle') {
+      // Cánh tay biến thành cơ bắp hoàn toàn và chỉa thẳng ra trước khi tấn công
+      ctx.save();
+      ctx.translate(0, -bodyHeight - 10);
+      let armAngle = p.atk ? 0 : (Math.sin(p.walkTimer) * 0.4);
+      ctx.rotate(armAngle);
+
       ctx.fillStyle = col; 
       ctx.shadowColor = "#ffa502"; ctx.shadowBlur = 12;
       ctx.beginPath();
       ctx.moveTo(0, 0);
-      ctx.quadraticCurveTo(10, -14, 22, -16);
-      ctx.quadraticCurveTo(30, -10, 24, -2);
-      ctx.lineTo(35, -6);
-      ctx.lineTo(30, 6);
-      ctx.lineTo(2, 6);
+      let ext = p.atk ? 45 : 25;
+      ctx.quadraticCurveTo(ext * 0.4, -12, ext * 0.8, -8);
+      ctx.quadraticCurveTo(ext, 0, ext * 0.8, 6);
+      ctx.lineTo(0, 8);
       ctx.closePath();
       ctx.fill();
       
       ctx.strokeStyle = "#ffa502"; ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(8, -8);
-      ctx.quadraticCurveTo(16, -12, 22, -8);
+      ctx.moveTo(ext * 0.3, -6);
+      ctx.quadraticCurveTo(ext * 0.5, -10, ext * 0.7, -6);
       ctx.stroke();
       ctx.shadowBlur = 0;
+      ctx.restore();
+
+    } else {
+      ctx.strokeStyle = col; ctx.fillStyle = col;
+      let armAngle = p.atk ? 0.8 : (Math.sin(p.walkTimer) * 0.6);
+      ctx.beginPath();
+      ctx.moveTo(0, -bodyHeight - 10);
+      let handX = 18 + (p.atk ? 15 : 0);
+      let handY = -bodyHeight - 5 + (armAngle * 10);
+      ctx.lineTo(handX, handY);
+      ctx.stroke();
+
+      ctx.save();
+      ctx.translate(handX, handY);
+      if (p.atk) ctx.rotate(0.5);
+
+      if(wp === 'sword') {
+        ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(28, -28); ctx.stroke();
+        ctx.strokeStyle = "#66fcf1"; ctx.lineWidth = 6; ctx.globalAlpha = 0.5;
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(28, -28); ctx.stroke(); ctx.globalAlpha = 1.0;
+        ctx.fillStyle = "#f1c40f"; ctx.fillRect(-4, -1, 8, 3);
+        ctx.fillStyle = "#e67e22"; ctx.fillRect(-2, 2, 4, 8);
+      } else if(wp === 'axe') {
+        ctx.strokeStyle = "#8e44ad"; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(-5, 5); ctx.lineTo(22, -22); ctx.stroke();
+        ctx.fillStyle = "#ff4757"; ctx.shadowColor = "#ff4757"; ctx.shadowBlur = 10;
+        ctx.beginPath(); ctx.moveTo(15, -15); ctx.quadraticCurveTo(28, -25, 22, -30); ctx.quadraticCurveTo(15, -20, 15, -15); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(15, -15); ctx.quadraticCurveTo(25, -2, 30, -8); ctx.quadraticCurveTo(20, -15, 15, -15); ctx.fill();
+        ctx.shadowBlur = 0;
+      } else if(wp === 'dagger') {
+        ctx.strokeStyle = "#2ed573"; ctx.lineWidth = 3; ctx.shadowColor = "#2ed573"; ctx.shadowBlur = 8;
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(8, -5, 16, -16); ctx.stroke();
+        ctx.fillStyle = "#2c3e50"; ctx.fillRect(-2, 0, 4, 6);
+        ctx.shadowBlur = 0;
+      } else if(wp === 'spear') {
+        ctx.rotate(-0.5);
+        ctx.strokeStyle = "#bdc3c7"; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(45, 0); ctx.stroke();
+        ctx.fillStyle = "#f1c40f"; ctx.shadowColor = "#f1c40f"; ctx.shadowBlur = 12;
+        ctx.beginPath(); ctx.moveTo(45, 0); ctx.lineTo(35, -6); ctx.lineTo(58, 0); ctx.lineTo(35, 6); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = "#ff4757"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(25, 0); ctx.quadraticCurveTo(30, 10, 25, 15); ctx.stroke();
+        ctx.shadowBlur = 0;
+      } else if(wp === 'staff') {
+        ctx.strokeStyle = "#8b4513"; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(20, -20); ctx.stroke();
+        ctx.fillStyle = "#fffa65"; ctx.shadowColor = "#fffa65"; ctx.shadowBlur = 15;
+        ctx.beginPath(); ctx.arc(22, -22, 7, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(20, -24, 2, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur = 0;
+      } else if(wp === 'bow') {
+        ctx.strokeStyle = "#e056fd"; ctx.lineWidth = 4; ctx.shadowColor = "#e056fd"; ctx.shadowBlur = 8;
+        ctx.beginPath(); ctx.arc(8, -12, 16, -Math.PI/2 - 0.2, Math.PI/2 + 0.2); ctx.stroke();
+        ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 1; ctx.shadowBlur = 0;
+        ctx.beginPath(); ctx.moveTo(8, -28); ctx.lineTo(-2, -12); ctx.lineTo(8, 4); ctx.stroke();
+        if(p.atk) {
+          ctx.strokeStyle = "#66fcf1"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-2, -12); ctx.lineTo(18, -12); ctx.stroke();
+        }
+      } else if(wp === 'laser') {
+        ctx.fillStyle = "#2f3542"; ctx.fillRect(-2, -6, 20, 10);
+        ctx.fillStyle = "#747d8c"; ctx.fillRect(18, -4, 6, 6);
+        ctx.fillStyle = "#ff4757"; ctx.fillRect(4, -8, 8, 4);
+        ctx.fillStyle = "#66fcf1"; ctx.shadowColor = "#66fcf1"; ctx.shadowBlur = 10;
+        ctx.fillRect(8, -2, 6, 2);
+        if(p.atk) { ctx.fillRect(24, -2, 10, 2); }
+        ctx.shadowBlur = 0;
+      }
+
+      ctx.restore();
     }
 
-    ctx.restore();
     ctx.restore();
   }
 
