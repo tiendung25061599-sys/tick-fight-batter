@@ -1,169 +1,101 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Găng Tay Bão Táp - Trận Chiến</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #121212;
-            color: #e0e0e0;
-            max-width: 600px;
-            margin: 40px auto;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-        }
-        h2 { color: #4facfe; text-align: center; }
-        .stats-box {
-            display: flex;
-            justify-content: space-between;
-            background: #1e1e1e;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #333;
-        }
-        .character { width: 48%; }
-        .controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        button {
-            flex: 1;
-            padding: 12px;
-            font-size: 16px;
-            font-weight: bold;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        #btn-attack { background-color: #ff9800; color: white; }
-        #btn-attack:hover { background-color: #f57c00; }
-        #btn-skill { background-color: #4facfe; color: white; }
-        #btn-skill:hover { background-color: #00f2fe; color: #121212; }
-        button:disabled { background-color: #444; color: #888; cursor: not-allowed; }
-        #log {
-            background: #181818;
-            border: 1px solid #333;
-            padding: 15px;
-            border-radius: 8px;
-            height: 250px;
-            overflow-y: auto;
-            font-family: monospace;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-        .log-hit { color: #ffb74d; }
-        .log-crit { color: #ff5252; font-weight: bold; }
-        .log-skill { color: #4facfe; font-weight: bold; }
-    </style>
-</head>
-<body>
+import streamlit as st
 
-    <h2>🥊 GĂNG TAY BÃO TÁP - THẬP ẢNH CUỒNG PHONG</h2>
+# Cấu hình giao diện trang
+st.set_page_config(page_title="Găng Tay Bão Táp - Trận Chiến", page_icon="🥊", layout="centered")
 
-    <div class="stats-box">
-        <div class="character">
-            <h3>Chiến Binh Gió</h3>
-            <p>HP: <span id="hero-hp">1000</span>/1000</p>
-            <p>Mana: <span id="hero-mana">150</span>/150</p>
-            <p>Tấn công: <span id="hero-atk">380</span> (Đã cộng găng)</p>
-        </div>
-        <div class="character">
-            <h3>Quái Vật Goblin</h3>
-            <p>HP: <span id="monster-hp">800</span>/800</p>
-            <p>Trạng thái: <span id="monster-status" style="color: #4caf50;">Bình thường</span></p>
-        </div>
-    </div>
+# Khởi tạo trạng thái game trong session_state để lưu trữ qua các lượt bấm nút
+if "initialized" not in st.session_state:
+    st.session_state.hero_hp = 1000
+    st.session_state.hero_max_hp = 1000
+    st.session_state.hero_mana = 150
+    st.session_state.hero_max_mana = 150
+    st.session_state.hero_atk = 380  (200 gốc + 180 từ Găng Tay Bão Táp)
+    
+    st.session_state.monster_hp = 800
+    st.session_state.monster_max_hp = 800
+    st.session_state.monster_stunned = False
+    
+    st.session_state.logs = ["[Hệ thống] Đã trang bị Găng Tay Bão Táp (+180 Tấn công). Trận chiến bắt đầu!"]
+    st.session_state.initialized = True
 
-    <div class="controls">
-        <button id="btn-attack" onclick="normalAttack()">Đánh Thường</button>
-        <button id="btn-skill" onclick="castSkill()">Dùng Chiêu: Thập Ảnh Cuồng Phong (60 Mana)</button>
-    </div>
+# Giao diện tiêu đề
+st.markdown("<h2 style='text-align: center; color: #4facfe;'>🥊 GĂNG TAY BÃO TÁP - THẬP ẢNH CUỒNG PHONG</h2>", unsafe_allow_html=True)
 
-    <div id="log">
-        [Hệ thống] Đã trang bị Găng Tay Bão Táp (+180 Tấn công). Trận chiến bắt đầu!<br>
-    </div>
+# Hiển thị thông số nhân vật và quái vật
+col1, col2 = st.columns(2)
 
-    <script>
-        let hero = { name: "Chiến Binh Gió", hp: 1000, maxHp: 1000, mana: 150, maxMana: 150, atk: 380 };
-        let monster = { name: "Quái Vật Goblin", hp: 800, maxHp: 800, isStunned: false };
+with col1:
+    st.markdown("### 🛡️ Chiến Binh Gió")
+    st.write(f"**HP:** {max(0, st.session_state.hero_hp)} / {st.session_state.hero_max_hp}")
+    st.write(f"**Mana:** {st.session_state.hero_mana} / {st.session_state.hero_max_mana}")
+    st.write(f"**Tấn công:** {st.session_state.hero_atk} (Đã cộng găng)")
 
-        function updateUI() {
-            document.getElementById("hero-hp").innerText = Math.max(0, hero.hp);
-            document.getElementById("hero-mana").innerText = Math.max(0, hero.mana);
-            document.getElementById("monster-hp").innerText = Math.max(0, monster.hp);
-            document.getElementById("monster-status").innerText = monster.isStunned ? "Choáng (Stun)" : "Bình thường";
-            document.getElementById("monster-status").style.color = monster.isStunned ? "#ff5252" : "#4caf50";
-        }
+with col2:
+    st.markdown("### 👹 Quái Vật Goblin")
+    st.write(f"**HP:** {max(0, st.session_state.monster_hp)} / {st.session_state.monster_max_hp}")
+    status_text = "Choáng (Stun)" if st.session_state.monster_stunned else "Bình thường"
+    st.write(f"**Trạng thái:** {status_text}")
 
-        function logMessage(msg, className = "") {
-            let logDiv = document.getElementById("log");
-            logDiv.innerHTML += `<span class="${className}">${msg}</span><br>`;
-            logDiv.scrollTop = logDiv.scrollHeight;
-        }
+st.markdown("---")
 
-        function normalAttack() {
-            if (monster.hp <= 0) {
-                logMessage("Quái vật đã bị hạ gục! Hãy reset lại trang.", "log-crit");
-                return;
-            }
-            let dmg = hero.atk * 0.4;
-            monster.hp -= dmg;
-            logMessage(`[Đánh thường] ${hero.name} tấn công gây ${dmg.toFixed(1)} sát thương.`, "log-hit");
+# Kiểm tra điều kiện thắng/thua để khóa/mở nút bấm
+game_over = st.session_state.monster_hp <= 0 or st.session_state.hero_hp <= 0
+
+# Các nút hành động
+col_btn1, col_btn2, col_btn3 = st.columns(3)
+
+with col_btn1:
+    if st.button("⚔️ Đánh Thường", disabled=game_over):
+        dmg = st.session_state.hero_atk * 0.4
+        st.session_state.monster_hp -= dmg
+        st.session_state.logs.append(f"[Đánh thường] Chiến Binh Gió tấn công gây {dmg:.1f} sát thương.")
+        st.rerun()
+
+with col_btn2:
+    if st.button("⚡ Thập Ảnh Cuồng Phong", disabled=game_over):
+        if st.session_state.hero_mana < 60:
+            st.session_state.logs.append("⚠️ Không đủ Mana để dùng chiêu!")
+        else:
+            st.session_state.hero_mana -= 60
+            st.session_state.logs.append(f"⚡ [KỸ NĂNG] Chiến Binh Gió tung chiêu Thập Ảnh Cuồng Phong!")
             
-            checkWin();
-            updateUI();
-        }
+            total_dmg = 0
+            # 9 cú đấm đầu
+            for i in range(1, 10):
+                if st.session_state.monster_hp <= 0:
+                    break
+                hit_dmg = st.session_state.hero_atk * 0.15
+                total_dmg += hit_dmg
+                st.session_state.logs.append(f"  • Cú đấm thứ {i}: Lao tới gây gián đoạn và {hit_dmg:.1f} sát thương.")
+            
+            # Cú đấm thứ 10
+            if st.session_state.monster_hp > 0:
+                finisher_dmg = st.session_state.hero_atk * 1.50
+                total_dmg += finisher_dmg
+                st.session_state.monster_hp -= finisher_dmg
+                st.session_state.monster_stunned = True
+                st.session_state.logs.append(f"  💥 Cú đấm thứ 10 (ĐÒN KẾT LIỄU): Bùng nổ gây {finisher_dmg:.1f} sát thương chí mạng!")
+                st.session_state.logs.append(f"  🌪️ Quái Vật Goblin bị đánh văng ra xa 5 mét và dính hiệu ứng Choáng trong 1.5 giây!")
+            
+            st.session_state.logs.append(f"✨ Tổng sát thương chuỗi kỹ năng: {total_dmg:.1f}")
+        st.rerun()
 
-        function castSkill() {
-            if (monster.hp <= 0) {
-                logMessage("Quái vật đã bị hạ gục!", "log-crit");
-                return;
-            }
-            if (hero.mana < 60) {
-                logMessage("Không đủ Mana để dùng chiêu!", "log-crit");
-                return;
-            }
+with col_btn3:
+    if st.button("🔄 Chơi Lại"):
+        st.session_state.hero_hp = 1000
+        st.session_state.hero_mana = 150
+        st.session_state.monster_hp = 800
+        st.session_state.monster_stunned = False
+        st.session_state.logs = ["[Hệ thống] Trò chơi đã được thiết lập lại. Trận chiến bắt đầu!"]
+        st.rerun()
 
-            hero.mana -= 60;
-            logMessage(`⚡ [KỸ NĂNG] ${hero.name} tung chiêu Thập Ảnh Cuồng Phong!`, "log-skill");
+# Hiển thị thông báo kết quả nếu trận đấu kết thúc
+if st.session_state.monster_hp <= 0:
+    st.success("🏆 Chúc mừng! Quái Vật Goblin đã bị tiêu diệt hoàn toàn bởi Găng Tay Bão Táp!")
 
-            let totalDmg = 0;
-            // 9 cú đấm đầu
-            for (let i = 1; i <= 9; i++) {
-                if (monster.hp <= 0) break;
-                let hitDmg = hero.atk * 0.15;
-                totalDmg += hitDmg;
-                logMessage(`  • Cú đấm thứ ${i}: Lao tới gây gián đoạn và ${hitDmg.toFixed(1)} sát thương.`, "log-hit");
-            }
-
-            // Cú đấm thứ 10
-            if (monster.hp > 0) {
-                let finisherDmg = hero.atk * 1.50;
-                totalDmg += finisherDmg;
-                monster.hp -= finisherDmg;
-                monster.isStunned = true;
-                logMessage(`  💥 Cú đấm thứ 10 (ĐÒN KẾT LIỄU): Bùng nổ gây ${finisherDmg.toFixed(1)} sát thương chí mạng!`, "log-crit");
-                logMessage(`  🌪️ ${monster.name} bị đánh văng ra xa 5 mét và dính hiệu ứng **Choáng** trong 1.5 giây!`, "log-skill");
-            }
-
-            logMessage(`✨ Tổng sát thương chuỗi kỹ năng: ${totalDmg.toFixed(1)}`, "log-skill");
-            checkWin();
-            updateUI();
-        }
-
-        function checkWin() {
-            if (monster.hp <= 0) {
-                logMessage(`🏆 Chúc mừng! ${monster.name} đã bị tiêu diệt hoàn toàn bởi Găng Tay Bão Táp!`, "log-crit");
-                document.getElementById("btn-attack").disabled = true;
-                document.getElementById("btn-skill").disabled = true;
-            }
-        }
-    </script>
-</body>
-</html>
+# Khung nhật ký trận đấu
+st.markdown("### 📜 Nhật Ký Trận Đấu")
+log_container = st.container(height=250)
+with log_container:
+    for log in reversed(st.session_state.logs):
+        st.write(log)
